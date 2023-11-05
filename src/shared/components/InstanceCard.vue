@@ -1,0 +1,48 @@
+<script setup lang="ts">
+import {ModPack} from "../models/ModPack";
+import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
+
+defineProps<{
+  modpack: ModPack,
+  isLoading: boolean
+}>()
+</script>
+
+<template>
+  <div class="relative items-center inline-flex p-4 border rounded-lg shadow-md border-gray-700 hover:bg-gray-700">
+    <div class="space-y-2 flex-grow" v-if="!isLoading">
+      <h3 class="text-2xl tracking-tight text-white">{{ modpack?.title }}</h3>
+      <span class="inline-grid grid-cols-3 items-center gap-2">
+        <span class="text-sm font-medium p-2 rounded bg-green-900 text-green-300 inline-flex items-center h-full" v-if="modpack?.versions?.minecraft">
+          <img src="../../assets/minecraft_logo.ico" class="w-4 h-4 mr-1.5" alt="Minecraft logo" />
+          <span class="text-white font-medium text-xs">{{ modpack?.versions?.minecraft }}</span>
+        </span>
+        <span class="text-sm font-medium p-2 rounded bg-gray-900 text-gray-300 inline-flex items-center h-full" v-if="modpack?.versions?.forge">
+          <img src="../../assets/forge_logo.ico" class="w-4 h-4 mr-1.5" alt="Forge logo" />
+          <span class="text-white font-medium text-xs">{{ modpack?.versions?.forge }}</span>
+        </span>
+        <span class="text-sm font-medium p-2 rounded bg-orange-900 text-orange-300 inline-flex items-center h-full" v-if="modpack?.versions?.fabric">
+          <img src="../../assets/fabric_logo.png" class="w-4 h-4 mr-1.5" alt="Fabric logo" />
+          <span class="text-white font-medium text-xs">{{ modpack?.versions?.fabric }}</span>
+        </span>
+        <span class="text-sm font-medium p-2 rounded bg-orange-900 text-orange-300 inline-flex items-center h-full" v-if="modpack?.versions?.quilt">
+          <img src="../../assets/quilt_logo.svg" class="w-4 h-4 mr-1.5" alt="Quilt logo" />
+          <span class="text-white font-medium text-xs">{{ modpack?.versions?.quilt }}</span>
+        </span>
+      </span>
+      <p class="text-gray-400">{{ modpack?.description }}</p>
+    </div>
+    <div v-if="modpack?.id && !isLoading">
+      <button class="bg-transparent rounded-full p-1.5" :disabled="isLoading">
+        <font-awesome-icon class="text-2xl text-white" :icon="['fas', 'add']" />
+      </button>
+    </div>
+    <div role="status" class="animate-pulse" v-if="isLoading">
+      <div class="h-4 rounded-full bg-gray-600 w-72 mb-4"></div>
+      <div class="h-3 rounded-full bg-gray-600 w-72 mb-4"></div>
+      <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+      <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+      <div class="h-2 rounded-full bg-gray-600"></div>
+    </div>
+  </div>
+</template>
