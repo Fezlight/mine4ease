@@ -1,16 +1,15 @@
-/** @type {import('tailwindcss').Config} */
-import defaultTheme from "tailwindcss/defaultTheme";
+import defaultTheme from 'tailwindcss/defaultTheme'
 
 module.exports = {
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx,vue}",
+    './index.html',
+    './src/**/*.{js,ts,jsx,tsx,vue}'
   ],
   theme: {
     fontFamily: {
-      'sans': ['Lato', 'Raleway', ...defaultTheme.fontFamily.sans]
+      sans: ['Lato', 'Raleway', ...defaultTheme.fontFamily.sans]
     }
   },
-  plugins: [],
+  plugins: [
+  ]
 }
-

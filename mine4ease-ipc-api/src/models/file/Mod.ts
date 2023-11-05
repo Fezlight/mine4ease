@@ -18,13 +18,13 @@ export class Mod extends File {
 }
 
 export enum ModLoader {
-  FORGE = "FORGE", FABRIC = "FABRIC", QUILT = "QUILT",
+  FORGE = "Forge", FABRIC = "Fabric", QUILT = "Quilt",
 }
 
 export enum ModLoaderCurse {
-  FORGE = 1,
-  FABRIC = 4,
-  QUILT = 5
+  Forge = 1,
+  Fabric = 4,
+  Quilt = 5
 }
 
 

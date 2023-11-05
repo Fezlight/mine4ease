@@ -1,52 +1,94 @@
 <script setup lang="ts">
 import InstanceIcon from "../../shared/components/InstanceIcon.vue";
-import {Ref, ref} from "vue";
-import {Instance} from "../../shared/models/Instance.ts";
-import {Settings} from "../../shared/models/Settings";
+import {inject, Ref, ref} from "vue";
 import {useRouter} from "vue-router";
+import {Instance, InstanceService, Settings} from "mine4ease-ipc-api";
 
-const modpacks: Ref<Instance[] | undefined> = ref();
-const selectedModpack: Ref<Instance | undefined> = ref();
+const selectedInstance: Ref<Instance | undefined> = ref();
+const settings: Ref<Settings | undefined> = ref();
 
 const router = useRouter();
+const $instanceService: InstanceService | undefined = inject('instanceService');
 
-async function readInstances() {
-  const data = await window.ipcRenderer.invoke('readFile', 'instances.json');
-  return JSON.parse(data);
-}
+window.ipcRenderer.on('saveSettings', (_event) => {
+  if (settings.value) {
+    $instanceService?.saveSettings(settings.value);
+  }
+})
 
 function createModPack() {
-  selectedModpack.value = undefined;
+  selectedInstance.value = undefined;
   router.push({name: 'instance-create'});
 }
 
-function selectModPack(modpack: Instance) {
-  selectedModpack.value = modpack;
-  router.push({name:'instance', params: {id: modpack.id}});
+function selectModPack(instance: Instance) {
+  if(instance === selectedInstance.value) {
+    return;
+  }
+
+  selectedInstance.value = instance;
+  if(settings.value) {
+    settings.value.selectedInstance = instance.id;
+  }
+  router.push({name:'instance', params: {id: instance.id}});
 }
 
-readInstances().then((data: Settings) => {
-  modpacks.value = data.instances;
-  let selectedModpack = data.instances?.filter(modpack => modpack.id === data.selectedInstance)[0];
-  if(selectedModpack) {
-    selectModPack(selectedModpack);
+function addInstance(instance: Instance) {
+  settings.value?.instances?.push(instance);
+  selectModPack(instance);
+}
+
+function deleteInstance(id: string) {
+  if(!settings?.value?.instances) {
+    throw new Error("No instance found with id : " + id);
+  }
+
+  const index = settings.value.instances.findIndex(i => i.id === id);
+  if(index !== -1) {
+    settings.value?.instances?.splice(index, 1);
+  }
+
+  if(settings?.value?.instances.length === 0) {
+    createModPack();
+    return;
+  }
+
+  const precedingInstance = settings?.value?.instances[index-1];
+  if(precedingInstance) {
+    selectModPack(precedingInstance);
+  } else {
+    selectModPack(settings?.value?.instances[index+1]);
+  }
+}
+
+$instanceService?.retrieveSettings().then(async data => {
+  settings.value = data;
+  let selectedModpack = data.instances.filter(i => i.id === data.selectedInstance);
+  if (selectedModpack && selectedModpack.length > 0) {
+    selectModPack(selectedModpack[0]);
+    const instance = document.getElementById(selectedModpack[0].id);
+    const scrollContainer = document.getElementById('scroll-container');
+    if (instance && scrollContainer) {
+      scrollContainer.animate({scrollTop: instance.offsetTop});
+    }
   }
 });
 </script>
 <template>
   <div class="flex flex-row">
     <section class="sticky top-[30px] flex flex-col menu-left max-window-height bg-gray-800 w-[70px]">
-      <div class="flex flex-col gap-2 p-2 overflow-y-auto">
-        <InstanceIcon v-for="modpack in modpacks"
-                     @click="selectModPack(modpack)"
-                     :class="{ 'active': selectedModpack == modpack }">
-          <img src="../../assets/minecraft_logo.svg" class="absolute p-2" alt="Minecraft logo" />
+      <div id="scroll-container" class="flex flex-col flex-grow gap-2 p-2 overflow-y-auto">
+        <InstanceIcon :id="instance.id"
+                      :class="{ 'active': selectedInstance == instance }"
+                      v-for="instance in settings?.instances"
+                     @click="selectModPack(instance)">
+          <img :src="'mine4ease-icon://' + `${instance.id}/${instance.iconName}`" alt="Instance logo" class="object-cover"/>
         </InstanceIcon>
-        <InstanceIcon @click="createModPack()">
+        <InstanceIcon @click="createModPack()" custom-class="bg-sky-600/60">
           <font-awesome-icon class="text-2xl text-white" :icon="['fas', 'add']" />
         </InstanceIcon>
       </div>
-      <div class="shadow-[-1px_-10px_10px_0px] z-10 shadow-black/50 p-2 rounded-t-md border-t-[1px] border-gray-500/60 flex flex-col justify-center gap-2">
+      <div class=" z-10 shadow-black/50 p-2 rounded-t-md border-t-[1px] border-gray-500/60 flex flex-col justify-center gap-2">
         <button type="button" class="group rounded-lg hover:bg-gray-700/60 flex justify-center">
           <font-awesome-icon class="p-2 text-2xl text-white/80 h-[34px]"
                              :icon="['fas', 'gear']" />
@@ -58,7 +100,7 @@ readInstances().then((data: Settings) => {
       </div>
     </section>
     <section class="flex flex-col bg-black/40 p-8 bg-gray-800 flex-grow max-window-height overflow-y-auto">
-      <router-view></router-view>
+      <router-view @create-instance="addInstance" @delete-instance="deleteInstance"></router-view>
     </section>
   </div>
 </template>

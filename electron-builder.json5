@@ -3,9 +3,9 @@
  */
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "YourAppID",
+  "appId": "fr.fezlight.mine4ease",
   "asar": true,
-  "productName": "Minecraft",
+  "productName": "Mine4Ease",
   "directories": {
     "output": "release/${version}"
   },

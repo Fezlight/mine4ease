@@ -1,23 +1,16 @@
-import {app, BrowserWindow, protocol, net, ipcMain} from 'electron'
+import {app, BrowserWindow, ipcMain, net, protocol} from 'electron'
 import path from 'node:path'
 import fs from "node:fs";
-import {InstanceServiceImpl} from "./src/services/InstanceServiceImpl";
-import {InstanceService} from "mine4ease-ipc-api";
+import {INSTANCE_PATH, InstanceServiceImpl} from "./src/services/InstanceServiceImpl";
+import {ASSETS_PATH, DownloadService, InstanceService, Utils} from "mine4ease-ipc-api";
+import * as winston from "winston";
 import {createLogger, format} from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
-import * as winston from "winston";
-import {UtilsImpl} from "./src/utils/UtilsImpl.ts";
-const { combine, timestamp, label, prettyPrint } = format;
+import {MinecraftServiceImpl} from "./src/services/MinecraftServiceImpl";
+import {AuthService} from "./src/services/AuthService";
+import {AuthProvider} from "./src/providers/AuthProvider";
 
-// The built directory structure
-//
-// ├─┬─┬ dist
-// │ │ └── index.html
-// │ │
-// │ ├─┬ dist-electron
-// │ │ ├── main.js
-// │ │ └── preload.js
-// │
+const { combine, timestamp } = format;
 
 process.env.DIST = path.join(__dirname, '../dist')
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(process.env.DIST, '../public')
@@ -121,11 +114,14 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export const $instanceService: InstanceService = new InstanceServiceImpl();
-export const $utils: UtilsImpl = new UtilsImpl();
+export const $utils: Utils = new Utils(logger);
+export const $minecraftService: MinecraftServiceImpl = new MinecraftServiceImpl();
+export const $downloadService: DownloadService = new DownloadService($utils, logger);
+export const $authService: AuthService = new AuthService(new AuthProvider());
 
 protocol.registerSchemesAsPrivileged([
   {
-    scheme: 'mine4ease',
+    scheme: 'mine4ease-icon',
     privileges: {
       standard: true,
       secure: true,
@@ -135,19 +131,22 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 app.whenReady().then(() => {
-  ipcMain.handle('saveFile',async (ev, args) => $utils.saveFile(args));
-  ipcMain.handle('readFile', async (ev, args) => $utils.readFile(args));
-  ipcMain.handle('instanceService.createInstance', async (ev, args) => $instanceService.createInstance(JSON.parse(args)));
-  ipcMain.handle('instanceService.deleteInstance', async (ev, args) => $instanceService.deleteInstance(args))
-  ipcMain.handle('instanceService.getInstanceById', async (ev, args) => $instanceService.getInstanceById(args));
-  ipcMain.handle('instanceService.saveSettings', async (ev, args) => $instanceService.saveSettings(JSON.parse(args)));
-  ipcMain.handle('instanceService.saveInstanceSettings', async (ev, args) => $instanceService.saveInstanceSettings(JSON.parse(args)));
-  ipcMain.handle('instanceService.retrieveSettings', async () => $instanceService.retrieveSettings());
+  ipcMain.handle('instanceService.createInstance', (ev, args) => $instanceService.createInstance(JSON.parse(args)));
+  ipcMain.handle('instanceService.deleteInstance', (ev, args) => $instanceService.deleteInstance(args))
+  ipcMain.handle('instanceService.getInstanceById', (ev, args) => $instanceService.getInstanceById(args));
+  ipcMain.handle('instanceService.saveSettings', (ev, args) => $instanceService.saveSettings(JSON.parse(args)));
+  ipcMain.handle('instanceService.saveInstanceSettings', (ev, args) => $instanceService.saveInstanceSettings(JSON.parse(args)));
+  ipcMain.handle('instanceService.retrieveSettings', () => $instanceService.retrieveSettings());
+  ipcMain.handle('minecraftService.launchGame', (ev, args) => $minecraftService.launchGame(JSON.parse(args)));
+  ipcMain.handle('authService.authenticate', (ev, args) => $authService.authenticate(args));
 
-  protocol.handle('mine4ease', (request) => {
+  protocol.handle('mine4ease-icon', (request) => {
     const appDirectory = process.env.APP_DIRECTORY ?? "";
-    const url = path.join(appDirectory, request.url.replace('..', '').slice('mine4ease://'.length));
-    return net.fetch('file://' + url)
+    const instanceAsset = request.url.replace('..', '').slice('mine4ease-icon://'.length);
+    const [instanceId, assetsName] = instanceAsset.split('/');
+
+    const url = path.join(appDirectory, INSTANCE_PATH, instanceId, ASSETS_PATH, assetsName);
+    return net.fetch('file://' + url);
   })
   createWindow()
 });

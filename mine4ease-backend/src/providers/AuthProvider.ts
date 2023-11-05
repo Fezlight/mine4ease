@@ -1,10 +1,20 @@
 import {CryptoProvider, PublicClientApplication} from "@azure/msal-node";
 import {BrowserWindow} from "electron";
-import CustomProtocolListener from "./CustomProtocolListener";
+import {AuthProtocolListener} from "../listeners/AuthProtocolListener";
 import {msalConfig, REDIRECT_URI} from "../config/AuthConfig";
 
+export interface TokenResponse {
+  IssueInstant: Date,
+  NotAfter: Date,
+  Token: string,
+  DisplayClaims: {
+    xui: [
+      { uhs: string }
+    ]
+  }
+}
 
-class AuthProvider {
+export class AuthProvider {
   clientApplication;
   cryptoProvider;
   authCodeUrlParams;
@@ -31,6 +41,14 @@ class AuthProvider {
      */
     this.customFileProtocolName = REDIRECT_URI.split(":")[0];
 
+    const crypto= require('crypto');
+
+    Object.defineProperty(globalThis, 'crypto', {
+      value: {
+        getRandomValues: arr => crypto.randomBytes(arr.length)
+      }
+    });
+
     this.setRequestObjects();
   }
 
@@ -46,7 +64,7 @@ class AuthProvider {
    * Initialize request objects used by this AuthModule.
    */
   setRequestObjects() {
-    const requestScopes = ["User.Read"];
+    const requestScopes = ["XboxLive.signin"];
 
     this.authCodeUrlParams = {
       scopes: requestScopes,
@@ -69,6 +87,60 @@ class AuthProvider {
   async login() {
     const authResult = await this.getTokenInteractive(this.authCodeUrlParams);
     return this.handleResponse(authResult);
+  }
+
+  async loginWithMicrosoft() {
+    return this.getTokenInteractive(this.authCodeUrlParams);
+  }
+
+  async loginXboxLive(microsoftToken: string): Promise<TokenResponse> {
+    const request = {
+      method: "POST",
+      body: JSON.stringify({
+        Properties: {
+          AuthMethod: "RPS",
+          SiteName: "user.auth.xboxlive.com",
+          RpsTicket: `d=${microsoftToken}`
+        },
+        RelyingParty: "http://auth.xboxlive.com",
+        TokenType: "JWT"
+      })
+    };
+
+    return fetch("https://user.auth.xboxlive.com/user/authenticate", request)
+      .then(response => response.json())
+      .then(data => this.getXboxXstsToken(data.Token))
+  }
+
+  private async getXboxXstsToken(xboxToken: string): Promise<TokenResponse> {
+    const request = {
+      method: "POST",
+      body: JSON.stringify({
+        Properties: {
+          SandboxId: "RETAIL",
+          UserTokens: [
+            xboxToken
+          ]
+        },
+        RelyingParty: "rp://api.minecraftservices.com/",
+        TokenType: "JWT"
+      })
+    };
+
+    return fetch("https://xsts.auth.xboxlive.com/xsts/authorize", request)
+      .then(response => response.json())
+  }
+
+  async loginMinecraft(userHash: string, xstsToken: string) {
+    const request = {
+      method: "POST",
+      body: JSON.stringify({
+        identityToken: `XBL3.0 x=${userHash};${xstsToken}`
+      })
+    };
+
+    return fetch("https://api.minecraftservices.com/authentication/login_with_xbox", request)
+      .then(response => response.json());
   }
 
   async logout() {
@@ -163,7 +235,7 @@ class AuthProvider {
 
   async listenForAuthCode(navigateUrl, authWindow) {
     // Set up custom file protocol to listen for redirect response
-    const authCodeListener = new CustomProtocolListener(
+    const authCodeListener = new AuthProtocolListener(
       this.customFileProtocolName
     );
     const codePromise = authCodeListener.start();
@@ -214,5 +286,3 @@ class AuthProvider {
     }
   }
 }
-
-module.exports = AuthProvider;

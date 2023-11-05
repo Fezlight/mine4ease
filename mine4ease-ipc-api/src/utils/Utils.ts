@@ -1,10 +1,13 @@
 import {Logger} from "winston";
+import {ExtractRequest} from "../models/ExtractRequest";
+import path from "node:path";
 
 export interface IUtils {
   readFile(filePath: string, relative: boolean, binary: boolean) : Promise<any>;
   saveFile(file: {data: any, path?: string, filename: string, binary?: boolean}) : Promise<string>;
   deleteFile(filePath: string) : Promise<string>;
   readFileHash(filePath: string): Promise<string>;
+  extractFile(extractRequest: ExtractRequest): Promise<void>;
 }
 
 export class Utils implements IUtils {
@@ -145,5 +148,28 @@ export class Utils implements IUtils {
       .digest('hex');
     })
     .catch(err => this.logger.error(err.message));
+  }
+
+  async extractFile(extractRequest: ExtractRequest): Promise<void> {
+    const path = require("node:path");
+    const decompress = require("decompress");
+
+    let directory = process.env.APP_DIRECTORY;
+    if (!directory) {
+      throw new Error("Unable to retrieve main directory");
+    }
+
+    let fullPath = path.join(directory, extractRequest.file.filePath(), extractRequest.file.fileName());
+    let destFullPath = path.join(directory, extractRequest.destPath);
+    let excludes = extractRequest.excludes;
+
+    return decompress(fullPath, destFullPath, {
+      filter: file => {
+        if(file.type === 'file') {
+          return !excludes.includes(file.path)
+        }
+        return !excludes.includes(path.basename(file.path));
+      }
+    });
   }
 }

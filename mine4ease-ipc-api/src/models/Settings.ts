@@ -1,6 +1,6 @@
-import {Instance} from "./Instance.ts";
+import {Instance} from "./instance/Instance";
 
 export interface Settings {
   selectedInstance?: string,
-  instances?: Instance[];
+  instances: Instance[];
 }

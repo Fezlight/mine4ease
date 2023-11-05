@@ -8,4 +8,46 @@
 body {
   font-size: 16px;
   letter-spacing: normal;
+  color: white;
+}
+
+.draggable {
+  -webkit-app-region: drag;
+}
+
+h1 {
+  @apply text-6xl font-semibold text-white;
+}
+
+h2 {
+  @apply text-4xl font-semibold text-white;
+}
+
+h3, label {
+  @apply block text-xl font-semibold text-white;
+}
+
+input, select {
+  @apply border text-sm rounded block p-2.5 bg-gray-700 focus:ring-4 focus:outline-none border-gray-600 placeholder-gray-400/60 text-white focus:ring-sky-600/20;
+}
+
+.required label::after {
+  content: ' *';
+  @apply text-red-400;
+}
+
+button[type=submit] {
+  @apply px-5 py-2.5 inline-flex;
+}
+
+.danger {
+  @apply bg-red-600/60 hover:bg-red-600/50 focus:ring-red-600/20;
+}
+
+.primary {
+  @apply bg-sky-600/60 hover:bg-sky-600/50 focus:ring-sky-600/20;
+}
+
+button {
+  @apply bg-gray-800 focus:ring-4 focus:outline-none font-medium rounded-lg text-sm text-center text-white items-center focus:ring-sky-600/20;
 }

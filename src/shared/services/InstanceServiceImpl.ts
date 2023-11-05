@@ -1,33 +1,53 @@
-import {Instance, InstanceService, InstanceSettings, Mod, Settings, Shader} from "mine4ease-ipc-api";
-import {ResourcePack} from "mine4ease-ipc-api/src/models/ResourcePack";
+import {Instance, ResourcePack, InstanceService, InstanceSettings, Mod, ModLoader, Settings, Shader} from "mine4ease-ipc-api";
+import {v4 as uuidv4} from "uuid";
 
-export class FrontInstanceService implements InstanceService {
+export class InstanceServiceImpl implements InstanceService {
   addMod(instance: Instance, mod: Mod): Promise<Mod> {
-    return Promise.resolve(undefined);
+    return Promise.resolve(mod);
   }
 
   addResourcePack(instance: Instance, resourcePack: ResourcePack): Promise<ResourcePack> {
-    return Promise.resolve(undefined);
+    return Promise.resolve(resourcePack);
   }
 
   addShader(instance: Instance, shader: Shader): Promise<Shader> {
-    return Promise.resolve(undefined);
+    return Promise.resolve(shader);
   }
 
-  createInstance(instance: Instance): Promise<Instance> {
-    return Promise.resolve(undefined);
+  async createInstance(instance: InstanceSettings): Promise<InstanceSettings> {
+    console.log("Creating an instance %s", JSON.stringify(instance));
+    instance.id = uuidv4();
+
+    let modLoader = instance.modLoader;
+    if (modLoader === ModLoader.FORGE) {
+      instance.versions.forge?.name.replace("forge-", "");
+    }
+    instance.installSide = 'client';
+
+    return window.ipcRenderer.invoke('instanceService.createInstance', JSON.stringify(instance));
   }
 
-  deleteInstance(id: string): Promise<void> {
-    return Promise.resolve(undefined);
+  async getInstanceById(id: string): Promise<InstanceSettings> {
+    console.log("Retrieve instance with id : " + id);
+    return window.ipcRenderer.invoke('instanceService.getInstanceById', id);
   }
 
-  retrieveSettings(): Promise<Settings> {
-    return Promise.resolve(undefined);
+  async deleteInstance(id: string): Promise<void> {
+    console.log("Deleting instance with id : " + id);
+    return window.ipcRenderer.invoke('instanceService.deleteInstance', id);
   }
 
-  saveSettings(instanceSettings: InstanceSettings): Promise<InstanceSettings> {
-    return Promise.resolve(undefined);
+  async retrieveSettings(): Promise<Settings> {
+    return await window.ipcRenderer.invoke('instanceService.retrieveSettings');
   }
 
+  async saveSettings(settings: Settings): Promise<Settings> {
+    console.log("Saving global settings...");
+    return await window.ipcRenderer.invoke('instanceService.saveSettings', JSON.stringify(settings));
+  }
+
+  async saveInstanceSettings(instanceSettings: InstanceSettings): Promise<InstanceSettings> {
+    console.log(`Saving instance ${instanceSettings.id} settings ...`, instanceSettings.id);
+    return await window.ipcRenderer.invoke('instanceService.saveInstanceSettings', JSON.stringify(instanceSettings));
+  }
 }

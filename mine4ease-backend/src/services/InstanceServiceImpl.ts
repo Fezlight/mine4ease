@@ -1,11 +1,20 @@
-import {Instance, InstanceService, InstanceSettings, Mod, ResourcePack, Settings, Shader} from "mine4ease-ipc-api";
+import {
+  ASSETS_PATH,
+  File,
+  Instance,
+  InstanceService,
+  InstanceSettings,
+  Mod,
+  ResourcePack,
+  Settings,
+  Shader, Version
+} from "mine4ease-ipc-api";
 import path from "node:path";
-import {$utils, logger} from "../../main";
+import {$minecraftService, $utils, logger} from "../../main";
 
-const SETTINGS_FILE = "instances.json";
-const INSTANCE_FILE = "instance.json";
-const INSTANCE_PATH = "instances/";
-const ASSETS_PATH = "assets/";
+export const SETTINGS_FILE = "instances.json";
+export const INSTANCE_FILE = "instance.json";
+export const INSTANCE_PATH = "instances/";
 export class InstanceServiceImpl implements InstanceService {
   static settings: Settings | null = null;
 
@@ -47,7 +56,7 @@ export class InstanceServiceImpl implements InstanceService {
           error.name = 'INSTANCE_NOT_FOUND';
           throw error;
         }
-        logger.error(error);
+        logger.error("", error);
         throw error;
       })
       .then(JSON.parse);
@@ -60,7 +69,7 @@ export class InstanceServiceImpl implements InstanceService {
         if(error.name === 'FILE_NOT_FOUND') {
           return;
         }
-        logger.error(error.message);
+        logger.error("", error);
         throw error;
       })
       .then(async () => {
@@ -96,12 +105,20 @@ export class InstanceServiceImpl implements InstanceService {
   }
 
   async saveInstanceSettings(instanceSettings: InstanceSettings): Promise<InstanceSettings> {
-    logger.log("info", "Saving instance %s settings ...", instanceSettings.id);
+    logger.log("info", `Saving instance ${instanceSettings.id} settings ...`, instanceSettings.id);
 
     await this.saveIcon(instanceSettings);
 
     // Save instance without iconPath
-    const {iconPath, ...instance} = instanceSettings;
+    const {iconName, ...instance} = instanceSettings;
+
+    const manifestUrl = instanceSettings.versions.minecraft.url;
+
+    const manifestFile: File = new Version();
+    manifestFile.url = manifestUrl;
+
+    await $minecraftService.downloadManifest(manifestFile)
+      .catch(err => logger.error("", err));
 
     return $utils.saveFile({
       data: JSON.stringify(instance, null, 2),
@@ -111,16 +128,17 @@ export class InstanceServiceImpl implements InstanceService {
   }
 
   async saveIcon(instanceSettings: InstanceSettings) {
-    let icon = instanceSettings.iconPath;
+    let icon = instanceSettings.iconName;
     logger.info("Saving instance icon ...")
-    if(icon == null) {
+    if(icon == null || icon === "") {
       logger.debug("No icon to save for instance : " + instanceSettings.id);
       return;
     }
 
-    let assetsPath = INSTANCE_PATH + instanceSettings.id + '/' + ASSETS_PATH;
+    let assetsPath = path.join(INSTANCE_PATH, instanceSettings.id, ASSETS_PATH);
     let iconFile = await $utils.readFile(icon, false, true);
-    let filename = path.parse(icon).base;
+    let filename = "icon" + path.parse(icon).ext;
+    instanceSettings.iconName = filename;
 
     await $utils.saveFile({
       data: iconFile,
@@ -128,15 +146,14 @@ export class InstanceServiceImpl implements InstanceService {
       filename: filename,
       binary: true
     });
-    instanceSettings.iconPath = path.join(assetsPath, filename);
   }
 
   async saveSettings(settings: Settings): Promise<Settings> {
     logger.info("Saving launcher settings ...");
     settings.instances = settings.instances.map(instance => {
-      const {id, title, iconPath} = instance;
+      const {id, title, iconName} = instance;
       return {
-        id, title, iconPath
+        id, title, iconName: iconName
       };
     });
 
