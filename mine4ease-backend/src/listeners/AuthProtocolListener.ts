@@ -1,9 +1,9 @@
 import {protocol} from "electron";
 
 export class AuthProtocolListener {
-  hostName;
+  hostName: string;
 
-  constructor(hostName) {
+  constructor(hostName: string) {
     this.hostName = hostName;
   }
 
@@ -11,29 +11,24 @@ export class AuthProtocolListener {
     return this.hostName;
   }
 
-  /**
-   * Registers a custom string protocol on which the library will
-   * listen for Auth Code response.
-   */
   start() {
     return new Promise((resolve, reject) => {
-      protocol.registerStringProtocol(this.host, (req, callback) => {
-        const requestUrl = new URL(req.url);
+      protocol.handle(this.host, (request: Request) => {
+        const requestUrl = new URL(request.url);
         const authCode = requestUrl.searchParams.get("code");
         if (authCode) {
           resolve(authCode);
         } else {
-          protocol.unregisterProtocol(this.host);
+          protocol.unhandle(this.host);
           reject(new Error("No code found in URL"));
         }
+
+        return new Response();
       });
     });
   }
 
-  /**
-   * Unregisters a custom string protocol to stop listening for Auth Code response.
-   */
   close() {
-    protocol.unregisterProtocol(this.host);
+    protocol.unhandle(this.host);
   }
 }

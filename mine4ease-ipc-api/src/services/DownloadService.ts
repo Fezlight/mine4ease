@@ -1,5 +1,5 @@
 import {DownloadRequest} from "../models/DownloadRequest";
-import {IUtils} from "../utils/Utils";
+import {Utils} from "../utils/Utils";
 import {File} from "../models/file/File";
 import {Logger} from "winston";
 
@@ -24,10 +24,10 @@ export interface IDownloadService {
 }
 
 export class DownloadService implements IDownloadService {
-  private utils: IUtils;
+  private utils: Utils;
   private logger: Logger;
 
-  constructor(utils: IUtils, logger: Logger) {
+  constructor(utils: Utils, logger: Logger) {
     this.utils = utils;
     this.logger = logger;
   }

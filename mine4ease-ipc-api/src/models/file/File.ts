@@ -2,8 +2,8 @@ import {InstallSide} from "../Rule";
 
 export interface FileControl {
   mainPath(): string;
-  filePath?(): string;
-  fileName?(): string;
+  filePath(): string;
+  fileName(): string;
 }
 
 export abstract class File implements FileControl {
@@ -19,7 +19,7 @@ export abstract class File implements FileControl {
   subPath?: string;
   installSide?: InstallSide;
 
-  filePath?(): string {
+  filePath(): string {
     if(this.subPath) {
       const path = require('node:path');
       return path.join(this.mainPath(), this.subPath);
@@ -51,7 +51,7 @@ export abstract class File implements FileControl {
     return this._name;
   }
 
-  fullPath?(): string {
+  fullPath(): string {
     if(this.isRelativePath) {
       const path = require('node:path');
       return path.join(this.relativePath, this.filePath());
@@ -59,11 +59,11 @@ export abstract class File implements FileControl {
     return this.filePath();
   }
 
-  fileName?(): string {
+  fileName(): string {
     return this._name + (this.extension ?? "");
   }
 
-  isHashInvalid?(): boolean {
+  isHashInvalid(): boolean {
     return !this.currentHash || this.currentHash !== this.sha1;
   }
 }

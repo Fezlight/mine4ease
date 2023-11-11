@@ -2,11 +2,15 @@
 
 import {AuthService} from "../../shared/services/AuthService.ts";
 import {inject} from "vue";
+import {useRouter} from "vue-router";
 
+const router = useRouter();
 const $authService: AuthService | undefined = inject('authService');
 
 async function login() {
-  await $authService?.authenticate().then(console.log);
+  await $authService?.authenticate()
+      .catch(console.log)
+      .then(() => router.push('/'))
 }
 </script>
 

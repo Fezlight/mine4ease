@@ -10,8 +10,10 @@ export const msalConfig = {
   },
   system: {
     loggerOptions: {
-      loggerCallback(loglevel, message, containsPii) {
-        console.log(message);
+      loggerCallback(loglevel: LogLevel, message: string, containsPii: any) {
+        if(loglevel == LogLevel.Info) {
+          console.log(message);
+        }
       },
       piiLoggingEnabled: false,
       logLevel: LogLevel.Verbose,

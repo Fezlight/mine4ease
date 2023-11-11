@@ -14,11 +14,12 @@ const emit = defineEmits<{
 }>();
 
 const modloaderVersions = ref<Version[]>();
-const selectedVersion = ref<Version>();
+const selectedVersion = ref<Version | undefined>();
 const title = ref<string>();
 
-function retrieveVersions(modLoader: ModLoader = props.modLoader) {
+function retrieveVersions(modLoader: ModLoader | undefined = props.modLoader) {
   modloaderVersions.value = [];
+  selectedVersion.value = undefined;
 
   $apiService?.searchVersions(props.gameVersion.name, modLoader).then(mlVersions => {
     modloaderVersions.value = mlVersions;
@@ -53,6 +54,7 @@ function selectVersion(version: Version) {
   <div class="space-y-2" v-if="modLoader != null">
     <label for="version">{{title}} version</label>
     <select id="version" class="w-full" v-model="selectedVersion">
+      <option v-show="modloaderVersions?.length == 0" disabled :value="undefined">No {{ title }} version available</option>
       <option v-for="version of modloaderVersions" :value="version" :selected="version.recommended">
         {{ version.name }} {{ version.recommended ? '<RECOMMENDED>' : ''}}
       </option>

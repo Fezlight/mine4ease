@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
-import {Instance} from "mine4ease-ipc-api";
+import {Instance, InstanceSettings} from "mine4ease-ipc-api";
 
 defineProps<{
-  instance: Instance,
+  instance: InstanceSettings,
   isLoading: boolean
 }>()
 </script>

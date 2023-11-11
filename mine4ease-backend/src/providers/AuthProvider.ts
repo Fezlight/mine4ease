@@ -2,6 +2,7 @@ import {CryptoProvider, PublicClientApplication} from "@azure/msal-node";
 import {BrowserWindow} from "electron";
 import {AuthProtocolListener} from "../listeners/AuthProtocolListener";
 import {msalConfig, REDIRECT_URI} from "../config/AuthConfig";
+import {Account} from "mine4ease-ipc-api";
 
 export interface TokenResponse {
   IssueInstant: Date,
@@ -14,31 +15,25 @@ export interface TokenResponse {
   }
 }
 
+const headers = {
+  "Content-Type": "application/json",
+  "Accept": "application/json"
+};
+
 export class AuthProvider {
   clientApplication;
   cryptoProvider;
   authCodeUrlParams;
   authCodeRequest;
   pkceCodes;
-  account;
+  accessToken: string;
   customFileProtocolName;
 
   constructor() {
-    /**
-     * Initialize a public client application. For more information, visit:
-     * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-node/docs/initialize-public-client-application.md
-     */
     this.clientApplication = new PublicClientApplication(msalConfig);
-    this.account = null;
+    this.accessToken = null;
 
-    // Initialize CryptoProvider instance
     this.cryptoProvider = new CryptoProvider();
-
-    /**
-     * To demonstrate best security practices, this Electron sample application makes use of
-     * a custom file protocol instead of a regular web (https://) redirect URI in order to
-     * handle the redirection step of the authorization flow, as suggested in the OAuth2.0 specification for Native Apps.
-     */
     this.customFileProtocolName = REDIRECT_URI.split(":")[0];
 
     const crypto= require('crypto');
@@ -52,7 +47,6 @@ export class AuthProvider {
     this.setRequestObjects();
   }
 
-  // Creates a "popup" window for interactive authentication
   static createAuthWindow() {
     return new BrowserWindow({
       width: 400,
@@ -60,9 +54,6 @@ export class AuthProvider {
     });
   }
 
-  /**
-   * Initialize request objects used by this AuthModule.
-   */
   setRequestObjects() {
     const requestScopes = ["XboxLive.signin"];
 
@@ -84,11 +75,6 @@ export class AuthProvider {
     };
   }
 
-  async login() {
-    const authResult = await this.getTokenInteractive(this.authCodeUrlParams);
-    return this.handleResponse(authResult);
-  }
-
   async loginWithMicrosoft() {
     return this.getTokenInteractive(this.authCodeUrlParams);
   }
@@ -96,6 +82,7 @@ export class AuthProvider {
   async loginXboxLive(microsoftToken: string): Promise<TokenResponse> {
     const request = {
       method: "POST",
+      headers,
       body: JSON.stringify({
         Properties: {
           AuthMethod: "RPS",
@@ -115,6 +102,7 @@ export class AuthProvider {
   private async getXboxXstsToken(xboxToken: string): Promise<TokenResponse> {
     const request = {
       method: "POST",
+      headers,
       body: JSON.stringify({
         Properties: {
           SandboxId: "RETAIL",
@@ -131,56 +119,48 @@ export class AuthProvider {
       .then(response => response.json())
   }
 
-  async loginMinecraft(userHash: string, xstsToken: string) {
+  async loginMinecraft(userHash: string, xstsToken: string): Promise<Account> {
     const request = {
       method: "POST",
+      headers,
       body: JSON.stringify({
         identityToken: `XBL3.0 x=${userHash};${xstsToken}`
       })
     };
 
-    return fetch("https://api.minecraftservices.com/authentication/login_with_xbox", request)
-      .then(response => response.json());
+    this.accessToken = await fetch("https://api.minecraftservices.com/authentication/login_with_xbox", request)
+      .then(response => response.json())
+      .then(response => response.access_token);
+
+    return this.getProfile();
+  }
+
+  async getProfile(): Promise<Account> {
+    const request = {
+      headers: {
+        ...headers,
+        "Authorization": `Bearer ${this.accessToken}`
+      }
+    };
+
+    return fetch("https://api.minecraftservices.com/minecraft/profile", request)
+    .then((response: Response) => {
+      if(!response.ok) {
+        throw new Error("Error when trying to retrieve minecraft profile");
+      }
+      return response.json()
+    })
+    .then(response => {
+      return {
+        uuid: response.id,
+        accessToken: this.accessToken,
+        username: response.name
+      }
+    });
   }
 
   async logout() {
-    if (this.account) {
-      await this.clientApplication.getTokenCache().removeAccount(this.account);
-      this.account = null;
-    }
-  }
-
-  async getToken(tokenRequest) {
-    let authResponse;
-    const account = this.account || (await this.getAccount());
-    if (account) {
-      tokenRequest.account = account;
-      authResponse = await this.getTokenSilent(tokenRequest);
-    } else {
-      const authCodeRequest = {
-        ...this.authCodeUrlParams,
-        ...tokenRequest,
-      };
-
-      authResponse = await this.getTokenInteractive(authCodeRequest);
-    }
-
-    return authResponse.accessToken || null;
-  }
-
-  async getTokenSilent(tokenRequest) {
-    try {
-      return await this.clientApplication.acquireTokenSilent(tokenRequest);
-    } catch (error) {
-      console.log(
-        "Silent token acquisition failed, acquiring token using pop up"
-      );
-      const authCodeRequest = {
-        ...this.authCodeUrlParams,
-        ...tokenRequest,
-      };
-      return await this.getTokenInteractive(authCodeRequest);
-    }
+    this.accessToken = null;
   }
 
   async getTokenInteractive(tokenRequest) {
@@ -243,46 +223,5 @@ export class AuthProvider {
     const code = await codePromise;
     authCodeListener.close();
     return code;
-  }
-
-  /**
-   * Handles the response from a popup or redirect. If response is null, will check if we have any accounts and attempt to sign in.
-   * @param response
-   */
-  async handleResponse(response) {
-    if (response !== null) {
-      this.account = response.account;
-    } else {
-      this.account = await this.getAccount();
-    }
-
-    return this.account;
-  }
-
-  /**
-   * Calls getAllAccounts and determines the correct account to sign into, currently defaults to first account found in cache.
-   * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-common/docs/Accounts.md
-   */
-  async getAccount() {
-    // need to call getAccount here?
-    const cache = this.clientApplication.getTokenCache();
-    const currentAccounts = await cache.getAllAccounts();
-
-    if (currentAccounts === null) {
-      console.log("No accounts detected");
-      return null;
-    }
-
-    if (currentAccounts.length > 1) {
-      // Add choose account code here
-      console.log(
-        "Multiple accounts detected, need to add choose account code."
-      );
-      return currentAccounts[0];
-    } else if (currentAccounts.length === 1) {
-      return currentAccounts[0];
-    } else {
-      return null;
-    }
   }
 }

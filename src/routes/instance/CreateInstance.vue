@@ -22,7 +22,8 @@ const instance: Ref<InstanceSettings> = ref({
       name: ""
     }
   },
-  iconName: ""
+  iconName: "",
+  installSide: "client"
 });
 
 const emit = defineEmits<(e: 'createInstance', instance: Instance) => void>();

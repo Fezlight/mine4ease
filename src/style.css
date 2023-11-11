@@ -28,7 +28,7 @@ h3, label {
 }
 
 input, select {
-  @apply border text-sm rounded block p-2.5 bg-gray-700 focus:ring-4 focus:outline-none border-gray-600 placeholder-gray-400/60 text-white focus:ring-sky-600/20;
+  @apply border text-sm rounded-lg block p-2.5 bg-gray-700 focus:ring-4 focus:outline-none border-gray-600 placeholder-gray-400/60 text-white focus:ring-sky-600/20;
 }
 
 .required label::after {

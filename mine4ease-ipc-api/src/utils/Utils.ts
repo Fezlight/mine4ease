@@ -1,9 +1,8 @@
 import {Logger} from "winston";
 import {ExtractRequest} from "../models/ExtractRequest";
-import path from "node:path";
 
 export interface IUtils {
-  readFile(filePath: string, relative: boolean, binary: boolean) : Promise<any>;
+  readFile(filePath: string, relative?: boolean, binary?: boolean) : Promise<any>;
   saveFile(file: {data: any, path?: string, filename: string, binary?: boolean}) : Promise<string>;
   deleteFile(filePath: string) : Promise<string>;
   readFileHash(filePath: string): Promise<string>;
@@ -123,7 +122,7 @@ export class Utils implements IUtils {
 
     this.logger.info(`Deleting file from ${fullPath} ...`);
     return new Promise((resolve, reject) => {
-      fs.access(fullPath, fs.constants.F_OK, (err) => {
+      fs.access(fullPath, fs.constants.F_OK, (err: NodeJS.ErrnoException | null) => {
         if (err) {
           let error = new Error("File does not exist : " + fullPath);
           error.name = "FILE_NOT_FOUND";
@@ -157,6 +156,10 @@ export class Utils implements IUtils {
     let directory = process.env.APP_DIRECTORY;
     if (!directory) {
       throw new Error("Unable to retrieve main directory");
+    }
+
+    if(!extractRequest?.file) {
+      throw new Error("Unable to retrieve file to extract");
     }
 
     let fullPath = path.join(directory, extractRequest.file.filePath(), extractRequest.file.fileName());

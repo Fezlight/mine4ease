@@ -8,7 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@azure/msal-node": "^2.4.0",
+    "@azure/msal-node": "^2.5.1",
     "@fortawesome/fontawesome-free": "^6.4.2",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
     "@fortawesome/free-brands-svg-icons": "^6.4.2",
@@ -17,7 +17,6 @@
     "@fortawesome/vue-fontawesome": "^3.0.3",
     "decompress": "^4.2.1",
     "mine4ease-ipc-api": "file:mine4ease-ipc-api",
-    "prismarine-auth": "^2.3.0",
     "uuid": "^9.0.1",
     "vue": "^3.3.4",
     "vue-router": "4",
