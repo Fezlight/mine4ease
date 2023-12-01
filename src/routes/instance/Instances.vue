@@ -2,19 +2,19 @@
 import InstanceIcon from "../../shared/components/InstanceIcon.vue";
 import {inject, Ref, ref} from "vue";
 import {useRouter} from "vue-router";
-import {Instance, InstanceService, Settings} from "mine4ease-ipc-api";
+import {IAuthService, IGlobalSettingService, IInstanceService, Instance, Settings} from "mine4ease-ipc-api";
 
 const selectedInstance: Ref<Instance | undefined> = ref();
 const settings: Ref<Settings | undefined> = ref();
 
 const router = useRouter();
-const $instanceService: InstanceService | undefined = inject('instanceService');
+const $instanceService: IInstanceService | undefined = inject('instanceService');
+const $globalSettingsService: IGlobalSettingService | undefined = inject('globalSettingsService');
+const $authService: IAuthService | undefined = inject('authService');
 
-window.ipcRenderer.on('saveSettings', (_event) => {
-  if (settings.value) {
-    $instanceService?.saveSettings(settings.value);
-  }
-})
+$authService?.getProfile().then(account => {
+  console.log(account);
+}).catch(() => router.push('/login'));
 
 function createModPack() {
   selectedInstance.value = undefined;
@@ -22,15 +22,17 @@ function createModPack() {
 }
 
 function selectModPack(instance: Instance) {
-  if(instance === selectedInstance.value) {
+  if (instance === selectedInstance.value) {
     return;
   }
 
   selectedInstance.value = instance;
-  if(settings.value) {
+  if (settings.value) {
     settings.value.selectedInstance = instance.id;
   }
-  router.push({name:'instance', params: {id: instance.id}});
+
+  $instanceService?.selectInstance(instance.id)
+  .then(() => router.push({name: 'instance', params: {id: instance.id}}));
 }
 
 function addInstance(instance: Instance) {
@@ -39,38 +41,33 @@ function addInstance(instance: Instance) {
 }
 
 function deleteInstance(id: string) {
-  if(!settings?.value?.instances) {
+  if (!settings?.value?.instances) {
     throw new Error("No instance found with id : " + id);
   }
 
   const index = settings.value.instances.findIndex(i => i.id === id);
-  if(index !== -1) {
+  if (index !== -1) {
     settings.value?.instances?.splice(index, 1);
   }
 
-  if(settings?.value?.instances.length === 0) {
+  if (settings?.value?.instances.length === 0) {
     createModPack();
     return;
   }
 
-  const precedingInstance = settings?.value?.instances[index-1];
-  if(precedingInstance) {
+  const precedingInstance = settings?.value?.instances[index - 1];
+  if (precedingInstance) {
     selectModPack(precedingInstance);
   } else {
-    selectModPack(settings?.value?.instances[index+1]);
+    selectModPack(settings?.value?.instances[index + 1]);
   }
 }
 
-$instanceService?.retrieveSettings().then(async data => {
+$globalSettingsService?.retrieveSettings().then(data => {
   settings.value = data;
   let selectedModpack = data.instances.filter(i => i.id === data.selectedInstance);
   if (selectedModpack && selectedModpack.length > 0) {
     selectModPack(selectedModpack[0]);
-    const instance = document.getElementById(selectedModpack[0].id);
-    const scrollContainer = document.getElementById('scroll-container');
-    if (instance && scrollContainer) {
-      scrollContainer.animate({scrollTop: instance.offsetTop});
-    }
   }
 });
 </script>
@@ -81,8 +78,10 @@ $instanceService?.retrieveSettings().then(async data => {
         <InstanceIcon :id="instance.id"
                       :class="{ 'active': selectedInstance == instance }"
                       v-for="instance in settings?.instances"
-                     @click="selectModPack(instance)">
-          <img :src="'mine4ease-icon://' + `${instance.id}/${instance.iconName}`" alt="Instance logo" class="object-cover"/>
+                      @click="selectModPack(instance)">
+          <img :src="'mine4ease-icon://' + `${instance.id}/${instance.iconName}`"
+               alt="Instance logo"
+               class="object-cover" />
         </InstanceIcon>
         <InstanceIcon @click="createModPack()" custom-class="bg-sky-600/60">
           <font-awesome-icon class="text-2xl text-white" :icon="['fas', 'add']" />
@@ -93,26 +92,25 @@ $instanceService?.retrieveSettings().then(async data => {
           <font-awesome-icon class="p-2 text-2xl text-white/80 h-[34px]"
                              :icon="['fas', 'gear']" />
         </button>
-        <button type="button" class="group rounded-lg hover:bg-gray-700/60 flex justify-center" @click="router.push('/login')">
+        <button type="button"
+                class="group rounded-lg hover:bg-gray-700/60 flex justify-center"
+                @click="router.push('/login')">
           <font-awesome-icon class="p-2 text-2xl text-white/80 h-[34px] group-hover:text-red-700/80"
                              :icon="['fas', 'right-from-bracket']" />
         </button>
       </div>
     </section>
-    <section class="flex flex-col bg-black/40 p-8 bg-gray-800 flex-grow max-window-height overflow-y-auto">
+    <section class="content">
       <router-view @create-instance="addInstance" @delete-instance="deleteInstance"></router-view>
     </section>
   </div>
 </template>
-
 <style scoped>
 ::-webkit-scrollbar {
   display: none;
 }
+
 .menu-left {
   @apply max-h-screen shadow-xl shadow-black/80 border-r-[1px] border-gray-500/60;
-}
-.max-window-height {
-  height: calc(100vh - 30px);
 }
 </style>

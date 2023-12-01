@@ -18,6 +18,7 @@ export abstract class File implements FileControl {
   relativePath?: string;
   subPath?: string;
   installSide?: InstallSide;
+  content?: ArrayBuffer;
 
   filePath(): string {
     if(this.subPath) {

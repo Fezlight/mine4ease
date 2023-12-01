@@ -2,7 +2,8 @@ import {CryptoProvider, PublicClientApplication} from "@azure/msal-node";
 import {BrowserWindow} from "electron";
 import {AuthProtocolListener} from "../listeners/AuthProtocolListener";
 import {msalConfig, REDIRECT_URI} from "../config/AuthConfig";
-import {Account} from "mine4ease-ipc-api";
+import {Account, CacheProvider} from "mine4ease-ipc-api";
+import {CURRENT_ACCOUNT_STORAGE_CACHE, CURRENT_ACCOUNT_STORAGE_KEY} from "../config/CacheConfig.ts";
 
 export interface TokenResponse {
   IssueInstant: Date,
@@ -26,17 +27,20 @@ export class AuthProvider {
   authCodeUrlParams;
   authCodeRequest;
   pkceCodes;
-  accessToken: string;
+  accessToken: string | undefined;
   customFileProtocolName;
 
-  constructor() {
+  constructor(cacheProvider: CacheProvider) {
     this.clientApplication = new PublicClientApplication(msalConfig);
-    this.accessToken = null;
+
+    cacheProvider.put(CURRENT_ACCOUNT_STORAGE_KEY, CURRENT_ACCOUNT_STORAGE_CACHE);
+    cacheProvider.loadObject(CURRENT_ACCOUNT_STORAGE_KEY).then(object => this.accessToken = object?.accessToken);
+    cacheProvider.delete(CURRENT_ACCOUNT_STORAGE_KEY);
 
     this.cryptoProvider = new CryptoProvider();
     this.customFileProtocolName = REDIRECT_URI.split(":")[0];
 
-    const crypto= require('crypto');
+    const crypto = require('crypto');
 
     Object.defineProperty(globalThis, 'crypto', {
       value: {
@@ -51,6 +55,12 @@ export class AuthProvider {
     return new BrowserWindow({
       width: 400,
       height: 600,
+      titleBarStyle: 'hidden',
+      titleBarOverlay: {
+        color: '#00000000',
+        symbolColor: '#ffffff',
+        height: 30
+      },
     });
   }
 
@@ -160,7 +170,7 @@ export class AuthProvider {
   }
 
   async logout() {
-    this.accessToken = null;
+    this.accessToken = undefined;
   }
 
   async getTokenInteractive(tokenRequest) {
@@ -213,7 +223,7 @@ export class AuthProvider {
     }
   }
 
-  async listenForAuthCode(navigateUrl, authWindow) {
+  async listenForAuthCode(navigateUrl: string, authWindow: BrowserWindow) {
     // Set up custom file protocol to listen for redirect response
     const authCodeListener = new AuthProtocolListener(
       this.customFileProtocolName

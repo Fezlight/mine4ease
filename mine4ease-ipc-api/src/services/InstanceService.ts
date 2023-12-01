@@ -3,15 +3,21 @@ import {InstanceSettings} from "../models/instance/InstanceSettings";
 import {Mod} from "../models/file/Mod";
 import {ResourcePack} from "../models/file/ResourcePack";
 import {Shader} from "../models/file/Shader";
-import {Settings} from "../models/Settings";
 
-export interface InstanceService {
+export interface IInstanceService {
   /**
    * Create an instance
    *
    * @param instanceSettings instance object containing all information for creation
    */
   createInstance(instanceSettings: InstanceSettings): Promise<InstanceSettings>;
+
+  /**
+   * Select an instance
+   *
+   * @param id instance id shared with the external server
+   */
+  selectInstance(id: string) : Promise<void>;
 
   /**
    * Retrieve an instance by its id
@@ -57,16 +63,4 @@ export interface InstanceService {
    * @param shader shader to add
    */
   addShader(instance: Instance, shader: Shader): Promise<Shader>;
-
-  /**
-   * Retrieve launcher settings containing selected instance and list of instances
-   */
-  retrieveSettings(): Promise<Settings>;
-
-  /**
-   * Save launcher settings
-   *
-   * @param settings launcher settings to save
-   */
-  saveSettings(settings: Settings): Promise<Settings>;
 }

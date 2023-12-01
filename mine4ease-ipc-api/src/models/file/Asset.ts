@@ -14,8 +14,8 @@ export class Asset extends File {
     this.name = hash;
   }
 
-  set virtual(virtual: boolean) {
-    if(virtual) {
+  set virtual(virtual: boolean | undefined) {
+    if (virtual) {
       this.subPath = ASSETS_SUB_PATH_LEGACY;
     } else {
       this.subPath = ASSETS_SUB_PATH;

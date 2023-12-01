@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import {useRoute} from "vue-router";
 import {inject, Ref, ref} from "vue";
-import {InstanceService} from "mine4ease-ipc-api";
+import {IInstanceService} from "mine4ease-ipc-api";
 
 const route = useRoute();
 const id: Ref<string> = ref(route.query.id as string);
 
-const $instanceService: InstanceService | undefined = inject('instanceService');
+const $instanceService: IInstanceService | undefined = inject('instanceService');
 
 const emit = defineEmits<{
   (e: 'deleteInstance', id: string): void,
@@ -15,10 +15,8 @@ const emit = defineEmits<{
 
 function deleteInstance(id: string) {
   $instanceService?.deleteInstance(id)
-    .then(() => emit('deleteInstance', id));
+  .then(() => emit('deleteInstance', id));
 }
-
-
 </script>
 <template>
   <div class="flex flex-col items-center justify-center h-screen gap-2">

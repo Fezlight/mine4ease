@@ -9,7 +9,7 @@ export class DownloadRequest extends RuleControl{
     let cond = super.isRuleValid();
 
     // Current hash differ from source
-    cond &&= this.file.isHashInvalid();
+    cond &&= this.file?.isHashInvalid();
 
     return cond;
   }

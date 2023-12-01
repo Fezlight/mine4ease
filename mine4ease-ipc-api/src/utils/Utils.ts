@@ -2,11 +2,17 @@ import {Logger} from "winston";
 import {ExtractRequest} from "../models/ExtractRequest";
 
 export interface IUtils {
-  readFile(filePath: string, relative?: boolean, binary?: boolean) : Promise<any>;
-  saveFile(file: {data: any, path?: string, filename: string, binary?: boolean}) : Promise<string>;
-  deleteFile(filePath: string) : Promise<string>;
+  readFile(filePath: string, relative?: boolean, binary?: boolean): Promise<any>;
+
+  saveFile(file: { data: any, path?: string, filename: string, binary?: boolean }): Promise<string>;
+
+  deleteFile(filePath: string): Promise<string>;
+
   readFileHash(filePath: string): Promise<string>;
+
   extractFile(extractRequest: ExtractRequest): Promise<void>;
+
+  getPlatform(): { OS: string; platform: string };
 }
 
 export class Utils implements IUtils {
@@ -31,7 +37,7 @@ export class Utils implements IUtils {
     }
     let fullPath = path.join(directory, file.filename);
 
-    this.logger.debug(`Saving file ${file.filename} into ${fullPath} ...`);
+    this.logger?.debug(`Saving file ${file.filename} into ${fullPath} ...`);
     return new Promise((resolve, reject) => {
       const buffer = Buffer.from(file.data);
 
@@ -41,10 +47,10 @@ export class Utils implements IUtils {
 
       stream.write(buffer, (err) => {
         if (err) {
-          this.logger.error("Error writing to file", err)
+          this.logger?.error("Error writing to file", err)
           return reject(err);
         } else {
-          this.logger.debug("Writing to file : " + fullPath)
+          this.logger?.debug("Writing to file : " + fullPath)
           stream.end();
           return resolve("");
         }
@@ -68,7 +74,7 @@ export class Utils implements IUtils {
       fullPath = path.join(directory, filePath);
     }
 
-    this.logger.debug(`Reading file from ${fullPath} ...`);
+    this.logger?.debug(`Reading file from ${fullPath} ...`);
     return new Promise((resolve, reject) => {
       fs.access(fullPath, fs.constants.F_OK, (err) => {
         if (err) {
@@ -138,7 +144,7 @@ export class Utils implements IUtils {
 
   async readFileHash(filePath: string): Promise<string> {
     const crypto = require("node:crypto");
-    
+
     this.logger.debug(`Reading file hash : ${filePath} ...`);
     return this.readFile(filePath, true, true)
     .then((data: ArrayBuffer) => {
@@ -158,7 +164,7 @@ export class Utils implements IUtils {
       throw new Error("Unable to retrieve main directory");
     }
 
-    if(!extractRequest?.file) {
+    if (!extractRequest?.file) {
       throw new Error("Unable to retrieve file to extract");
     }
 
@@ -168,11 +174,33 @@ export class Utils implements IUtils {
 
     return decompress(fullPath, destFullPath, {
       filter: file => {
-        if(file.type === 'file') {
+        if (file.type === 'file') {
           return !excludes.includes(file.path)
         }
         return !excludes.includes(path.basename(file.path));
       }
     });
+  }
+
+  getPlatform(): { OS: string; platform: string } {
+    const os = require("node:os");
+
+    let platform = os.machine();
+    if (platform === 'x86_64') {
+      platform = os.arch() !== 'x64' ? 'x86' : 'x64';
+    }
+
+    let OS = os.type()
+    if (OS === 'Linux') {
+      OS = "linux";
+    } else if (OS === 'Darwin') {
+      OS = "mac-os";
+    } else if (OS === 'Windows_NT') {
+      OS = "windows";
+    } else {
+      throw new Error(`Unknow OS : ${OS}`);
+    }
+
+    return {platform, OS};
   }
 }

@@ -11,6 +11,10 @@ export class Version extends File {
     this.subPath = name;
   }
 
+  get name() {
+    return this._name;
+  }
+
   mainPath(): string {
     return VERSIONS_PATH;
   }

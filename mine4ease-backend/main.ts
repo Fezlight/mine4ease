@@ -1,14 +1,15 @@
 import {app, BrowserWindow, ipcMain, net, protocol} from 'electron'
 import path from 'node:path'
 import fs from "node:fs";
-import {INSTANCE_PATH} from "./src/services/InstanceServiceImpl";
-import {ASSETS_PATH} from "mine4ease-ipc-api";
-import {handlerMap} from "./src/config/HandlerConfig.ts";
+import {INSTANCE_PATH} from "./src/services/InstanceService";
+import {ASSETS_PATH, TASK_EVENT_NAME, TaskEvent} from "mine4ease-ipc-api";
+import {handlerMap} from "./src/config/HandlerConfig";
+import {$cacheProvider, $eventEmitter} from "./src/config/ObjectFactoryConfig";
 
 process.env.DIST = path.join(__dirname, '../dist')
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(process.env.DIST, '../public')
 
-let win: BrowserWindow | null
+export let win: BrowserWindow | null
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
@@ -33,11 +34,10 @@ function createWindow() {
 
   win.on('close', (event) => {
     event.preventDefault();
-    win?.webContents.send('saveSettings');
-    setTimeout(() => {
+    $cacheProvider.saveAll().then(() => {
       win?.destroy();
       app.quit();
-    }, 500);
+    });
   });
 
   let directory = process.env.APP_DIRECTORY;
@@ -86,6 +86,10 @@ app.whenReady().then(() => {
   handlerMap.forEach((v, k) => {
     ipcMain.handle(k, v);
   })
+
+  $eventEmitter.on(TASK_EVENT_NAME, (taskEvent: TaskEvent) => {
+    win?.webContents.send(TASK_EVENT_NAME, taskEvent);
+  });
 
   protocol.handle('mine4ease-icon', (request) => {
     const appDirectory = process.env.APP_DIRECTORY ?? "";

@@ -2,6 +2,7 @@ import {Version} from "../models/file/Version";
 import {Mod, ModLoader, ModLoaderCurse} from "../models/file/Mod";
 import {Shader} from "../models/file/Shader";
 import {ResourcePack} from "../models/file/ResourcePack";
+import {Versions} from "../models/Manifest";
 
 export enum ApiType {
   CURSE = "CURSE", MODRINTH = "MODRINTH"
@@ -99,6 +100,21 @@ export class CurseApiService implements ApiService {
 
   async searchShaders(): Promise<Shader[]> {
     throw new Error("Not yet implemented");
+  }
+
+  async searchModLoaderManifest(name: string): Promise<Versions> {
+    return fetch(CURSE_FORGE_API_URL + `/v1/minecraft/modloader/${name}`)
+    .then(data => data.json())
+    .then(data => {
+      if (!data.data) {
+        throw new Error(`Unable to retrieve data manifest for modloader '${name}'`);
+      }
+
+      let version = JSON.parse(data.data.versionJson.replace('\\n', '').replace('\\r', '').replace('\\', ''));
+      version = Object.assign(new Versions(), version);
+
+      return version;
+    })
   }
 
   async searchVersions(gameVersion?: string, modLoader?: ModLoader): Promise<Version[]> {

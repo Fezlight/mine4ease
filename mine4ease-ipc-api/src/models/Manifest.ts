@@ -41,14 +41,14 @@ export class Versions {
 export class Libraries {
   downloads: {
     artifact: Library;
-    classifiers: Map<string, Library>;
+    classifiers: { [key: string]: Library };
   };
   name: string;
   rules?: Rule[];
   extract: {
     excludes: string[]
   };
-  natives: Map<string, string>;
+  natives: { [key: string]: string };
 }
 
 export class Assets {

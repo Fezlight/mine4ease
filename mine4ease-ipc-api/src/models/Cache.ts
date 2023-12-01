@@ -3,7 +3,7 @@ export class Cache {
   filename?: string;
   object?: any;
 
-  save(callback: Function) {
+  async save(callback: Function) {
     if(!this.path) return;
 
     const file = {
@@ -11,14 +11,15 @@ export class Cache {
       ...this
     };
 
-    callback(file);
+    await callback(file);
   }
 
   async load(callback: Function): Promise<Cache> {
     if(!this.path) return this;
     if(this.object) return this;
 
-    await callback(this.path).then((response: string) => {
+    const path = require("node:path")
+    await callback(path.join(this.path, this.filename)).then((response: string) => {
       this.object = JSON.parse(response);
     });
 

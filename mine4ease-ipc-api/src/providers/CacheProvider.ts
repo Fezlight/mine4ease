@@ -7,9 +7,17 @@ export interface ICacheProvider {
    * Load an object from cache
    *
    * @param key key related to object used to retrieve it
-   * @return promise of object or null if not found
+   * @return promise of cache or undefined if not found
    */
   load(key: string): Promise<Cache | undefined>;
+
+  /**
+   * Alias method for load(key: string) but extract object from cache and return it
+   *
+   * @param key key related to object used to retrieve it
+   * @return promise of object or undefined if not found or empty
+   */
+  loadObject(key: string): Promise<any>
 
   /**
    * Put an object inside cache
@@ -18,6 +26,16 @@ export interface ICacheProvider {
    * @param object object to save (only json object)
    */
   put(key: string, object: Cache): void;
+
+  /**
+   * Update an object inside cache
+   *
+   * @param key key related to object used to retrieve it
+   * @param object object to save (only json object)
+   *
+   * @throws Error if key not exist in cache
+   */
+  update(key: string, object: any): Promise<void>
 
   /**
    * Check if a key exist in cache
@@ -31,7 +49,7 @@ export interface ICacheProvider {
    *
    * (defined in Cache object)
    */
-  saveAll(): void;
+  saveAll(): Promise<void[]>;
 
   /**
    * Delete an object from cache
@@ -52,17 +70,35 @@ export class CacheProvider implements ICacheProvider {
 
   async load(key: string): Promise<Cache | undefined> {
     return Promise.resolve(this.caches.get(key))
-      .then(cache => cache?.load(this.utils.readFile));
+    .then(cache => cache?.load(f => this.utils.readFile(f)));
+  }
+
+  async loadObject(key: string): Promise<any> {
+    return this.load(key)
+    .then(cache => cache?.object);
+  }
+
+  async update(key: string, object: any): Promise<void> {
+    return this.load(key).then(cache => {
+      if (!cache) throw new Error(`Cache ${key} not found`);
+
+      cache.object = object;
+      return cache;
+    }).then(cache => this.put(key, cache));
   }
 
   put(key: string, object: Cache): void {
     this.caches.set(key, object);
   }
 
-  saveAll(): void {
+  async saveAll(): Promise<void[]> {
+    let promises: Promise<void>[] = [];
+
     this.caches.forEach((v) => {
-      v.save(this.utils.saveFile)
+      promises.push(v.save(f => this.utils.saveFile(f)));
     });
+
+    return Promise.all(promises);
   }
 
   delete(key: string): boolean {

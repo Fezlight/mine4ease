@@ -1,7 +1,7 @@
 export interface Account {
   uuid?: string;
   username?: string;
-  accessToken: string;
+  accessToken?: string;
 }
 
 export class Accounts {

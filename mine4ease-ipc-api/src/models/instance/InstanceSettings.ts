@@ -7,5 +7,11 @@ export interface InstanceSettings extends Instance {
   installSide: InstallSide;
   description?: string;
   modLoader?: ModLoader;
-  versions: { forge?: Version, minecraft: Version; fabric?: Version, quilt?: Version, self?: string };
+  versions: {
+    forge?: Version,
+    minecraft: Version;
+    fabric?: Version,
+    quilt?: Version,
+    self?: string
+  };
 }

@@ -1,24 +1,23 @@
 import {createApp} from 'vue'
 import App from './App.vue'
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
-
-/* import the fontawesome core */
 import {library} from '@fortawesome/fontawesome-svg-core'
-
-import {faAdd, faGear, faRightFromBracket, faStar, faCamera} from '@fortawesome/free-solid-svg-icons'
+import {faAdd, faGear, faRightFromBracket, faStar, faCamera, faTrashCan, faArrowRight, faPlay} from '@fortawesome/free-solid-svg-icons'
 import {createRouter, createWebHashHistory} from "vue-router";
-import CreateInstance from "./routes/instance/CreateInstance.vue";
+import CreateInstance from "./routes/instance/create-instance/CreateInstance.vue";
 import Instances from "./routes/instance/Instances.vue";
 import Login from "./routes/authentication/Login.vue";
 import './style.css'
-import Instance from "./routes/instance/Instance.vue";
+import Instance from "./routes/instance/instance/Instance.vue";
 import {CurseApiService} from "mine4ease-ipc-api";
-import {InstanceServiceImpl} from "./shared/services/InstanceServiceImpl.ts";
-import InstanceNotFound from "./routes/instance/InstanceNotFound.vue";
-import {MinecraftServiceImpl} from "./shared/services/MinecraftServiceImpl.ts";
+import {InstanceService} from "./shared/services/InstanceService.ts";
+import InstanceNotFound from "./routes/instance/instance-error/InstanceNotFound.vue";
+import {MinecraftService} from "./shared/services/MinecraftService.ts";
 import {AuthService} from "./shared/services/AuthService.ts";
+import {faMicrosoft} from "@fortawesome/free-brands-svg-icons";
+import {GlobalSettingsService} from "./shared/services/GlobalSettingsService.ts";
 
-library.add(faStar, faGear, faRightFromBracket, faAdd, faCamera);
+library.add(faStar, faGear, faRightFromBracket, faAdd, faCamera, faMicrosoft, faTrashCan, faArrowRight, faPlay);
 
 const routes = [
   {
@@ -46,15 +45,10 @@ const app = createApp(App)
 .component('font-awesome-icon', FontAwesomeIcon);
 
 app.provide('apiService', new CurseApiService());
-app.provide('instanceService', new InstanceServiceImpl());
-app.provide('minecraftService', new MinecraftServiceImpl());
+app.provide('instanceService', new InstanceService());
+app.provide('minecraftService', new MinecraftService());
 app.provide('authService', new AuthService());
+app.provide('globalSettingsService', new GlobalSettingsService());
 app.mount('#app').$nextTick(() => {
-  // Remove Preload scripts loading
-  postMessage({payload: 'removeLoading'}, '*')
-
-  // Use contextBridge
-  window.ipcRenderer.on('main-process-message', (_event, message) => {
-    console.log(message)
-  })
+  postMessage({payload: 'removeLoading'}, '*');
 });

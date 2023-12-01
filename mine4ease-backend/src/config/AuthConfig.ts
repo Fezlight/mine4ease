@@ -10,7 +10,7 @@ export const msalConfig = {
   },
   system: {
     loggerOptions: {
-      loggerCallback(loglevel: LogLevel, message: string, containsPii: any) {
+      loggerCallback(loglevel: LogLevel, message: string) {
         if(loglevel == LogLevel.Info) {
           console.log(message);
         }

@@ -5,18 +5,18 @@ import {Logger} from "winston";
 
 export const fetchWithRetry = (url: string, logger: Logger, options = {}, retry = 3) => {
   return fetch(url, options)
-    .then(r => {
-      if(r.ok) {
-        return r;
-      }
+  .then(r => {
+    if (r.ok) {
+      return r;
+    }
 
-      if(retry > 0) {
-        logger.error(`Fetching url ${url} : ${retry-1} attempts left`)
-        return fetchWithRetry(url, logger, options, retry - 1);
-      }
+    if (retry > 0) {
+      logger.error(`Fetching url ${url} : ${retry - 1} attempts left`)
+      return fetchWithRetry(url, logger, options, retry - 1);
+    }
 
-      throw new Error(`Fetching url ${url} with 3 failed attempts`);
-    })
+    throw new Error(`Fetching url ${url} with 3 failed attempts`);
+  })
 }
 
 export interface IDownloadService {
@@ -37,8 +37,35 @@ export class DownloadService implements IDownloadService {
       throw new Error("Download Request need a file to achieve");
     }
 
+    let promise: Promise<ArrayBuffer>;
+    if (!request.file.content) {
+      promise = this.downloadFromUrl(request);
+    } else {
+      promise = Promise.resolve(request.file.content);
+    }
+
+    return promise
+    .then(r => {
+      return this.utils.saveFile({
+        data: r,
+        filename: request.file.fileName(),
+        path: request.file.fullPath(),
+        binary: true
+      })
+    })
+    .catch((err: Error) => {
+      if (err.name === 'FILE_DOWNLOAD_NOT_NEEDED' || err.name === 'FILE_ALREADY_DOWNLOADED') {
+        this.logger.debug("", err);
+        return;
+      }
+      this.logger.error("", err);
+      throw err;
+    });
+  }
+
+  private async downloadFromUrl(request: DownloadRequest): Promise<ArrayBuffer> {
     return new Promise(async (resolve, reject) => {
-      if(!request.isRuleValid()) {
+      if (!request.isRuleValid()) {
         let error = new Error(`No need to download file rules are not valid : ${request.file.fileName()}`);
         error.name = "FILE_DOWNLOAD_NOT_NEEDED";
         return reject(error);
@@ -62,28 +89,13 @@ export class DownloadService implements IDownloadService {
       }
       return r.arrayBuffer();
     })
-    .then(r => {
-      return this.utils.saveFile({
-        data: r,
-        filename: request.file.fileName(),
-        path: request.file.fullPath(),
-        binary: true
-      })
-    })
-    .catch((err: Error) => {
-      if(err.name === 'FILE_DOWNLOAD_NOT_NEEDED' || err.name === 'FILE_ALREADY_DOWNLOADED') {
-        this.logger.debug("", err);
-        return;
-      }
-      this.logger.error("", err);
-      throw err;
-    });
   }
 
   async initFileHash(file: File): Promise<string> {
     const path = require("node:path");
     let destFile = path.join(file.fullPath(), file.fileName());
     return this.utils.readFileHash(destFile)
+    .then(hash => file.currentHash = hash)
     .catch(() => "");
   }
 }

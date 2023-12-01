@@ -5,6 +5,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  .max-window-height {
+    height: calc(100vh - 30px);
+  }
+}
+
 body {
   font-size: 16px;
   letter-spacing: normal;
@@ -13,6 +19,10 @@ body {
 
 .draggable {
   -webkit-app-region: drag;
+}
+
+.content {
+  @apply flex flex-col bg-black/40 p-8 bg-gray-800 flex-grow overflow-y-auto max-window-height;
 }
 
 h1 {
