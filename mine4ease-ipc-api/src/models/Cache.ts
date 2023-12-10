@@ -21,7 +21,7 @@ export class Cache {
     const path = require("node:path")
     await callback(path.join(this.path, this.filename)).then((response: string) => {
       this.object = JSON.parse(response);
-    });
+    }).catch(() => this.object = {});
 
     return this;
   }

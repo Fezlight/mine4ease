@@ -70,7 +70,8 @@ export class CacheProvider implements ICacheProvider {
 
   async load(key: string): Promise<Cache | undefined> {
     return Promise.resolve(this.caches.get(key))
-    .then(cache => cache?.load(f => this.utils.readFile(f)));
+    .then(cache => cache?.load(f => this.utils.readFile(f)))
+    .catch(() => undefined);
   }
 
   async loadObject(key: string): Promise<any> {

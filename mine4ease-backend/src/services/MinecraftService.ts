@@ -29,6 +29,8 @@ import {DownloadFileTask} from "../task/FileTask.ts";
 import {DownloadAssetsTask} from "../task/DownloadAssetsTask.ts";
 import {DownloadLibrariesTask} from "../task/DownloadLibsTask.ts";
 import {DownloadJavaTask} from "../task/DownloadJavaTask.ts";
+import {InstallForgeTask} from "../task/InstallForgeTask.ts";
+import {LaunchGameTask} from "../task/LaunchGameTask.ts";
 
 export class MinecraftService implements IMinecraftService {
   private authService: AuthService;
@@ -44,41 +46,6 @@ export class MinecraftService implements IMinecraftService {
     this.utils = utils;
     this.logger = logger;
     this.apiService = apiService;
-  }
-
-  async installForge(forgeVersion: string, minecraftVersion: string) {
-    forgeVersion = forgeVersion.replace('forge-', '');
-
-    return;
-
-    // FIXME
-
-    let installerFile = new CachedFile();
-    installerFile.url = `https://maven.minecraftforge.net/net/minecraftforge/forge/${minecraftVersion}-${forgeVersion}/forge-${minecraftVersion}-${forgeVersion}-installer.jar`;
-
-    let downloadRequest = new DownloadRequest();
-    downloadRequest.file = installerFile;
-
-    await this.downloadService.download(downloadRequest);
-
-    let argLine: string[] = [
-      "-jar",
-      path.join(process.env.APP_DIRECTORY, installerFile.fullPath(), installerFile.fileName())
-    ];
-
-    // TODO Replace with java runtime downloaded
-    const processus = exec.spawn("C:\\Program Files\\Java\\jdk-17\\bin\\java.exe", argLine, {
-      cwd: process.env.APP_DIRECTORY,
-      detached: true
-    });
-
-    processus.stdout.on('data', (data: Buffer) => {
-      console.log(data.toString());
-    });
-
-    processus.stderr.on('data', (data: Buffer) => {
-      console.error(data.toString());
-    });
   }
 
   // TODO Rework when forge downloading work
@@ -125,7 +92,7 @@ export class MinecraftService implements IMinecraftService {
     // TODO Throw a dedicated launch exception
 
     if (instance.modLoader === 'Forge' && instance.versions.forge) {
-      await this.installForge(instance.versions.forge.name, minecraftVersion);
+      $eventEmitter.emit(ADD_TASK_EVENT_NAME, new InstallForgeTask(minecraftVersion, instance.versions.forge.name));
     }
 
     if (instance.installSide === 'client') {
@@ -149,8 +116,6 @@ export class MinecraftService implements IMinecraftService {
 
     $eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadJavaTask(versions[0].javaVersion.component));
 
-    return;
-
     // Accumulate args / main class of different manifest
     let newVersionManifest = versions[0];
     versions.forEach(version => {
@@ -171,163 +136,8 @@ export class MinecraftService implements IMinecraftService {
   }
 
   async launchGame(instance: InstanceSettings): Promise<void> {
-    this.logger.info(`Launching instance ${instance.id} ...`);
-    const exec = require('child_process');
+    const versionManifest = await this.beforeLaunch(instance);
 
-    return this.beforeLaunch(instance)
-    /*.then(versions => this.buildCommandLine(instance, versions))
-    .then(argLine => {
-      this.logger.info(argLine);
-
-      // TODO Change path to java executable to a java download directory by os arch
-      const processus = exec.spawn("C:\\Program Files\\Java\\jdk-17\\bin\\javaw.exe", argLine, {
-        cwd: path.join(process.env.APP_DIRECTORY, INSTANCE_PATH, instance.id),
-        detached: true
-      });
-
-      processus.stdout.on('data', (data: Buffer) => {
-        console.log(data.toString());
-      });
-
-      processus.stderr.on('data', (data: Buffer) => {
-        console.error(data.toString());
-      });
-    });*/
-  }
-
-  private async buildCommandLine(instance: InstanceSettings, versionsManifest: Versions): Promise<string[]> {
-    let argLine: string[] = [];
-    let versionName = instance.versions.minecraft.name;
-    let args = [
-      versionsManifest.mainClass
-    ];
-    let userAccount: Account | undefined = await this.authService.getProfile();
-
-    if (!userAccount) {
-      throw new Error("User account cannot be validated by auth server");
-    }
-
-    let defaultJvmArg = [
-      "-Djava.library.path=${natives_directory}",
-      "-Djna.tmpdir=${natives_directory}",
-      "-Dminecraft.launcher.brand=${launcher_name}",
-      "-Dminecraft.launcher.version=${launcher_version}",
-      "-cp",
-      "${classpath}",
-    ]
-
-    if (!versionsManifest.arguments) {
-      args = [...defaultJvmArg, ...args, ...versionsManifest.minecraftArguments.split(' ')];
-    } else {
-      args = [...versionsManifest.arguments.jvm, ...args, ...versionsManifest.arguments.game];
-    }
-
-    args.forEach(arg => {
-      if (typeof (arg) === 'object') {
-        let a: ArgRule = Object.assign(new ArgRule(), arg);
-
-        if (!a?.rules) {
-          return;
-        }
-
-        let rules = [...a.rules];
-        a.rules = [];
-        rules.forEach(rule => {
-          a.rules?.push(Object.assign(new Rule(), rule));
-        })
-
-        if (!a.isRuleValid()) {
-          return;
-        }
-
-        if (typeof a.value === 'string') {
-          argLine.push(a.value);
-        } else {
-          argLine.push(...a.value);
-        }
-      } else {
-        argLine.push(arg);
-      }
-    })
-
-    let regexIdentifier = /\${(\w*)}/;
-    for (let i = 0; i < argLine.length; i++) {
-      let newValue = null;
-      if (!RegExp(regexIdentifier).exec(argLine[i])) {
-        continue;
-      }
-
-      let argIdentifier;
-      do {
-        argIdentifier = RegExp(regexIdentifier).exec(argLine[i]);
-
-        if (!argIdentifier) {
-          break;
-        }
-
-        switch (argIdentifier[1]) {
-          case "natives_directory":
-            newValue = path.join(process.env.APP_DIRECTORY, VERSIONS_PATH, versionName, "natives");
-            break;
-          case "library_directory":
-            newValue = path.join(process.env.APP_DIRECTORY, LIBRARIES_PATH);
-            break;
-          case "launcher_name":
-            newValue = "Mine4Ease";
-            break;
-          case "launcher_version":
-            newValue = String(versionsManifest.minimumLauncherVersion);
-            break;
-          case "auth_player_name":
-            newValue = userAccount.username;
-            break;
-          case "version_name":
-            newValue = instance.versions.minecraft.name;
-            break;
-          case "game_directory":
-            newValue = path.join(process.env.APP_DIRECTORY, INSTANCE_PATH, instance.id);
-            break;
-          case "game_assets":
-            newValue = path.join(process.env.APP_DIRECTORY, ASSETS_PATH, "virtual", "legacy");
-            break;
-          case "assets_root":
-            newValue = path.join(process.env.APP_DIRECTORY, ASSETS_PATH);
-            break;
-          case "assets_index_name":
-            newValue = versionsManifest.assets;
-            break;
-          case "auth_uuid":
-            newValue = userAccount.uuid;
-            break;
-          case "auth_access_token":
-            newValue = userAccount.accessToken;
-            break;
-          case "user_type":
-            newValue = "msa";
-            break;
-          case "version_type":
-            newValue = versionsManifest.type;
-            break;
-          case "user_properties":
-            newValue = "{}";
-            break;
-          case "classpath":
-            let minecraftJarPath = path.join(process.env.APP_DIRECTORY, VERSIONS_PATH, versionName, versionName + '.jar');
-            newValue = [process.env.CLASSPATH, minecraftJarPath].join(process.platform === 'win32' ? ';' : ':');
-            break;
-          case "classpath_separator":
-            newValue = process.platform === 'win32' ? ';' : ':';
-            break;
-        }
-
-        if (newValue != null) {
-          argLine[i] = argLine[i].replace(regexIdentifier, newValue);
-        } else {
-          break;
-        }
-      } while (argIdentifier);
-    }
-
-    return Promise.resolve(argLine);
+    $eventEmitter.emit(ADD_TASK_EVENT_NAME, new LaunchGameTask(instance, versionManifest));
   }
 }

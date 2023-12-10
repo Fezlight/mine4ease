@@ -16,13 +16,18 @@ export class GlobalSettingsService implements IGlobalSettingService {
   async retrieveSettings(): Promise<Settings> {
     this.logger.info("Retrieving launcher settings ...");
 
+    let settings;
     if (this.cacheProvider.has(SETTINGS_KEY)) {
-      return this.cacheProvider.load(SETTINGS_KEY)
-      .then(cache => cache?.object);
+      settings = this.cacheProvider.loadObject(SETTINGS_KEY);
+    } else {
+      settings = await this.utils.readFile(SETTINGS_FILE)
+        .catch(() => "{}")
+        .then(JSON.parse);
     }
 
-    let settings = await this.utils.readFile(SETTINGS_FILE)
-    .then(JSON.parse);
+    if(!settings) {
+      settings = {};
+    }
 
     await this.cacheProvider.update(SETTINGS_KEY, settings);
 

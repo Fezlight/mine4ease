@@ -1,7 +1,7 @@
 import {Account, Cache, CacheProvider, IAuthService} from "mine4ease-ipc-api";
 import {AuthProvider} from "../providers/AuthProvider";
 import {CURRENT_ACCOUNT_STORAGE_CACHE, CURRENT_ACCOUNT_STORAGE_KEY} from "../config/CacheConfig";
-import {Logger} from "winston";
+import {debug, Logger} from "winston";
 
 export const ACCOUNTS_STORAGE_KEY = "ACCOUNTS"
 

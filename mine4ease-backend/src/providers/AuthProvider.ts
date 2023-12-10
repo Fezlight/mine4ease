@@ -4,6 +4,7 @@ import {AuthProtocolListener} from "../listeners/AuthProtocolListener";
 import {msalConfig, REDIRECT_URI} from "../config/AuthConfig";
 import {Account, CacheProvider} from "mine4ease-ipc-api";
 import {CURRENT_ACCOUNT_STORAGE_CACHE, CURRENT_ACCOUNT_STORAGE_KEY} from "../config/CacheConfig.ts";
+import {logger} from "../config/ObjectFactoryConfig.ts";
 
 export interface TokenResponse {
   IssueInstant: Date,
@@ -34,7 +35,10 @@ export class AuthProvider {
     this.clientApplication = new PublicClientApplication(msalConfig);
 
     cacheProvider.put(CURRENT_ACCOUNT_STORAGE_KEY, CURRENT_ACCOUNT_STORAGE_CACHE);
-    cacheProvider.loadObject(CURRENT_ACCOUNT_STORAGE_KEY).then(object => this.accessToken = object?.accessToken);
+    cacheProvider.loadObject(CURRENT_ACCOUNT_STORAGE_KEY)
+      .then(object => this.accessToken = object?.accessToken)
+      .catch(e => logger.error("Error when retrieving account profile settings", e))
+    ;
     cacheProvider.delete(CURRENT_ACCOUNT_STORAGE_KEY);
 
     this.cryptoProvider = new CryptoProvider();

@@ -2,6 +2,7 @@ import {DownloadRequest, Java, Task, TaskRunner} from "mine4ease-ipc-api";
 import {$eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig";
 import {DownloadFileTask} from "./FileTask.ts";
 import {EventEmitter} from "events";
+import path from "node:path";
 
 const MOJANG_JAVA_URL = "https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json";
 
@@ -41,6 +42,8 @@ export class DownloadJavaTask extends Task {
 
     if (javaFiles.files) {
       let files: Map<string, any> = new Map<string, any>(Object.entries(javaFiles.files));
+
+      process.env.JAVA_PATH = path.join("runtimes", this.javaType);
 
       for (const [filePath, file] of files) {
         if (!file.downloads) continue;
