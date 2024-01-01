@@ -17,7 +17,7 @@ import path from "node:path";
 import os from "os";
 import {DownloadFileTask, ExtractFileTask} from "./FileTask.ts";
 
-const SEPARATOR = process.platform === 'win32' ? ';' : ':';
+export const SEPARATOR = process.platform === 'win32' ? ';' : ':';
 
 export class DownloadLibrariesTask extends Task {
   private readonly taskRunner: TaskRunner;
@@ -59,8 +59,6 @@ export class DownloadLibrariesTask extends Task {
     });
 
     await this.taskRunner.process();
-
-    console.log(process.env.CLASSPATH_ARRAY);
   }
 }
 
@@ -124,7 +122,8 @@ export class DownloadClassifierTask extends Task {
 
     // No classifiers found for os abort process
     if (!nativeName || !this.lib.downloads?.classifiers[nativeName]) {
-      throw new Error(`No classifier found for native=${nativeName}`)
+      logger.warn(`No classifier found for lib=${this.lib.name} and os=${this.osName} and osArch=${this.osArch}`);
+      return;
     }
 
     let nativeLib = this.lib.downloads?.classifiers[nativeName];

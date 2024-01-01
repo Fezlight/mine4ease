@@ -38,10 +38,6 @@ export const logger = createLogger({
   handleRejections: true
 });
 
-//
-// If we're not in production then log to the `console` with the format:
-// `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
-//
 if (process.env.NODE_ENV !== 'production') {
   logger.add(new winston.transports.Console());
 }
@@ -57,7 +53,7 @@ export const $taskRunner = new TaskRunner(logger, $eventEmitter);
 export const $downloadService = new DownloadService($utils, logger);
 export const $authService = new AuthService($authProvider, $cacheProvider, logger);
 export const $apiService = new CurseApiService();
-export const $minecraftService = new MinecraftService($authService, $downloadService, $apiService, $utils, logger);
+export const $minecraftService = new MinecraftService($downloadService, $apiService, $utils, logger);
 export const $globalSettingsService = new GlobalSettingsService(logger, $cacheProvider, $utils);
 export const $instanceService = new InstanceService($minecraftService, $globalSettingsService, $utils, logger, $cacheProvider);
 

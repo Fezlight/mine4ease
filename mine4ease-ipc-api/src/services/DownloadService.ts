@@ -79,7 +79,7 @@ export class DownloadService implements IDownloadService {
         return reject(error);
       }
 
-      this.logger.info(`Downloading file ${request.file.fileName()} from ${request.file.url} ...`);
+      this.logger.debug(`Downloading file ${request.file.fileName()} from ${request.file.url} ...`);
       return resolve("");
     })
     .then(() => fetchWithRetry(request.file.url, this.logger))

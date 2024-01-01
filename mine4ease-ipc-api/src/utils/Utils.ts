@@ -174,10 +174,30 @@ export class Utils implements IUtils {
 
     return decompress(fullPath, destFullPath, {
       filter: file => {
-        if (file.type === 'file') {
-          return !excludes.includes(file.path)
+        let valid = true;
+        if (extractRequest.includes) {
+          if (file.type === 'file') {
+            valid &&= extractRequest.includes.includes(file.path);
+          } else {
+            valid &&= extractRequest.includes.includes(path.basename(file.path));
+          }
         }
-        return !excludes.includes(path.basename(file.path));
+
+        if (extractRequest.excludes) {
+          if (file.type === 'file') {
+            valid &&= !excludes.includes(file.path)
+          } else {
+            valid &&= !excludes.includes(path.basename(file.path));
+          }
+        }
+
+        return valid;
+      },
+      map: file => {
+        if (extractRequest.destName) {
+          file.path = extractRequest.destName;
+        }
+        return file;
       }
     });
   }

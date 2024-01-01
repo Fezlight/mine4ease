@@ -1,47 +1,34 @@
 import {
-  Account,
   ADD_TASK_EVENT_NAME,
-  ArgRule,
   Asset,
   Assets,
-  ASSETS_PATH,
   CurseApiService,
   DownloadRequest,
   DownloadService,
   IMinecraftService,
   InstanceSettings,
   Libraries,
-  LIBRARIES_PATH,
-  Rule,
   Utils,
   Version,
   Versions,
-  VERSIONS_PATH
 } from "mine4ease-ipc-api";
-import {INSTANCE_PATH} from "./InstanceService";
 import {Logger} from "winston";
-import {AuthService} from "./AuthService";
-import {CachedFile} from "mine4ease-ipc-api/src/models/file/CachedFile";
-import exec from "child_process";
 import path from "node:path";
 import {$eventEmitter} from "../config/ObjectFactoryConfig";
-import {DownloadFileTask} from "../task/FileTask.ts";
-import {DownloadAssetsTask} from "../task/DownloadAssetsTask.ts";
-import {DownloadLibrariesTask} from "../task/DownloadLibsTask.ts";
-import {DownloadJavaTask} from "../task/DownloadJavaTask.ts";
-import {InstallForgeTask} from "../task/InstallForgeTask.ts";
-import {LaunchGameTask} from "../task/LaunchGameTask.ts";
+import {DownloadFileTask} from "../task/FileTask";
+import {DownloadAssetsTask} from "../task/DownloadAssetsTask";
+import {DownloadLibrariesTask} from "../task/DownloadLibsTask";
+import {DownloadJavaTask} from "../task/DownloadJavaTask";
+import {InstallForgeTask} from "../task/InstallForgeTask";
+import {LaunchGameTask} from "../task/LaunchGameTask";
 
 export class MinecraftService implements IMinecraftService {
-  private authService: AuthService;
   private downloadService: DownloadService;
   private utils: Utils;
   private logger: Logger;
   private apiService: CurseApiService;
 
-  constructor(authService: AuthService, downloadService: DownloadService, apiService: CurseApiService,
-              utils: Utils, logger: Logger) {
-    this.authService = authService;
+  constructor(downloadService: DownloadService, apiService: CurseApiService, utils: Utils, logger: Logger) {
     this.downloadService = downloadService;
     this.utils = utils;
     this.logger = logger;
@@ -51,34 +38,38 @@ export class MinecraftService implements IMinecraftService {
   // TODO Rework when forge downloading work
   async downloadVersionManifest(instanceSettings: InstanceSettings): Promise<(Versions | Assets)[]> {
     const manifestFile: Version = Object.assign(new Version(), instanceSettings.versions.minecraft);
-
     let versionsManifest: Promise<Versions | Assets>[] = [];
     versionsManifest.push(this.downloadManifest(manifestFile));
-
     if (instanceSettings.versions.forge) {
-      let version = Object.assign(new Version(), instanceSettings.versions.forge);
-      let manifest = await this.apiService.searchModLoaderManifest(version.name);
-      version.content = new TextEncoder().encode(JSON.stringify(manifest));
-      version.name = `${manifestFile.name}-${version.name}`;
-      version.extension = ".json";
-
+      let version = await this.createForgeVersionObject(instanceSettings.versions.forge, manifestFile);
       versionsManifest.push(this.downloadManifest(version));
     } else if (instanceSettings.versions.fabric) {
       versionsManifest.push(this.downloadManifest(Object.assign(new Version(), instanceSettings.versions.fabric)));
     } else if (instanceSettings.versions.quilt) {
       versionsManifest.push(this.downloadManifest(Object.assign(new Version(), instanceSettings.versions.quilt)));
     }
-
     return Promise.all(versionsManifest);
   }
 
+  private async createForgeVersionObject(forgeVersion: Version, manifestFile: Version): Promise<Version | Asset> {
+    let version = Object.assign(new Version(), forgeVersion);
+    let manifest = await this.apiService.searchModLoaderManifest(version.name);
+    version.content = new TextEncoder().encode(JSON.stringify(manifest));
+    version.name = `${manifestFile.name}-${version.name}`;
+    version.extension = ".json";
+    return version;
+  }
+
   async downloadManifest(manifestFile: Version | Asset): Promise<Versions | Assets> {
-    let downloadRequest: DownloadRequest = new DownloadRequest();
+    const downloadRequest: DownloadRequest = new DownloadRequest()
     downloadRequest.file = manifestFile;
 
     this.logger.info(`Retrieving manifest '${downloadRequest.file.fileName()}' ...`);
+
+    const filePathToRead = path.join(downloadRequest.file.fullPath(), downloadRequest.file.fileName());
+
     return this.downloadService.download(downloadRequest)
-    .then(() => this.utils.readFile(path.join(downloadRequest.file.fullPath(), downloadRequest.file.fileName())))
+    .then(() => this.utils.readFile(filePathToRead))
     .then(JSON.parse);
   }
 
@@ -86,13 +77,18 @@ export class MinecraftService implements IMinecraftService {
   async beforeLaunch(instance: InstanceSettings): Promise<Versions> {
     let minecraftVersion = instance.versions.minecraft.name;
 
+    // Reinit classpath array to avoid overflow
+    process.env.CLASSPATH_ARRAY = "";
+
     // Read & download manifest version file
     let versions: Versions[] = await this.downloadVersionManifest(instance)
     .catch(err => this.logger.error("Error when trying to retrieve manifest file", err));
     // TODO Throw a dedicated launch exception
 
+    $eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadJavaTask(versions[0].javaVersion.component));
+
     if (instance.modLoader === 'Forge' && instance.versions.forge) {
-      $eventEmitter.emit(ADD_TASK_EVENT_NAME, new InstallForgeTask(minecraftVersion, instance.versions.forge.name));
+      $eventEmitter.emit(ADD_TASK_EVENT_NAME, new InstallForgeTask(minecraftVersion, instance.versions.forge.name, instance.installSide));
     }
 
     if (instance.installSide === 'client') {
@@ -113,8 +109,6 @@ export class MinecraftService implements IMinecraftService {
     })
 
     $eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadLibrariesTask(libsToDownloads, minecraftVersion, instance.installSide));
-
-    $eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadJavaTask(versions[0].javaVersion.component));
 
     // Accumulate args / main class of different manifest
     let newVersionManifest = versions[0];
