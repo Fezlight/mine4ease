@@ -47,7 +47,7 @@ export const $utils = new Utils(logger);
 export const $cacheProvider = new CacheProvider($utils);
 export const $authProvider = new AuthProvider($cacheProvider);
 export const $eventEmitter = new EventEmitter();
-export const $taskRunner = new TaskRunner(logger, $eventEmitter);
+export const $taskRunner = new TaskRunner(logger, $eventEmitter, false);
 
 // Service
 export const $downloadService = new DownloadService($utils, logger);

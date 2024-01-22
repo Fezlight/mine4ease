@@ -13,7 +13,7 @@ export abstract class File implements FileControl {
   size?: number;
   totalSize?: number;
   _name: string;
-  extension: string;
+  _extension: string;
   isRelativePath?: boolean;
   relativePath?: string;
   subPath?: string;
@@ -50,6 +50,17 @@ export abstract class File implements FileControl {
 
   get name() {
     return this._name;
+  }
+
+  set extension(ext: string) {
+    if(ext && !ext.includes('.')) {
+      ext = '.'.concat(ext);
+    }
+    this._extension = ext;
+  }
+
+  get extension() {
+    return this._extension;
   }
 
   fullPath(): string {

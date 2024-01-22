@@ -29,7 +29,7 @@ export class DownloadAssetsTask extends Task {
   async run(): Promise<void> {
     let downloadReq = new DownloadRequest();
     downloadReq.file = this.assetsFile;
-    this.taskRunner.addTask(new DownloadFileTask(downloadReq));
+    this.taskRunner.addTask(new DownloadFileTask(downloadReq), true);
 
     let assetsFile: Assets = await $utils.readFile(path.join(this.assetsFile.fullPath(), this.assetsFile.fileName()))
     .then(JSON.parse)
@@ -39,7 +39,7 @@ export class DownloadAssetsTask extends Task {
     logger.info(`Checking ${assets.size} assets...`);
 
     for (const [name, asset] of assets) {
-      this.taskRunner.addTask(new DownloadAssetTask(this.subEventEmitter, asset, name, assetsFile.virtual), false);
+      this.taskRunner.addTask(new DownloadAssetTask(this.subEventEmitter, asset, name, assetsFile.virtual));
     }
 
     await this.taskRunner.process();
@@ -78,7 +78,7 @@ export class DownloadAssetTask extends Task {
       let downloadReq = new DownloadRequest();
       downloadReq.file = asset;
 
-      this.eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadFileTask(downloadReq), false);
+      this._eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadFileTask(downloadReq), false);
     }
   }
 }

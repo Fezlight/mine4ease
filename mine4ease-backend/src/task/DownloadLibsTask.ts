@@ -2,6 +2,7 @@ import {
   ADD_TASK_EVENT_NAME,
   DownloadRequest,
   ExtractRequest,
+  File,
   InstallSide,
   Libraries,
   Library,
@@ -19,27 +20,38 @@ import {DownloadFileTask, ExtractFileTask} from "./FileTask.ts";
 
 export const SEPARATOR = process.platform === 'win32' ? ';' : ':';
 
-export class DownloadLibrariesTask extends Task {
-  private readonly taskRunner: TaskRunner;
-  private readonly libraries: Libraries[];
-  private readonly minecraftVersion: string;
-  private readonly installSide: InstallSide;
-  private readonly subEventEmitter: EventEmitter;
+function addToClassPath(file: File, isAddingToClassPath: boolean) {
+  if(!isAddingToClassPath) return;
 
-  constructor(libraries: Libraries[], minecraftVersion: string, installSide: InstallSide) {
+  if (!process.env.CLASSPATH_ARRAY) {
+    process.env.CLASSPATH_ARRAY = "";
+  }
+  process.env.CLASSPATH_ARRAY += path.join(process.env.APP_DIRECTORY, file.fullPath(), file.fileName()) + SEPARATOR;
+}
+
+export class DownloadLibrariesTask extends Task {
+  private readonly _taskRunner: TaskRunner;
+  private readonly _libraries: Libraries[];
+  private readonly _minecraftVersion: string;
+  private readonly _installSide: InstallSide;
+  private readonly _subEventEmitter: EventEmitter;
+  private readonly _isAddingToClassPath: boolean;
+
+  constructor(libraries: Libraries[], minecraftVersion: string, installSide: InstallSide, isAddingToClassPath: boolean = false) {
     super($eventEmitter, logger, () => "Checking libraries ...");
-    this.subEventEmitter = new EventEmitter();
-    this.taskRunner = new TaskRunner(logger, this.subEventEmitter);
-    this.libraries = libraries;
-    this.minecraftVersion = minecraftVersion;
-    this.installSide = installSide;
+    this._subEventEmitter = new EventEmitter();
+    this._taskRunner = new TaskRunner(logger, this._subEventEmitter);
+    this._libraries = libraries;
+    this._minecraftVersion = minecraftVersion;
+    this._installSide = installSide;
+    this._isAddingToClassPath = isAddingToClassPath;
   }
 
   async run(): Promise<void> {
     let osArch = os.arch();
     let osName = Object.keys(OS)[Object.values(OS).indexOf(os.platform())];
 
-    this.libraries.forEach((lib: Libraries) => {
+    this._libraries.forEach((lib: Libraries) => {
       let rules: Rule[] = [];
       lib.rules?.forEach(rule => {
         rules.push(Object.assign(new Rule(), rule));
@@ -47,18 +59,18 @@ export class DownloadLibrariesTask extends Task {
       lib.rules = lib.rules ? rules : undefined;
 
       if (lib.downloads?.artifact) {
-        this.taskRunner.addTask(new DownloadLibTask(this.subEventEmitter, lib, this.installSide), false);
+        this._taskRunner.addTask(new DownloadLibTask(this._subEventEmitter, lib, this._installSide, this._isAddingToClassPath));
       }
 
       if (lib.natives && lib.downloads?.classifiers) {
         let downloadClassifierTask = new DownloadClassifierTask(
-          this.subEventEmitter, lib, this.minecraftVersion, osName, osArch, this.installSide
+          this._subEventEmitter, lib, this._minecraftVersion, osName, osArch, this._installSide, this._isAddingToClassPath
         );
-        this.taskRunner.addTask(downloadClassifierTask, false);
+        this._taskRunner.addTask(downloadClassifierTask);
       }
     });
 
-    await this.taskRunner.process();
+    await this._taskRunner.process();
   }
 }
 
@@ -66,8 +78,9 @@ export class DownloadLibTask extends Task {
   private readonly lib: Library;
   private readonly rules: Rule[] | undefined;
   private readonly installSide: InstallSide;
+  private readonly _isAddingToClassPath: boolean;
 
-  constructor(eventEmitter: EventEmitter, lib: Libraries, installSide: InstallSide) {
+  constructor(eventEmitter: EventEmitter, lib: Libraries, installSide: InstallSide, isAddingToClassPath: boolean = false) {
     super(eventEmitter, logger, () => `Checking lib ${lib.name}`);
     if (!lib.downloads.artifact) {
       throw new Error(`No library artifact found for lib ${lib.name}`);
@@ -75,6 +88,7 @@ export class DownloadLibTask extends Task {
     this.lib = Object.assign(new Library(), lib.downloads.artifact);
     this.rules = lib.rules;
     this.installSide = installSide;
+    this._isAddingToClassPath = isAddingToClassPath;
   }
 
   async run(): Promise<void> {
@@ -84,12 +98,9 @@ export class DownloadLibTask extends Task {
     downloadReq.file = this.lib;
 
     if (downloadReq.isRuleValid()) {
-      if (!process.env.CLASSPATH_ARRAY) {
-        process.env.CLASSPATH_ARRAY = "";
-      }
-      process.env.CLASSPATH_ARRAY += path.join(process.env.APP_DIRECTORY, downloadReq.file.fullPath(), downloadReq.file.fileName()) + SEPARATOR;
+      addToClassPath(downloadReq.file, this._isAddingToClassPath);
 
-      this.eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadFileTask(downloadReq), false);
+      this._eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadFileTask(downloadReq), false);
     }
   }
 }
@@ -100,14 +111,16 @@ export class DownloadClassifierTask extends Task {
   private readonly osName: string;
   private readonly osArch: string;
   private readonly installSide: InstallSide;
+  private readonly _isAddingToClassPath: boolean;
 
-  constructor(eventEmitter: EventEmitter, lib: Libraries, minecraftVersion: string, osName: string, osArch: string, installSide: InstallSide) {
+  constructor(eventEmitter: EventEmitter, lib: Libraries, minecraftVersion: string, osName: string, osArch: string, installSide: InstallSide, isAddingToClassPath: boolean = false) {
     super(eventEmitter, logger, () => `Checking classifier ${lib.name}`, true);
     this.lib = lib;
     this.minecraftVersion = minecraftVersion;
     this.osName = osName;
     this.osArch = osArch;
     this.installSide = installSide;
+    this._isAddingToClassPath = isAddingToClassPath;
   }
 
   async run(): Promise<void> {
@@ -134,10 +147,7 @@ export class DownloadClassifierTask extends Task {
     downloadReqClassifier.file = Object.assign(new Library(), nativeLib);
 
     if (downloadReqClassifier.isRuleValid()) {
-      if (!process.env.CLASSPATH_ARRAY) {
-        process.env.CLASSPATH_ARRAY = "";
-      }
-      process.env.CLASSPATH_ARRAY += path.join(process.env.APP_DIRECTORY, downloadReqClassifier.file.fullPath(), downloadReqClassifier.file.fileName()) + SEPARATOR;
+      addToClassPath(downloadReqClassifier.file, this._isAddingToClassPath);
 
       // Extract classifiers
       let extractRequest = new ExtractRequest();
@@ -145,8 +155,8 @@ export class DownloadClassifierTask extends Task {
       extractRequest.destPath = path.join(VERSIONS_PATH, this.minecraftVersion, "natives");
       extractRequest.excludes = this.lib.extract?.excludes ?? [];
 
-      this.eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadFileTask(downloadReqClassifier), false);
-      this.eventEmitter.emit(ADD_TASK_EVENT_NAME, new ExtractFileTask(extractRequest), false);
+      this._eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadFileTask(downloadReqClassifier), false);
+      this._eventEmitter.emit(ADD_TASK_EVENT_NAME, new ExtractFileTask(extractRequest), false);
     }
   }
 }

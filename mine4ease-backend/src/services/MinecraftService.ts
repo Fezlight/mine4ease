@@ -8,6 +8,7 @@ import {
   IMinecraftService,
   InstanceSettings,
   Libraries,
+  TaskRunner,
   Utils,
   Version,
   Versions,
@@ -21,12 +22,13 @@ import {DownloadLibrariesTask} from "../task/DownloadLibsTask";
 import {DownloadJavaTask} from "../task/DownloadJavaTask";
 import {InstallForgeTask} from "../task/InstallForgeTask";
 import {LaunchGameTask} from "../task/LaunchGameTask";
+import {EventEmitter} from "events";
 
 export class MinecraftService implements IMinecraftService {
-  private downloadService: DownloadService;
-  private utils: Utils;
-  private logger: Logger;
-  private apiService: CurseApiService;
+  private readonly downloadService: DownloadService;
+  private readonly utils: Utils;
+  private readonly logger: Logger;
+  private readonly apiService: CurseApiService;
 
   constructor(downloadService: DownloadService, apiService: CurseApiService, utils: Utils, logger: Logger) {
     this.downloadService = downloadService;
@@ -76,6 +78,7 @@ export class MinecraftService implements IMinecraftService {
   // TODO REWORK to be more flexible on the merge of each manifest
   async beforeLaunch(instance: InstanceSettings): Promise<Versions> {
     let minecraftVersion = instance.versions.minecraft.name;
+    let taskRunner = new TaskRunner(this.logger, new EventEmitter());
 
     // Reinit classpath array to avoid overflow
     process.env.CLASSPATH_ARRAY = "";
@@ -85,10 +88,10 @@ export class MinecraftService implements IMinecraftService {
     .catch(err => this.logger.error("Error when trying to retrieve manifest file", err));
     // TODO Throw a dedicated launch exception
 
-    $eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadJavaTask(versions[0].javaVersion.component));
+    taskRunner.addTask(new DownloadJavaTask(versions[0].javaVersion.component));
 
     if (instance.modLoader === 'Forge' && instance.versions.forge) {
-      $eventEmitter.emit(ADD_TASK_EVENT_NAME, new InstallForgeTask(minecraftVersion, instance.versions.forge.name, instance.installSide));
+      taskRunner.addTask(new InstallForgeTask(minecraftVersion, instance.versions.forge, instance.installSide));
     }
 
     if (instance.installSide === 'client') {
@@ -98,17 +101,19 @@ export class MinecraftService implements IMinecraftService {
       let downloadReq = new DownloadRequest();
       downloadReq.file = client;
 
-      $eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadFileTask(downloadReq));
+      taskRunner.addTask(new DownloadFileTask(downloadReq));
     }
 
-    $eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadAssetsTask(versions[0]));
+    taskRunner.addTask(new DownloadAssetsTask(versions[0]));
 
     const libsToDownloads: Libraries[] = [];
     versions.forEach(version => {
       libsToDownloads.push(...version.libraries);
     })
 
-    $eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadLibrariesTask(libsToDownloads, minecraftVersion, instance.installSide));
+    taskRunner.addTask(new DownloadLibrariesTask(libsToDownloads, minecraftVersion, instance.installSide, true));
+
+    await taskRunner.process();
 
     // Accumulate args / main class of different manifest
     let newVersionManifest = versions[0];

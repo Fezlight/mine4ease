@@ -1,5 +1,6 @@
 import {Logger} from "winston";
 import {ExtractRequest} from "../models/ExtractRequest";
+import JSZip from "jszip";
 
 export interface IUtils {
   readFile(filePath: string, relative?: boolean, binary?: boolean): Promise<any>;
@@ -155,6 +156,45 @@ export class Utils implements IUtils {
     .catch(err => this.logger.error(err.message));
   }
 
+  async readFileMainClass(filePath: string): Promise<string> {
+    this.logger.debug(`Reading file main class : ${filePath} ...`);
+
+    let zip = new JSZip();
+    return this.readFile(filePath, true, true)
+    .then(async (data: ArrayBuffer) => {
+      await zip.loadAsync(data);
+      return zip.file("META-INF/MANIFEST.MF").async("string");
+    }).then(str => {
+      return str.split('\n')
+      .map(line => line.split(': '))
+      .find(arr => arr[0] === 'Main-Class')?.[1]
+      .trim();
+    });
+  }
+
+  async isFileExist(filePath: string): Promise<boolean> {
+    const path = require("node:path");
+    const fs = require("node:fs");
+
+    let directory = process.env.APP_DIRECTORY;
+    if (!directory) {
+      throw new Error("Unable to retrieve main directory");
+    }
+
+    let fullPath = path.join(directory, filePath);
+
+    this.logger.debug(`Checking if file exist : ${filePath} ...`);
+    return new Promise((resolve, reject) => {
+      fs.access(fullPath, fs.constants.F_OK, (err: NodeJS.ErrnoException | null) => {
+        if (err) {
+          resolve(false);
+        }
+
+        resolve(true);
+      })
+    })
+  }
+
   async extractFile(extractRequest: ExtractRequest): Promise<void> {
     const path = require("node:path");
     const decompress = require("decompress");
@@ -175,6 +215,7 @@ export class Utils implements IUtils {
     return decompress(fullPath, destFullPath, {
       filter: file => {
         let valid = true;
+        debugger;
         if (extractRequest.includes) {
           if (file.type === 'file') {
             valid &&= extractRequest.includes.includes(file.path);

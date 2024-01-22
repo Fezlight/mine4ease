@@ -3,7 +3,7 @@ import {v4 as uuidv4} from "uuid";
 import {EventEmitter} from 'events';
 
 export class Queue<T> {
-  private readonly _items: { [key: number]: T };
+  private _items: { [key: number]: T };
   private tailIndex: number;
   private headIndex: number;
 
@@ -27,6 +27,10 @@ export class Queue<T> {
 
   peek() {
     return this._items[this.headIndex];
+  }
+
+  wipe() {
+    this._items = {};
   }
 
   get length() {
@@ -53,10 +57,12 @@ export class TaskRunner {
   private queue = new Queue<Task>();
   private log: Logger;
   private isProcessing = false;
+  private readonly autoWipeQueueOnFail: boolean;
 
-  constructor(log: Logger, eventEmitter: EventEmitter) {
+  constructor(log: Logger, eventEmitter: EventEmitter, autoWipeQueueOnFail: boolean = true) {
     this.log = log;
-    eventEmitter.on(ADD_TASK_EVENT_NAME, (task: Task, processing: boolean) => {
+    this.autoWipeQueueOnFail = autoWipeQueueOnFail;
+    eventEmitter.on(ADD_TASK_EVENT_NAME, (task: Task, processing: boolean = true) => {
       this.addTask(task, processing);
     })
   }
@@ -69,17 +75,26 @@ export class TaskRunner {
       const task = this.queue.pop();
 
       await task.runTask()
-      .catch(e => this.log.error(e));
+        .catch(error => this.onFailed(error));
     }
 
     this.isProcessing = false;
   }
 
-  addTask(task: Task, processing: boolean = true) {
+  addTask(task: Task, processing: boolean = false) {
     this.queue.enqueue(task);
     if (processing) {
-      this.process();
+      this.process()
+        .catch(error => this.onFailed(error))
+        .catch(e => this.log.error(e.message));
     }
+  }
+
+  onFailed(error: any) {
+    if (this.autoWipeQueueOnFail) {
+      this.queue.wipe();
+    }
+    throw error;
   }
 
   currentTask(): Task {
@@ -91,17 +106,17 @@ export abstract class Task {
   protected _state: TaskState;
   protected readonly _name: string;
   protected readonly _id: string;
-  protected readonly log: Logger;
-  protected readonly eventEmitter: EventEmitter;
-  private readonly eventCanceled: boolean;
+  protected readonly _log: Logger;
+  protected readonly _eventEmitter: EventEmitter;
+  private readonly _eventCanceled: boolean;
 
   protected constructor(eventEmitter: EventEmitter, log: Logger, getName: () => string, eventCanceled: boolean = false) {
     this._id = uuidv4();
     this._name = getName();
-    this.eventEmitter = eventEmitter;
-    this.log = log;
-    this.log.debug(this._name);
-    this.eventCanceled = eventCanceled;
+    this._eventEmitter = eventEmitter;
+    this._log = log;
+    this._log.debug(this._name);
+    this._eventCanceled = eventCanceled;
     this.onCreated();
   }
 
@@ -109,12 +124,13 @@ export abstract class Task {
 
   async runTask() {
     this.state = "IN_PROGRESS";
+    this._log.debug(`Running task ${this._name}`);
     return this.run()
     .then(() => this.onFinished())
     .catch(e => this.onErrored(e));
   }
 
-  private set state(state: TaskState) {
+  set state(state: TaskState) {
     this._state = state;
     this.sendEvent();
   }
@@ -132,7 +148,7 @@ export abstract class Task {
   }
 
   sendEvent() {
-    if (this.eventCanceled) return;
+    if (this._eventCanceled) return;
 
     const event: TaskEvent = {
       id: this.id,
@@ -140,7 +156,7 @@ export abstract class Task {
       name: this.name
     };
 
-    this.eventEmitter.emit(TASK_EVENT_NAME, event);
+    this._eventEmitter.emit(TASK_EVENT_NAME, event);
   }
 
   onCreated() {
@@ -149,7 +165,8 @@ export abstract class Task {
 
   onErrored(e: Error) {
     this.state = "FAILED";
-    this.log.error("", e);
+    this._log.error("", e);
+    throw new Error(`${this._name} failed`);
   }
 
   onFinished() {
