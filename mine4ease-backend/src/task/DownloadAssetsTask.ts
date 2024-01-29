@@ -29,7 +29,7 @@ export class DownloadAssetsTask extends Task {
   async run(): Promise<void> {
     let downloadReq = new DownloadRequest();
     downloadReq.file = this.assetsFile;
-    this.taskRunner.addTask(new DownloadFileTask(downloadReq), true);
+    await $downloadService.download(downloadReq);
 
     let assetsFile: Assets = await $utils.readFile(path.join(this.assetsFile.fullPath(), this.assetsFile.fileName()))
     .then(JSON.parse)

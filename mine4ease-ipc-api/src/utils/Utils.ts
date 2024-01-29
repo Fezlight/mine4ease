@@ -259,9 +259,18 @@ export class Utils implements IUtils {
     } else if (OS === 'Windows_NT') {
       OS = "windows";
     } else {
-      throw new Error(`Unknow OS : ${OS}`);
+      throw new Error(`Unknown OS : ${OS}`);
     }
 
     return {platform, OS};
+  }
+
+  getJavaExecutablePath(): string {
+    let os = this.getPlatform().OS;
+
+    if(os === 'windows') {
+      return '/bin/javaw.exe';
+    }
+    return '/bin/javaw'
   }
 }

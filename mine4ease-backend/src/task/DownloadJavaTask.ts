@@ -17,7 +17,7 @@ export class DownloadJavaTask extends Task {
 
   constructor(javaType: string) {
     super($eventEmitter, logger, () => `Checking java '${javaType}'...`);
-    this.javaType = javaType;
+    this.javaType = javaType ?? 'jre-legacy';
     this.osSpecs = $utils.getPlatform();
     this.subEventEmitter = new EventEmitter();
     this.taskRunner = new TaskRunner(logger, this.subEventEmitter);

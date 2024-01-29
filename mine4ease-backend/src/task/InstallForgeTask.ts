@@ -3,6 +3,7 @@ import {
   CachedFile,
   DownloadRequest,
   ExtractRequest,
+  File,
   InstallSide,
   Library,
   Task,
@@ -42,14 +43,63 @@ export class InstallForgeTask extends Task {
       return Promise.resolve();
     }
 
-    let installerFile = new CachedFile();
-    installerFile.url = `https://maven.minecraftforge.net/net/minecraftforge/forge/${this._minecraftVersion}-${this._forgeVersion}/forge-${this._minecraftVersion}-${this._forgeVersion}-installer.jar`;
+    let installerFile = await this.downloadInstaller();
 
-    let downloadRequest = new DownloadRequest();
-    downloadRequest.file = installerFile;
+    let extractRequest = new ExtractRequest();
+    extractRequest.file = installerFile;
+    extractRequest.destPath = forgeVersionPath;
+    extractRequest.includes = [
+      "install_profile.json"
+    ];
 
-    await $downloadService.download(downloadRequest);
+    // Extract install_profiles.json
+    await $utils.extractFile(extractRequest);
 
+    const installProfile = await $utils.readFile(path.join(extractRequest.destPath, "install_profile.json"))
+    .then(JSON.parse);
+
+    if(installProfile.versionInfo) {
+      await this.runLegacyProcess(forgeVersionPath, installerFile, installProfile);
+    } else {
+      await this.runProcess(forgeVersionPath, installerFile, installProfile);
+    }
+
+    await this._taskRunner.process();
+
+    const fs = require('node:fs');
+    fs.writeFile(path.join(process.env.APP_DIRECTORY, forgeVersionPath, '.installed'), '', (err) => {
+      if(err) throw Error('Error when writing validation file \'.installed\'');
+    });
+  }
+
+  async runLegacyProcess(forgeVersionPath: string, installerFile: File, installProfile: any) {
+    let file = {
+      data: JSON.stringify(installProfile.versionInfo, null, 2),
+      path: forgeVersionPath,
+      filename: `${this._minecraftVersion}-forge-${this._forgeVersion}.json`
+    };
+
+    // Extract forge version.json
+    await $utils.saveFile(file);
+
+    let minecraftForgeJar = Library.resolve(installProfile.install.path);
+    let extractRequest = new ExtractRequest();
+    extractRequest.file = installerFile;
+    extractRequest.destPath = minecraftForgeJar.fullPath();
+    extractRequest.destName = minecraftForgeJar.fileName();
+    extractRequest.includes = [
+      installProfile.install.filePath
+    ];
+
+    // Extract forge version.json
+    await $utils.extractFile(extractRequest);
+
+    let libs = installProfile.versionInfo.libraries.filter(lib => !lib.name.includes(installProfile.install.path));
+
+    this._taskRunner.addTask(new DownloadLibrariesTask(libs, this._minecraftVersion, this._installSide, true));
+  }
+
+  async runProcess(forgeVersionPath: string, installerFile: File, installProfile: any) {
     let extractRequest = new ExtractRequest();
     extractRequest.file = installerFile;
     extractRequest.destPath = forgeVersionPath;
@@ -60,17 +110,6 @@ export class InstallForgeTask extends Task {
 
     // Extract forge version.json
     await $utils.extractFile(extractRequest);
-
-    extractRequest.destName = undefined;
-    extractRequest.includes = [
-      "install_profile.json"
-    ];
-
-    // Extract install_profiles.json
-    await $utils.extractFile(extractRequest);
-
-    const installProfile = await $utils.readFile(path.join(extractRequest.destPath, "install_profile.json"))
-    .then(JSON.parse);
 
     this._taskRunner.addTask(new DownloadLibrariesTask(installProfile.libraries, this._minecraftVersion, this._installSide));
 
@@ -99,13 +138,18 @@ export class InstallForgeTask extends Task {
 
       this._taskRunner.addTask(new InstallForgeProcessorTask(processor.jar, processor.classpath, processor.args, this._installSide, this._minecraftVersion, map));
     });
+  }
 
-    await this._taskRunner.process();
+  async downloadInstaller(): Promise<File> {
+    let installerFile = new CachedFile();
+    installerFile.url = `https://maven.minecraftforge.net/net/minecraftforge/forge/${this._minecraftVersion}-${this._forgeVersion}/forge-${this._minecraftVersion}-${this._forgeVersion}-installer.jar`;
 
-    const fs = require('node:fs');
-    fs.writeFile(path.join(process.env.APP_DIRECTORY, forgeVersionPath, '.installed'), '', (err) => {
-      if(err) throw Error('Error when writing validation file \'.installed\'');
-    });
+    let downloadRequest = new DownloadRequest();
+    downloadRequest.file = installerFile;
+
+    await $downloadService.download(downloadRequest);
+
+    return installerFile;
   }
 
   onFinished() {
@@ -195,7 +239,7 @@ export class InstallForgeProcessorTask extends Task {
     this._log.debug(`Command Line : ${cmdLine}`);
 
     return new Promise((resolve, reject) => {
-      const processus = exec.spawn(path.join(javaPath, "/bin/javaw.exe"), cmdLine, {
+      const processus = exec.spawn(path.join(javaPath, $utils.getJavaExecutablePath()), cmdLine, {
         cwd: path.join(process.env.APP_DIRECTORY)
       });
 

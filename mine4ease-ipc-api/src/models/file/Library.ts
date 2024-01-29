@@ -33,4 +33,9 @@ export class Library extends File {
   }
 }
 
+export interface LegacyForgeLib {
+  clientreq?:boolean;
+  serverreq?: boolean;
+}
+
 

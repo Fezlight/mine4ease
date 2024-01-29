@@ -88,11 +88,7 @@ export class MinecraftService implements IMinecraftService {
     .catch(err => this.logger.error("Error when trying to retrieve manifest file", err));
     // TODO Throw a dedicated launch exception
 
-    taskRunner.addTask(new DownloadJavaTask(versions[0].javaVersion.component));
-
-    if (instance.modLoader === 'Forge' && instance.versions.forge) {
-      taskRunner.addTask(new InstallForgeTask(minecraftVersion, instance.versions.forge, instance.installSide));
-    }
+    taskRunner.addTask(new DownloadJavaTask(versions[0].javaVersion?.component));
 
     if (instance.installSide === 'client') {
       let client = Object.assign(new Version(), versions[0].downloads.client);
@@ -102,6 +98,10 @@ export class MinecraftService implements IMinecraftService {
       downloadReq.file = client;
 
       taskRunner.addTask(new DownloadFileTask(downloadReq));
+    }
+
+    if (instance.modLoader === 'Forge' && instance.versions.forge) {
+      taskRunner.addTask(new InstallForgeTask(minecraftVersion, instance.versions.forge, instance.installSide));
     }
 
     taskRunner.addTask(new DownloadAssetsTask(versions[0]));
@@ -125,10 +125,13 @@ export class MinecraftService implements IMinecraftService {
         if (!newVersionManifest.minecraftArguments) {
           newVersionManifest.minecraftArguments = '';
         }
-        newVersionManifest.minecraftArguments += version.minecraftArguments ?? '';
+        // TODO Check duplicate arguments when merging
+        // TODO newVersionManifest.minecraftArguments += version.minecraftArguments ?? '';
+        newVersionManifest.minecraftArguments = version.minecraftArguments ?? '';
+      } else {
+        newVersionManifest.arguments.jvm.push(...version.arguments.jvm);
+        newVersionManifest.arguments.game.push(...version.arguments.game);
       }
-      newVersionManifest.arguments.jvm.push(...version.arguments.jvm);
-      newVersionManifest.arguments.game.push(...version.arguments.game);
     })
 
     return Promise.resolve(newVersionManifest);

@@ -4,6 +4,7 @@ import {
   ExtractRequest,
   File,
   InstallSide,
+  LegacyForgeLib,
   Libraries,
   Library,
   OS,
@@ -26,7 +27,13 @@ function addToClassPath(file: File, isAddingToClassPath: boolean) {
   if (!process.env.CLASSPATH_ARRAY) {
     process.env.CLASSPATH_ARRAY = "";
   }
-  process.env.CLASSPATH_ARRAY += path.join(process.env.APP_DIRECTORY, file.fullPath(), file.fileName()) + SEPARATOR;
+  let lib = path.join(process.env.APP_DIRECTORY, file.fullPath(), file.fileName()) + SEPARATOR;
+
+  if(process.env.CLASSPATH_ARRAY.includes(lib)) {
+    return;
+  }
+
+  process.env.CLASSPATH_ARRAY += lib;
 }
 
 export class DownloadLibrariesTask extends Task {
@@ -60,6 +67,8 @@ export class DownloadLibrariesTask extends Task {
 
       if (lib.downloads?.artifact) {
         this._taskRunner.addTask(new DownloadLibTask(this._subEventEmitter, lib, this._installSide, this._isAddingToClassPath));
+      } else if(!lib.natives) {
+        this._taskRunner.addTask(new DownloadLegacyLibTask(this._subEventEmitter, lib, this._installSide, this._isAddingToClassPath));
       }
 
       if (lib.natives && lib.downloads?.classifiers) {
@@ -71,6 +80,51 @@ export class DownloadLibrariesTask extends Task {
     });
 
     await this._taskRunner.process();
+  }
+}
+
+export class DownloadLegacyLibTask extends Task {
+  private readonly _lib: Library & LegacyForgeLib;
+  private readonly _libUrl: string;
+  private readonly _rules: Rule[] | undefined;
+  private readonly _installSide: InstallSide;
+  private readonly _isAddingToClassPath: boolean;
+
+  constructor(eventEmitter: EventEmitter, lib: Libraries, installSide: InstallSide, isAddingToClassPath: boolean = false) {
+    super(eventEmitter, logger, () => `Checking lib ${lib.name}`);
+    this._lib = Library.resolve(lib.name);
+    this._libUrl = lib.url;
+    this._rules = lib.rules;
+    this._installSide = installSide;
+    this._isAddingToClassPath = isAddingToClassPath;
+  }
+
+  async run(): Promise<void> {
+    let valid = true;
+
+    if(this._lib.clientreq != null || this._lib.serverreq != null) {
+      valid = false;
+      if(this._lib.clientreq != null && this._installSide === 'client') {
+        valid = this._lib.clientreq;
+      } else if(this._lib.serverreq != null && this._installSide === 'server') {
+        valid = this._lib.serverreq;
+      }
+    }
+    let url = this._libUrl || 'https://libraries.minecraft.net/';
+    url += this._lib.subPath?.replaceAll(/\\/g, '/') + '/' + this._lib.fileName();
+
+    this._lib.url = url;
+
+    let downloadReq = new DownloadRequest();
+    downloadReq.installSide = this._installSide;
+    downloadReq.rules = this._rules;
+    downloadReq.file = this._lib;
+
+    if (downloadReq.isRuleValid() && valid) {
+      addToClassPath(downloadReq.file, this._isAddingToClassPath);
+
+      this._eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadFileTask(downloadReq), false);
+    }
   }
 }
 

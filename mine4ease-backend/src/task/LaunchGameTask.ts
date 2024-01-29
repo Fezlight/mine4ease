@@ -11,7 +11,7 @@ import {
 } from "mine4ease-ipc-api";
 import path from "node:path";
 import {INSTANCE_PATH} from "../services/InstanceService";
-import {$authService, $eventEmitter, logger} from "../config/ObjectFactoryConfig";
+import {$authService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig";
 import {SEPARATOR} from "./DownloadLibsTask.ts";
 
 async function buildCommandLine(instance: InstanceSettings, versionsManifest: Versions) {
@@ -173,8 +173,7 @@ export class LaunchGameTask extends Task {
     }
     let javaPath = path.join(process.env.APP_DIRECTORY, process.env.JAVA_PATH);
 
-    // TODO Pick the right java executable related to os platform
-    const processus = exec.spawn(path.join(javaPath, "/bin/javaw.exe"), cmdLine, {
+    const processus = exec.spawn(path.join(javaPath, $utils.getJavaExecutablePath()), cmdLine, {
       cwd: path.join(process.env.APP_DIRECTORY, INSTANCE_PATH, this.instance.id),
       detached: true
     });

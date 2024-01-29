@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import {AuthService} from "../../shared/services/AuthService.ts";
 import {inject, ref} from "vue";
 import {useRouter} from "vue-router";

@@ -43,6 +43,7 @@ export class Libraries {
     artifact: Library;
     classifiers: { [key: string]: Library };
   };
+  url: string;
   name: string;
   rules?: Rule[];
   extract: {
