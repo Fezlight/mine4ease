@@ -3,13 +3,9 @@ import {createLogger, format} from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import {CacheProvider, CurseApiService, DownloadService, TaskRunner, Utils} from "mine4ease-ipc-api";
 import {AuthProvider} from "../providers/AuthProvider";
-import {MinecraftService} from "../services/MinecraftService.ts";
-import {InstanceService} from "../services/InstanceService.ts";
-import {AuthService} from "../services/AuthService";
 import path from "node:path";
 import {app} from "electron";
 import {defaultCaches} from "./CacheConfig";
-import {GlobalSettingsService} from "../services/GlobalSettingsService";
 import {EventEmitter} from 'events';
 
 
@@ -19,7 +15,7 @@ process.env.APP_DIRECTORY = path.join(app.getPath('appData'), '.mine4ease');
 process.env.LOG_DIRECTORY = process.env.APP_DIRECTORY + '/logs'
 
 export const logger = createLogger({
-  level: 'info',
+  level: 'debug',
   format: combine(
     timestamp(),
     format.json()
@@ -51,11 +47,7 @@ export const $taskRunner = new TaskRunner(logger, $eventEmitter, false);
 
 // Service
 export const $downloadService = new DownloadService($utils, logger);
-export const $authService = new AuthService($authProvider, $cacheProvider, logger);
 export const $apiService = new CurseApiService();
-export const $minecraftService = new MinecraftService($downloadService, $apiService, $utils, logger);
-export const $globalSettingsService = new GlobalSettingsService(logger, $cacheProvider, $utils);
-export const $instanceService = new InstanceService($minecraftService, $globalSettingsService, $utils, logger, $cacheProvider);
 
 // Add default caches
 defaultCaches.forEach((v, k) => $cacheProvider.put(k, v));

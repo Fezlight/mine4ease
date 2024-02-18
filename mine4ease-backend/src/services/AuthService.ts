@@ -1,7 +1,8 @@
 import {Account, Cache, CacheProvider, IAuthService} from "mine4ease-ipc-api";
 import {AuthProvider} from "../providers/AuthProvider";
 import {CURRENT_ACCOUNT_STORAGE_CACHE, CURRENT_ACCOUNT_STORAGE_KEY} from "../config/CacheConfig";
-import {debug, Logger} from "winston";
+import {Logger} from "winston";
+import {$authProvider, $cacheProvider, logger} from "../config/ObjectFactoryConfig.ts";
 
 export const ACCOUNTS_STORAGE_KEY = "ACCOUNTS"
 
@@ -22,7 +23,7 @@ export class AuthService implements IAuthService {
     .then(data => this.authProvider.loginXboxLive(data.accessToken))
     .then(tokenResponse => this.authProvider.loginMinecraft(tokenResponse.DisplayClaims.xui[0]?.uhs, tokenResponse.Token));
 
-    this.initAuthCache(account);
+    await this.initAuthCache(account);
 
     return account;
   }
@@ -48,11 +49,14 @@ export class AuthService implements IAuthService {
     return this.authProvider.logout();
   }
 
-  initAuthCache(account: Account) {
+  async initAuthCache(account: Account) {
     let cache = {
       ...CURRENT_ACCOUNT_STORAGE_CACHE,
       object: account
     };
     this.cacheProvider.put(CURRENT_ACCOUNT_STORAGE_KEY, Object.assign(new Cache(), cache));
+    await this.cacheProvider.saveAll();
   }
 }
+
+export const $authService = new AuthService($authProvider, $cacheProvider, logger);

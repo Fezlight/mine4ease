@@ -26,3 +26,16 @@ export class ExtractFileTask extends Task {
     await $utils.extractFile(this.extractReq);
   }
 }
+
+export class DeleteFileTask extends Task {
+  private readonly _path: string;
+
+  constructor(path: string, eventCancelled: boolean = true) {
+    super($eventEmitter, logger, () => `Deleting file at ${path} ...`, eventCancelled);
+    this._path = path;
+  }
+
+  async run(): Promise<void> {
+    await $utils.deleteFile(this._path);
+  }
+}

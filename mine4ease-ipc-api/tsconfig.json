@@ -5,7 +5,7 @@
     "lib": ["ES2023"],
     "declaration": true,
     "outDir": "./dist",
-    "moduleResolution":"node",
+    "moduleResolution":"bundler",
     "allowSyntheticDefaultImports": true
   },
   "include": [

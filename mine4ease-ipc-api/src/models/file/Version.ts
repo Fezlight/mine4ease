@@ -5,7 +5,6 @@ export const VERSIONS_PATH = "/versions"
 export class Version extends File {
   latest?: boolean;
   recommended?: boolean;
-  installed?: boolean;
 
   set name(name: string) {
     this._name = name;

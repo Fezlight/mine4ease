@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import {contextBridge, ipcRenderer} from 'electron'
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', withPrototype(ipcRenderer))
@@ -24,7 +24,7 @@ function withPrototype(obj: Record<string, any>) {
 
 // --------- Preload scripts loading ---------
 function domReady(condition: DocumentReadyState[] = ['complete', 'interactive']) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     if (condition.includes(document.readyState)) {
       resolve(true)
     } else {
@@ -40,12 +40,12 @@ function domReady(condition: DocumentReadyState[] = ['complete', 'interactive'])
 const safeDOM = {
   append(parent: HTMLElement, child: HTMLElement) {
     if (!Array.from(parent.children).find(e => e === child)) {
-      parent.appendChild(child)
+      return parent.appendChild(child)
     }
   },
   remove(parent: HTMLElement, child: HTMLElement) {
     if (Array.from(parent.children).find(e => e === child)) {
-      parent.removeChild(child)
+      return parent.removeChild(child)
     }
   },
 }
@@ -110,7 +110,7 @@ function useLoading() {
 const { appendLoading, removeLoading } = useLoading()
 domReady().then(appendLoading)
 
-window.onmessage = ev => {
+window.onmessage = (ev) => {
   ev.data.payload === 'removeLoading' && removeLoading()
 }
 

@@ -10,8 +10,8 @@ import {
 } from "mine4ease-ipc-api";
 import {$downloadService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig";
 import {EventEmitter} from "events";
-import path from "node:path";
-import {DownloadFileTask} from "./FileTask.ts";
+import {join, parse} from "path";
+import {DownloadFileTask} from "./FileTask";
 
 export class DownloadAssetsTask extends Task {
   private readonly taskRunner: TaskRunner;
@@ -31,7 +31,7 @@ export class DownloadAssetsTask extends Task {
     downloadReq.file = this.assetsFile;
     await $downloadService.download(downloadReq);
 
-    let assetsFile: Assets = await $utils.readFile(path.join(this.assetsFile.fullPath(), this.assetsFile.fileName()))
+    let assetsFile: Assets = await $utils.readFile(join(this.assetsFile.fullPath(), this.assetsFile.fileName()))
     .then(JSON.parse)
     .then(assets => Object.assign(new Assets(), assets));
 
@@ -65,9 +65,9 @@ export class DownloadAssetTask extends Task {
     let folder = asset.sha1!.substring(0, 2);
     asset.url = MINECRAFT_RESSOURCES_URL + `/${folder}/${asset.name}`
     if (this.isVirtual) {
-      asset.subPath = `${asset.subPath}/${path.parse(this.path).dir}`;
-      asset.name = path.parse(this.path).name;
-      asset.extension = path.parse(this.path).ext;
+      asset.subPath = `${asset.subPath}/${parse(this.path).dir}`;
+      asset.name = parse(this.path).name;
+      asset.extension = parse(this.path).ext;
     } else {
       asset.subPath = `${asset.subPath}/${folder}`;
     }

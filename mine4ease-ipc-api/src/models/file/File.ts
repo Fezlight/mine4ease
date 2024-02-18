@@ -14,7 +14,6 @@ export abstract class File implements FileControl {
   totalSize?: number;
   _name: string;
   _extension: string;
-  isRelativePath?: boolean;
   relativePath?: string;
   subPath?: string;
   installSide?: InstallSide;
@@ -64,7 +63,7 @@ export abstract class File implements FileControl {
   }
 
   fullPath(): string {
-    if(this.isRelativePath) {
+    if(this.relativePath) {
       const path = require('node:path');
       return path.join(this.relativePath, this.filePath());
     }

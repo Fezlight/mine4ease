@@ -4,20 +4,20 @@ import {
   IGlobalSettingService,
   IInstanceService,
   IMinecraftService,
-  Instance,
+  INSTANCE_PATH,
   InstanceSettings,
-  Mod,
-  ResourcePack,
   Settings,
-  Shader,
-  Utils
+  Utils,
+  Version
 } from "mine4ease-ipc-api";
 import path from "node:path";
 import {Logger} from "winston";
 import {SETTINGS_KEY} from "../config/CacheConfig";
+import {$cacheProvider, $utils, logger} from "../config/ObjectFactoryConfig.ts";
+import {$globalSettingsService} from "./GlobalSettingsService.ts";
+import {$minecraftService} from "./MinecraftService.ts";
 
 export const INSTANCE_FILE = "instance.json";
-export const INSTANCE_PATH = "instances/";
 
 export class InstanceService implements IInstanceService {
   private minecraftService: IMinecraftService;
@@ -33,21 +33,6 @@ export class InstanceService implements IInstanceService {
     this.utils = utils;
     this.logger = logger;
     this.cacheProvider = cacheProvider;
-  }
-
-  addMod(instance: Instance, mod: Mod): Promise<Mod> {
-    this.logger.info("Adding mod %s to instance %s", mod, instance.id);
-    return Promise.resolve(new Mod());
-  }
-
-  addResourcePack(instance: Instance, resourcePack: ResourcePack): Promise<ResourcePack> {
-    this.logger.info("Adding resource pack %s to instance %s", resourcePack, instance.id);
-    return Promise.resolve(new ResourcePack());
-  }
-
-  addShader(instance: Instance, shader: Shader): Promise<Shader> {
-    this.logger.info("Adding shader %s to instance %s", shader, instance.id);
-    return Promise.resolve(new Shader());
   }
 
   async createInstance(instance: InstanceSettings): Promise<InstanceSettings> {
@@ -74,7 +59,7 @@ export class InstanceService implements IInstanceService {
 
   async getInstanceById(id: string): Promise<InstanceSettings> {
     this.logger.info("Retrieving instance with id : " + id);
-    return this.utils.readFile(INSTANCE_PATH + id + '/' + INSTANCE_FILE)
+    return this.utils.readFile(path.join(INSTANCE_PATH, id, INSTANCE_FILE))
     .catch((error: Error) => {
       if (error.name === 'FILE_NOT_FOUND') {
         let error = new Error("Instance not found");
@@ -89,7 +74,7 @@ export class InstanceService implements IInstanceService {
 
   async deleteInstance(id: string): Promise<void> {
     this.logger.info("Delete instance with id : " + id);
-    return this.utils.deleteFile(INSTANCE_PATH + id)
+    return this.utils.deleteFile(path.join(INSTANCE_PATH, id))
     .catch((error: Error) => {
       if (error.name === 'FILE_NOT_FOUND') {
         return;
@@ -122,7 +107,8 @@ export class InstanceService implements IInstanceService {
     // Save instance without iconPath
     const {iconName, ...instance} = instanceSettings;
 
-    await this.minecraftService.downloadVersionManifest!(instanceSettings);
+    const manifestFile: Version = Object.assign(new Version(), instance.versions.minecraft);
+    await this.minecraftService.downloadManifest!(manifestFile);
 
     return this.utils.saveFile({
       data: JSON.stringify(instance, null, 2),
@@ -152,3 +138,5 @@ export class InstanceService implements IInstanceService {
     });
   }
 }
+
+export const $instanceService = new InstanceService($minecraftService, $globalSettingsService, $utils, logger, $cacheProvider);

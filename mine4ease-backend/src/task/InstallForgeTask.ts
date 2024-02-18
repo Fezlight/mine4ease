@@ -12,19 +12,19 @@ import {
   VERSIONS_PATH
 } from "mine4ease-ipc-api";
 import {$downloadService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig";
-import path from "node:path";
-import exec from "child_process";
-import {DownloadLibrariesTask, SEPARATOR} from "./DownloadLibsTask.ts";
+import {join} from "path";
+import {spawn} from "child_process";
+import {DownloadLibrariesTask, SEPARATOR} from "./DownloadLibsTask";
 import {EventEmitter} from "events";
-import {ExtractFileTask} from "./FileTask.ts";
+import {DeleteFileTask, ExtractFileTask} from "./FileTask";
 
 export class InstallForgeTask extends Task {
   private readonly _taskRunner: TaskRunner;
   private readonly _minecraftVersion: string;
   private readonly _forgeVersion: string;
-  private readonly _forge: Version;
   private readonly _installSide: InstallSide;
   private readonly _subEventEmitter: EventEmitter;
+  private readonly _versionJsonName: string;
 
   constructor(minecraftVersion: string, forge: Version, installSide: InstallSide) {
     super($eventEmitter, logger, () => `Installing ${forge.name}...`);
@@ -32,42 +32,47 @@ export class InstallForgeTask extends Task {
     this._subEventEmitter = new EventEmitter();
     this._taskRunner = new TaskRunner(logger, this._subEventEmitter);
     this._forgeVersion = forge.name.replace('forge-', '');
-    this._forge = forge;
     this._installSide = installSide;
+    this._versionJsonName = `${this._minecraftVersion}-forge-${this._forgeVersion}.json`;
   }
 
   async run(): Promise<void> {
-    let forgeVersionPath = path.join(VERSIONS_PATH, `${this._minecraftVersion}-forge-${this._forgeVersion}`);
-    let alreadyInstalled = await $utils.isFileExist(path.join(forgeVersionPath, '.installed'));
-    if(alreadyInstalled) {
-      return Promise.resolve();
-    }
+    let forgeVersionPath = join(VERSIONS_PATH, `${this._minecraftVersion}-forge-${this._forgeVersion}`);
+    let alreadyInstalled = await $utils.isFileExist(join(forgeVersionPath, '.installed'));
+    if(!alreadyInstalled) {
+      let installerFile = await this.downloadInstaller();
 
-    let installerFile = await this.downloadInstaller();
+      let extractRequest = new ExtractRequest();
+      extractRequest.file = installerFile;
+      extractRequest.destPath = forgeVersionPath;
+      extractRequest.includes = [
+        "install_profile.json"
+      ];
 
-    let extractRequest = new ExtractRequest();
-    extractRequest.file = installerFile;
-    extractRequest.destPath = forgeVersionPath;
-    extractRequest.includes = [
-      "install_profile.json"
-    ];
+      // Extract install_profiles.json
+      await $utils.extractFile(extractRequest);
 
-    // Extract install_profiles.json
-    await $utils.extractFile(extractRequest);
+      const installProfile = await $utils.readFile(join(extractRequest.destPath, "install_profile.json"))
+      .then(JSON.parse);
 
-    const installProfile = await $utils.readFile(path.join(extractRequest.destPath, "install_profile.json"))
-    .then(JSON.parse);
+      if(installProfile.versionInfo) {
+        await this.runLegacyProcess(forgeVersionPath, installerFile, installProfile);
+      } else {
+        await this.runProcess(forgeVersionPath, installerFile, installProfile);
+      }
 
-    if(installProfile.versionInfo) {
-      await this.runLegacyProcess(forgeVersionPath, installerFile, installProfile);
+      this._taskRunner.addTask(new DeleteFileTask(join(installerFile.fullPath(), installerFile.fileName())));
     } else {
-      await this.runProcess(forgeVersionPath, installerFile, installProfile);
+      const versionJson = await $utils.readFile(join(forgeVersionPath, this._versionJsonName))
+        .then(JSON.parse);
+
+      this._taskRunner.addTask(new DownloadLibrariesTask(versionJson.libraries, this._minecraftVersion, this._installSide, true));
     }
 
     await this._taskRunner.process();
 
     const fs = require('node:fs');
-    fs.writeFile(path.join(process.env.APP_DIRECTORY, forgeVersionPath, '.installed'), '', (err) => {
+    fs.writeFile(join(process.env.APP_DIRECTORY, forgeVersionPath, '.installed'), '', (err: NodeJS.ErrnoException) => {
       if(err) throw Error('Error when writing validation file \'.installed\'');
     });
   }
@@ -76,7 +81,7 @@ export class InstallForgeTask extends Task {
     let file = {
       data: JSON.stringify(installProfile.versionInfo, null, 2),
       path: forgeVersionPath,
-      filename: `${this._minecraftVersion}-forge-${this._forgeVersion}.json`
+      filename: this._versionJsonName
     };
 
     // Extract forge version.json
@@ -103,13 +108,18 @@ export class InstallForgeTask extends Task {
     let extractRequest = new ExtractRequest();
     extractRequest.file = installerFile;
     extractRequest.destPath = forgeVersionPath;
-    extractRequest.destName = `${this._minecraftVersion}-forge-${this._forgeVersion}.json`;
+    extractRequest.destName = this._versionJsonName;
     extractRequest.includes = [
       "version.json"
     ];
 
     // Extract forge version.json
     await $utils.extractFile(extractRequest);
+
+    const versionJson = await $utils.readFile(join(forgeVersionPath, this._versionJsonName))
+      .then(JSON.parse);
+
+    this._taskRunner.addTask(new DownloadLibrariesTask(versionJson.libraries, this._minecraftVersion, this._installSide, true));
 
     this._taskRunner.addTask(new DownloadLibrariesTask(installProfile.libraries, this._minecraftVersion, this._installSide));
 
@@ -138,11 +148,18 @@ export class InstallForgeTask extends Task {
 
       this._taskRunner.addTask(new InstallForgeProcessorTask(processor.jar, processor.classpath, processor.args, this._installSide, this._minecraftVersion, map));
     });
+
+    this._taskRunner.addTask(new DeleteFileTask(join(CACHE_PATH, `${this._installSide}.lzma`)));
   }
 
   async downloadInstaller(): Promise<File> {
     let installerFile = new CachedFile();
     installerFile.url = `https://maven.minecraftforge.net/net/minecraftforge/forge/${this._minecraftVersion}-${this._forgeVersion}/forge-${this._minecraftVersion}-${this._forgeVersion}-installer.jar`;
+
+    const semver = require('semver');
+    if(semver.lte(semver.coerce(this._minecraftVersion), '1.6.0')) {
+      installerFile.url = `https://maven.minecraftforge.net/net/minecraftforge/forge/${this._minecraftVersion}-${this._forgeVersion}/forge-${this._minecraftVersion}-${this._forgeVersion}-universal.zip`;
+    }
 
     let downloadRequest = new DownloadRequest();
     downloadRequest.file = installerFile;
@@ -150,11 +167,6 @@ export class InstallForgeTask extends Task {
     await $downloadService.download(downloadRequest);
 
     return installerFile;
-  }
-
-  onFinished() {
-    super.onFinished();
-    this._forge.installed = true;
   }
 }
 
@@ -180,18 +192,18 @@ export class InstallForgeProcessorTask extends Task {
     if (!process.env.JAVA_PATH) {
       throw new Error("No java executable was found");
     }
-    let javaPath = path.join(process.env.APP_DIRECTORY, process.env.JAVA_PATH);
+    let javaPath = join(process.env.APP_DIRECTORY, process.env.JAVA_PATH);
 
     let classpath = [];
     for (const lib of this._classpath) {
       let library = Library.resolve(lib);
-      classpath.push(path.join(process.env.APP_DIRECTORY, library.fullPath(), library.fileName()))
+      classpath.push(join(process.env.APP_DIRECTORY, library.fullPath(), library.fileName()))
     }
 
     let library = Library.resolve(this._jar);
-    classpath.push(path.join(process.env.APP_DIRECTORY, library.fullPath(), library.fileName()));
+    classpath.push(join(process.env.APP_DIRECTORY, library.fullPath(), library.fileName()));
 
-    let mainClass = await $utils.readFileMainClass(path.join(library.fullPath(), library.fileName()));
+    let mainClass = await $utils.readFileMainClass(join(library.fullPath(), library.fileName()));
 
     let regexIdentifier = /{(\w*)}/;
     for (let i = 0; i < this._args.length; i++) {
@@ -208,7 +220,7 @@ export class InstallForgeProcessorTask extends Task {
 
           switch (argIdentifier[1]) {
             case 'MINECRAFT_JAR':
-              newValue = path.join(process.env.APP_DIRECTORY, VERSIONS_PATH, this._minecraftVersion, this._minecraftVersion + '.jar');
+              newValue = join(process.env.APP_DIRECTORY, VERSIONS_PATH, this._minecraftVersion, this._minecraftVersion + '.jar');
               break;
             case 'SIDE':
               newValue = this._installSide;
@@ -216,7 +228,7 @@ export class InstallForgeProcessorTask extends Task {
             case 'BINPATCH':
               let c = new CachedFile();
               c.url = this._mappings.get(argIdentifier[1]) || "";
-              newValue = path.join(process.env.APP_DIRECTORY, c.fullPath(), c.fileName());
+              newValue = join(process.env.APP_DIRECTORY, c.fullPath(), c.fileName());
               break;
             default:
               newValue = this._mappings.get(argIdentifier[1]);
@@ -239,8 +251,8 @@ export class InstallForgeProcessorTask extends Task {
     this._log.debug(`Command Line : ${cmdLine}`);
 
     return new Promise((resolve, reject) => {
-      const processus = exec.spawn(path.join(javaPath, $utils.getJavaExecutablePath()), cmdLine, {
-        cwd: path.join(process.env.APP_DIRECTORY)
+      const processus = spawn(join(javaPath, $utils.getJavaExecutablePath()), cmdLine, {
+        cwd: join(process.env.APP_DIRECTORY)
       });
 
       processus.stdout.on('data', (data) => {
@@ -267,7 +279,7 @@ export class InstallForgeProcessorTask extends Task {
   replaceLibPath(libPath: string): string {
     if(libPath.includes('[')) {
       let lib = Library.resolve(libPath.replace('[', '').replace(']', ''));
-      libPath = path.join(process.env.APP_DIRECTORY, lib.fullPath(), lib.fileName());
+      libPath = join(process.env.APP_DIRECTORY, lib.fullPath(), lib.fileName());
     }
     return libPath;
   }

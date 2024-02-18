@@ -13,11 +13,11 @@ import {
   TaskRunner,
   VERSIONS_PATH
 } from "mine4ease-ipc-api";
-import {$eventEmitter, logger} from "../config/ObjectFactoryConfig.ts";
+import {$eventEmitter, logger} from "../config/ObjectFactoryConfig";
 import {EventEmitter} from "events";
-import path from "node:path";
-import os from "os";
-import {DownloadFileTask, ExtractFileTask} from "./FileTask.ts";
+import {join} from "path";
+import {arch, platform} from "os";
+import {DownloadFileTask, ExtractFileTask} from "./FileTask";
 
 export const SEPARATOR = process.platform === 'win32' ? ';' : ':';
 
@@ -27,7 +27,7 @@ function addToClassPath(file: File, isAddingToClassPath: boolean) {
   if (!process.env.CLASSPATH_ARRAY) {
     process.env.CLASSPATH_ARRAY = "";
   }
-  let lib = path.join(process.env.APP_DIRECTORY, file.fullPath(), file.fileName()) + SEPARATOR;
+  let lib = join(process.env.APP_DIRECTORY, file.fullPath(), file.fileName()) + SEPARATOR;
 
   if(process.env.CLASSPATH_ARRAY.includes(lib)) {
     return;
@@ -55,8 +55,8 @@ export class DownloadLibrariesTask extends Task {
   }
 
   async run(): Promise<void> {
-    let osArch = os.arch();
-    let osName = Object.keys(OS)[Object.values(OS).indexOf(os.platform())];
+    let osArch = arch();
+    let osName = Object.keys(OS)[Object.values(OS).indexOf(platform())];
 
     this._libraries.forEach((lib: Libraries) => {
       let rules: Rule[] = [];
@@ -68,7 +68,7 @@ export class DownloadLibrariesTask extends Task {
       if (lib.downloads?.artifact) {
         this._taskRunner.addTask(new DownloadLibTask(this._subEventEmitter, lib, this._installSide, this._isAddingToClassPath));
       } else if(!lib.natives) {
-        this._taskRunner.addTask(new DownloadLegacyLibTask(this._subEventEmitter, lib, this._installSide, this._isAddingToClassPath));
+        this._taskRunner.addTask(new DownloadLibOldWayTask(this._subEventEmitter, lib, this._installSide, this._isAddingToClassPath));
       }
 
       if (lib.natives && lib.downloads?.classifiers) {
@@ -83,7 +83,7 @@ export class DownloadLibrariesTask extends Task {
   }
 }
 
-export class DownloadLegacyLibTask extends Task {
+export class DownloadLibOldWayTask extends Task {
   private readonly _lib: Library & LegacyForgeLib;
   private readonly _libUrl: string;
   private readonly _rules: Rule[] | undefined;
@@ -206,7 +206,7 @@ export class DownloadClassifierTask extends Task {
       // Extract classifiers
       let extractRequest = new ExtractRequest();
       extractRequest.file = downloadReqClassifier.file;
-      extractRequest.destPath = path.join(VERSIONS_PATH, this.minecraftVersion, "natives");
+      extractRequest.destPath = join(VERSIONS_PATH, this.minecraftVersion, "natives");
       extractRequest.excludes = this.lib.extract?.excludes ?? [];
 
       this._eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadFileTask(downloadReqClassifier), false);

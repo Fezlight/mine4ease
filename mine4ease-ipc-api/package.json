@@ -13,7 +13,7 @@
     "test": "jest"
   },
   "keywords": [],
-  "author": "",
+  "author": "FezLight",
   "license": "ISC",
   "devDependencies": {
     "@jest/globals": "29.1.1",
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "decompress": "^4.2.1",
-    "typescript": "^5.2.2",
+    "typescript": "^5.3.3",
     "winston": "^3.11.0"
   }
 }

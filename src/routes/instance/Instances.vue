@@ -1,27 +1,29 @@
 <script setup lang="ts">
 import InstanceIcon from "../../shared/components/InstanceIcon.vue";
-import {inject, Ref, ref} from "vue";
+import {inject, provide, Ref, ref} from "vue";
 import {useRouter} from "vue-router";
 import {IAuthService, IGlobalSettingService, IInstanceService, Instance, Settings} from "mine4ease-ipc-api";
+import {Transitions} from "../../shared/models/Transitions";
 
 const selectedInstance: Ref<Instance | undefined> = ref();
+const currentInstance: Ref<Instance | undefined> = ref();
 const settings: Ref<Settings | undefined> = ref();
+provide('currentInstance', currentInstance);
 
 const router = useRouter();
 const $instanceService: IInstanceService | undefined = inject('instanceService');
 const $globalSettingsService: IGlobalSettingService | undefined = inject('globalSettingsService');
 const $authService: IAuthService | undefined = inject('authService');
 
-$authService?.getProfile().then(account => {
-  console.log(account);
-}).catch(() => router.push('/login'));
+$authService?.getProfile()
+.catch(() => router.push('/login'));
 
-function createModPack() {
+function createInstance() {
   selectedInstance.value = undefined;
   router.push({name: 'instance-create'});
 }
 
-function selectModPack(instance: Instance) {
+function selectInstance(instance: Instance) {
   if (instance === selectedInstance.value) {
     return;
   }
@@ -32,12 +34,19 @@ function selectModPack(instance: Instance) {
   }
 
   $instanceService?.selectInstance(instance.id)
-  .then(() => router.push({name: 'instance', params: {id: instance.id}}));
+  .then(() => $instanceService?.getInstanceById(instance.id))
+  .then(currInstance => {
+    currentInstance.value = currInstance;
+    router.push({name: 'instance', params: {id: instance.id}});
+  })
+  .catch(() => {
+    router.push({name: 'instance-not-found', query: {id: instance.id}});
+  });
 }
 
 function addInstance(instance: Instance) {
   settings.value?.instances?.push(instance);
-  selectModPack(instance);
+  selectInstance(instance);
 }
 
 function deleteInstance(id: string) {
@@ -51,39 +60,43 @@ function deleteInstance(id: string) {
   }
 
   if (settings?.value?.instances.length === 0) {
-    createModPack();
+    createInstance();
     return;
   }
 
   const precedingInstance = settings?.value?.instances[index - 1];
   if (precedingInstance) {
-    selectModPack(precedingInstance);
+    selectInstance(precedingInstance);
   } else {
-    selectModPack(settings?.value?.instances[index + 1]);
+    selectInstance(settings?.value?.instances[index + 1]);
   }
+}
+
+function redirect(t: Transitions) {
+  router.push(t.route);
 }
 
 $globalSettingsService?.retrieveSettings().then(data => {
   settings.value = data;
   let selectedModpack = data.instances.filter(i => i.id === data.selectedInstance);
   if (selectedModpack && selectedModpack.length > 0) {
-    selectModPack(selectedModpack[0]);
+    selectInstance(selectedModpack[0]);
   }
 });
 </script>
 <template>
-  <div class="flex flex-row">
-    <section class="sticky top-[30px] flex flex-col menu-left max-window-height bg-gray-800 w-[70px]">
-      <div id="scroll-container" class="flex flex-col flex-grow gap-2 p-2 overflow-y-auto">
+  <div class="grid grid-cols-[80px_1fr]">
+    <section class="sticky flex flex-col menu-left max-window-height bg-gray-800">
+      <div id="scroll-container" class="flex flex-col flex-grow gap-4 overflow-y-auto py-2">
         <InstanceIcon :id="instance.id"
                       :class="{ 'active': selectedInstance == instance }"
                       v-for="instance in settings?.instances"
-                      @click="selectModPack(instance)">
+                      @click="selectInstance(instance)">
           <img :src="'mine4ease-icon://' + `${instance.id}/${instance.iconName}`"
                alt="Instance logo"
                class="object-cover" />
         </InstanceIcon>
-        <InstanceIcon @click="createModPack()" custom-class="bg-sky-600/60">
+        <InstanceIcon @click="createInstance()" custom-class="bg-sky-600/60">
           <font-awesome-icon class="text-2xl text-white" :icon="['fas', 'add']" />
         </InstanceIcon>
       </div>
@@ -101,7 +114,7 @@ $globalSettingsService?.retrieveSettings().then(data => {
       </div>
     </section>
     <section class="content">
-      <router-view @create-instance="addInstance" @delete-instance="deleteInstance"></router-view>
+      <router-view @create-instance="addInstance" @delete-instance="deleteInstance" @redirect="(t: Transitions) => redirect(t)" :instance="selectedInstance"></router-view>
     </section>
   </div>
 </template>

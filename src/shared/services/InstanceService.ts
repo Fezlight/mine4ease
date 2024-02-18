@@ -1,19 +1,7 @@
-import {IInstanceService, Instance, InstanceSettings, Mod, ResourcePack, Shader} from "mine4ease-ipc-api";
+import {IInstanceService, InstanceSettings} from "mine4ease-ipc-api";
 import {v4 as uuidv4} from "uuid";
 
 export class InstanceService implements IInstanceService {
-  addMod(instance: Instance, mod: Mod): Promise<Mod> {
-    return Promise.resolve(mod);
-  }
-
-  addResourcePack(instance: Instance, resourcePack: ResourcePack): Promise<ResourcePack> {
-    return Promise.resolve(resourcePack);
-  }
-
-  addShader(instance: Instance, shader: Shader): Promise<Shader> {
-    return Promise.resolve(shader);
-  }
-
   async createInstance(instance: InstanceSettings): Promise<InstanceSettings> {
     instance.id = uuidv4();
 

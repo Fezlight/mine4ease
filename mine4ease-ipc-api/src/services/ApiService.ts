@@ -66,7 +66,9 @@ export class CurseApiService implements ApiService {
       gameId: CURSE_FORGE_MINECRAFT_GAME_ID,
       searchFilter: filter,
       gameVersion: gameVersion,
-      modLoaderType: modLoaderCurse.toString()
+      modLoaderType: modLoaderCurse.toString(),
+      sortOrder: 'desc',
+      sortField: '2'
     }), {
       method: 'GET',
       headers: {
@@ -74,7 +76,27 @@ export class CurseApiService implements ApiService {
       }
     }).then(response => {
       return response.json();
+    }).then((response: any) => {
+      return response.data.map((v: any) => {
+        return this.toMod(v, gameVersion, modLoader);
+      });
+    });
+  }
+
+  async getFileById(id: string, gameVersion: string, modLoader: ModLoader): Promise<Mod[]> {
+    const modLoaderCurse = ModLoaderCurse[modLoader.toString() as keyof ModLoaderCurse];
+
+    return fetch(CURSE_FORGE_API_URL + `/v1/mods/${id}/files?`+ new URLSearchParams({
+      gameVersion: gameVersion,
+      modLoaderType: modLoaderCurse.toString()
+    }),{
+      method: 'GET',
+      headers: {
+        'x-api-key': CURSE_FORGE_API_KEY
+      }
     }).then(response => {
+      return response.json();
+    }).then((response: any) => {
       return response.data.map((v: any) => {
         return this.toMod(v, gameVersion, modLoader);
       });
@@ -89,7 +111,7 @@ export class CurseApiService implements ApiService {
       }
     }).then(response => {
       return response.json();
-    }).then(response => {
+    }).then((response: any) => {
       return this.toMod(response.data, gameVersion, modLoader);
     });
   }
@@ -105,7 +127,7 @@ export class CurseApiService implements ApiService {
   async searchModLoaderManifest(name: string): Promise<Versions> {
     return fetch(CURSE_FORGE_API_URL + `/v1/minecraft/modloader/${name}`)
     .then(data => data.json())
-    .then(data => {
+    .then((data: any) => {
       if (!data.data) {
         throw new Error(`Unable to retrieve data manifest for modloader '${name}'`);
       }
@@ -122,7 +144,7 @@ export class CurseApiService implements ApiService {
       return fetch('https://piston-meta.mojang.com/mc/game/version_manifest.json')
       .then(response => {
         return response.json();
-      }).then(response => {
+      }).then((response: any) => {
         return response.versions.map((v: any) => {
           return {
             name: v.id,
@@ -134,7 +156,7 @@ export class CurseApiService implements ApiService {
       return fetch(CURSE_FORGE_API_URL + '/v1/minecraft/modloader?version=' + gameVersion)
       .then(response => {
         return response.json();
-      }).then(response => {
+      }).then((response: any) => {
         return response.data.sort((a: any, b: any) => {
           return Number(new Date(b.dateModified)) - Number(new Date(a.dateModified))
         });
@@ -156,19 +178,23 @@ export class CurseApiService implements ApiService {
 
   toMod(v: any, gameVersion: string, modLoader: ModLoader): Mod {
     let mod: Mod = new Mod();
-    mod.id = v.id;
-    mod.name = v.name;
+    mod.id = v.modId ?? v.id;
+    mod.displayName = v.name;
     mod.gameVersion = gameVersion;
     mod.modLoader = modLoader;
     mod.apiType = ApiType.CURSE;
-    mod.iconUrl = v.logo.url;
-    mod.url = v.latestFiles[0]?.downloadUrl;
-    mod.size = v.latestFiles[0]?.fileLength;
-    mod.sha1 = v.latestFiles[0]?.hashes[0].value;
-    mod.dependencies = v.latestFiles[0]?.dependencies.map(dep => {
+    mod.description = v.summary;
+    mod.iconUrl = v.logo?.url;
+    mod.authors = v.authors;
+    mod.categories = v.categories;
+    mod._url = v.downloadUrl ?? v.latestFiles?.[0].downloadUrl;
+    mod.size = v.fileLength ??  v.latestFiles?.[0].fileLength;
+    mod.sha1 = v.hashes?.[0].value ?? v.latestFiles?.[0].hashes[0]?.value;
+    mod.dependencies = (v.dependencies ?? v.latestFiles?.[0].dependencies).map(dep => {
       return {
         id: dep.modId,
-        relationType: dep.relationType
+        relationType: dep.relationType,
+        apiType: ApiType.CURSE
       };
     })
     return mod;

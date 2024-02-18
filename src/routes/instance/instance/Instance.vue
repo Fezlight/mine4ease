@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import {inject, Ref, ref, watchEffect} from "vue";
-import {IInstanceService, IMinecraftService, InstanceSettings, TaskEvent} from "mine4ease-ipc-api";
-import {useRoute, useRouter} from "vue-router";
+import {inject, Ref, ref} from "vue";
+import {IInstanceService, IMinecraftService, Instance, InstanceSettings, TaskEvent} from "mine4ease-ipc-api";
+import {RouteLocationRaw} from "vue-router";
 import Tile from "../../../shared/components/Tile.vue";
 import {TaskListeners} from "../../../shared/listeners/TaskListeners.ts";
+import {Transitions} from "../../../shared/models/Transitions.ts";
 
-const instance: Ref<InstanceSettings | undefined> = ref();
-
-const route = useRoute();
-const router = useRouter();
+const instance: Ref<InstanceSettings | undefined> = inject('currentInstance');
 
 const $instanceService: IInstanceService | undefined = inject('instanceService');
 const $minecraftService: IMinecraftService | undefined = inject('minecraftService');
@@ -16,16 +14,8 @@ const id = ref();
 
 const emit = defineEmits<{
   (e: 'deleteInstance', id: string): void
+  (e: 'redirect', to: Transitions): void
 }>();
-
-async function searchInstanceById(id: string) {
-  instance.value = undefined;
-  $instanceService?.getInstanceById(id)
-  .then(i => instance.value = i)
-  .catch(() => {
-    router.push({name: 'not-found', query: {id: id}});
-  });
-}
 
 function deleteInstance(id: string) {
   $instanceService?.deleteInstance(id)
@@ -38,17 +28,18 @@ function launchGame() {
   }
 }
 
-watchEffect(() => {
-  if (route.params.id) {
-    id.value = route.params.id;
-    searchInstanceById(id.value);
+function redirect(route: RouteLocationRaw, instance: Instance) {
+  let transition: Transitions = {
+    route: route,
+    instance: instance
   }
-})
+
+  emit('redirect', transition);
+}
 
 const events: Ref<{ [key: string]: TaskEvent }> = ref({});
 
 function updateEvent(_event: any, value: TaskEvent) {
-  console.log(_event, value);
   events.value[value.id] = value;
 }
 
@@ -100,11 +91,9 @@ listener.start(updateEvent);
     </section>
     <section class="flex-grow py-4 space-y-6">
       <div class="grid grid-cols-3 xl:grid-cols-6 gap-3">
-        <Tile title="Mods" subtitle="You have X mods installed" button-title="Manage mods"></Tile>
-        <Tile title="Shaders" subtitle="You have X shaders installed" button-title="Manage shaders"></Tile>
-        <Tile title="Resource Packs"
-              subtitle="You have X resources packs installed"
-              button-title="Manage resource packs"></Tile>
+        <Tile title="Mods" subtitle="You have X mods installed" button-title="Manage mods" @action="redirect({name: 'instance-mods', params: {id: id}}, instance)"></Tile>
+        <Tile title="Shaders" subtitle="You have X shaders installed" button-title="Manage shaders" @action="redirect({name: 'instance-shaders', params: {id: id}}, instance)"></Tile>
+        <Tile title="Resource Packs" subtitle="You have X resources packs installed" button-title="Manage resource packs" @action="redirect({name: 'instance-ressource-packs', params: {id: id}}, instance)"></Tile>
       </div>
       <div class="flex flex-col">
         <span v-for="event in events">{{ event.name }} : {{ event.state }}</span>

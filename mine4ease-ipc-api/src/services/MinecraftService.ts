@@ -1,6 +1,6 @@
 import {File} from "../models/file/File";
 import {InstanceSettings} from "../models/instance/InstanceSettings";
-import {Assets, Libraries, Versions} from "../models/Manifest";
+import {Versions} from "../models/Manifest";
 
 export const MINECRAFT_RESSOURCES_URL = "https://resources.download.minecraft.net"
 
@@ -11,13 +11,7 @@ export interface IMinecraftService {
    *
    * @param manifestFile manifest file to download related to assets or versions manifest
    */
-  downloadManifest?(manifestFile: File): Promise<Versions | Assets>;
-
-  downloadVersionManifest?(instanceSettings: InstanceSettings): Promise<(Versions | Assets)[]>;
-
-  downloadAssets?(assets: Assets): Promise<any>;
-
-  downloadLibraries?(instance: InstanceSettings, libraries: Libraries[]): Promise<any>;
+  downloadManifest?(manifestFile: File): Promise<Versions>;
 
   beforeLaunch?(instance: InstanceSettings): Promise<Versions>;
 

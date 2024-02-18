@@ -1,8 +1,4 @@
-import {Instance} from "../models/instance/Instance";
 import {InstanceSettings} from "../models/instance/InstanceSettings";
-import {Mod} from "../models/file/Mod";
-import {ResourcePack} from "../models/file/ResourcePack";
-import {Shader} from "../models/file/Shader";
 
 export interface IInstanceService {
   /**
@@ -39,28 +35,4 @@ export interface IInstanceService {
    * @param instanceSettings instance specific settings to save
    */
   saveInstanceSettings(instanceSettings: InstanceSettings): Promise<InstanceSettings>;
-
-  /**
-   * Add a mod to an instance
-   *
-   * @param instance instance object
-   * @param mod mod to add
-   */
-  addMod(instance: Instance, mod: Mod): Promise<Mod>;
-
-  /**
-   * Add a resource pack to an instance
-   *
-   * @param instance instance object
-   * @param resourcePack resource pack to add
-   */
-  addResourcePack(instance: Instance, resourcePack: ResourcePack): Promise<ResourcePack>;
-
-  /**
-   * Add a shader to an instance
-   *
-   * @param instance instance object
-   * @param shader shader to add
-   */
-  addShader(instance: Instance, shader: Shader): Promise<Shader>;
 }

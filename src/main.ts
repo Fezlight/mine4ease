@@ -2,7 +2,19 @@ import {createApp} from 'vue'
 import App from './App.vue'
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import {library} from '@fortawesome/fontawesome-svg-core'
-import {faAdd, faGear, faRightFromBracket, faStar, faCamera, faTrashCan, faArrowRight, faPlay} from '@fortawesome/free-solid-svg-icons'
+import {
+  faAdd,
+  faArrowLeft,
+  faArrowRight,
+  faCamera,
+  faCircleCheck,
+  faCircleXmark,
+  faGear,
+  faPlay,
+  faRightFromBracket,
+  faStar,
+  faTrashCan
+} from '@fortawesome/free-solid-svg-icons'
 import {createRouter, createWebHashHistory} from "vue-router";
 import CreateInstance from "./routes/instance/create-instance/CreateInstance.vue";
 import Instances from "./routes/instance/Instances.vue";
@@ -16,15 +28,22 @@ import {MinecraftService} from "./shared/services/MinecraftService.ts";
 import {AuthService} from "./shared/services/AuthService.ts";
 import {faMicrosoft} from "@fortawesome/free-brands-svg-icons";
 import {GlobalSettingsService} from "./shared/services/GlobalSettingsService.ts";
+import Mods from "./routes/mods/Mods.vue";
+import {ModService} from "./shared/services/ModService.ts";
 
-library.add(faStar, faGear, faRightFromBracket, faAdd, faCamera, faMicrosoft, faTrashCan, faArrowRight, faPlay);
+library.add(
+  faStar, faGear, faRightFromBracket, faAdd, faCamera, faMicrosoft,
+  faTrashCan, faArrowRight, faArrowLeft, faPlay, faCircleXmark, faCircleCheck,
+  faGear
+);
 
 const routes = [
   {
     path: '/instance', component: Instances, children: [
       { path: '/:id', name: 'instance', component: Instance },
-      { path: '/create', name: 'instance-create', component: CreateInstance },
-      { path: '/not-found', name: 'not-found', component: InstanceNotFound }
+      { path: '/:id/mods', name: 'instance-mods', component: Mods },
+      { path: 'create', name: 'instance-create', component: CreateInstance },
+      { path: 'not-found', name: 'instance-not-found', component: InstanceNotFound }
     ]
   },
   {
@@ -46,6 +65,7 @@ const app = createApp(App)
 
 app.provide('apiService', new CurseApiService());
 app.provide('instanceService', new InstanceService());
+app.provide('modService', new ModService());
 app.provide('minecraftService', new MinecraftService());
 app.provide('authService', new AuthService());
 app.provide('globalSettingsService', new GlobalSettingsService());

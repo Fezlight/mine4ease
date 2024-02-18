@@ -1,6 +1,7 @@
 import {CacheProvider, IGlobalSettingService, IUtils, Settings} from "mine4ease-ipc-api";
 import {SETTINGS_FILE, SETTINGS_KEY} from "../config/CacheConfig";
 import {Logger} from "winston";
+import {$cacheProvider, $utils, logger} from "../config/ObjectFactoryConfig.ts";
 
 export class GlobalSettingsService implements IGlobalSettingService {
   private logger: Logger;
@@ -53,3 +54,5 @@ export class GlobalSettingsService implements IGlobalSettingService {
     }).then(() => settings);
   }
 }
+
+export const $globalSettingsService = new GlobalSettingsService(logger, $cacheProvider, $utils);

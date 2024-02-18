@@ -2,6 +2,7 @@ import {
   Account,
   ArgRule,
   ASSETS_PATH,
+  INSTANCE_PATH,
   InstanceSettings,
   LIBRARIES_PATH,
   Rule,
@@ -9,10 +10,10 @@ import {
   Versions,
   VERSIONS_PATH
 } from "mine4ease-ipc-api";
-import path from "node:path";
-import {INSTANCE_PATH} from "../services/InstanceService";
-import {$authService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig";
-import {SEPARATOR} from "./DownloadLibsTask.ts";
+import {join} from "path";
+import {$eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig";
+import {SEPARATOR} from "./DownloadLibsTask";
+import {$authService} from "../services/AuthService";
 
 async function buildCommandLine(instance: InstanceSettings, versionsManifest: Versions) {
   let argLine: string[] = [];
@@ -86,10 +87,10 @@ async function buildCommandLine(instance: InstanceSettings, versionsManifest: Ve
 
       switch (argIdentifier[1]) {
         case "natives_directory":
-          newValue = path.join(process.env.APP_DIRECTORY, VERSIONS_PATH, versionName, "natives");
+          newValue = join(process.env.APP_DIRECTORY, VERSIONS_PATH, versionName, "natives");
           break;
         case "library_directory":
-          newValue = path.join(process.env.APP_DIRECTORY, LIBRARIES_PATH);
+          newValue = join(process.env.APP_DIRECTORY, LIBRARIES_PATH);
           break;
         case "launcher_name":
           newValue = "Mine4Ease";
@@ -104,13 +105,13 @@ async function buildCommandLine(instance: InstanceSettings, versionsManifest: Ve
           newValue = instance.versions.minecraft.name;
           break;
         case "game_directory":
-          newValue = path.join(process.env.APP_DIRECTORY, INSTANCE_PATH, instance.id);
+          newValue = join(process.env.APP_DIRECTORY, INSTANCE_PATH, instance.id);
           break;
         case "game_assets":
-          newValue = path.join(process.env.APP_DIRECTORY, ASSETS_PATH, "virtual", "legacy");
+          newValue = join(process.env.APP_DIRECTORY, ASSETS_PATH, "virtual", "legacy");
           break;
         case "assets_root":
-          newValue = path.join(process.env.APP_DIRECTORY, ASSETS_PATH);
+          newValue = join(process.env.APP_DIRECTORY, ASSETS_PATH);
           break;
         case "assets_index_name":
           newValue = versionsManifest.assets;
@@ -131,8 +132,8 @@ async function buildCommandLine(instance: InstanceSettings, versionsManifest: Ve
           newValue = "{}";
           break;
         case "classpath":
-          let minecraftJarPath = path.join(process.env.APP_DIRECTORY, VERSIONS_PATH, versionName, versionName + '.jar');
-          newValue = [process.env.CLASSPATH_ARRAY, minecraftJarPath].join(SEPARATOR);
+          let minecraftJarPath = join(process.env.APP_DIRECTORY, VERSIONS_PATH, versionName, versionName + '.jar');
+          newValue = [process.env.CLASSPATH_ARRAY, minecraftJarPath].join('');
           break;
         case "classpath_separator":
           newValue = SEPARATOR;
@@ -171,10 +172,12 @@ export class LaunchGameTask extends Task {
     if (!process.env.JAVA_PATH) {
       throw new Error("No java executable was found");
     }
-    let javaPath = path.join(process.env.APP_DIRECTORY, process.env.JAVA_PATH);
+    let javaPath = join(process.env.APP_DIRECTORY, process.env.JAVA_PATH);
 
-    const processus = exec.spawn(path.join(javaPath, $utils.getJavaExecutablePath()), cmdLine, {
-      cwd: path.join(process.env.APP_DIRECTORY, INSTANCE_PATH, this.instance.id),
+    logger.debug(`Java executable path : ${javaPath}`);
+
+    const processus = exec.spawn(join(javaPath, $utils.getJavaExecutablePath()), cmdLine, {
+      cwd: join(process.env.APP_DIRECTORY, INSTANCE_PATH, this.instance.id),
       detached: true
     });
 

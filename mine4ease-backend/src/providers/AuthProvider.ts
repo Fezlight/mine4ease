@@ -3,7 +3,7 @@ import {BrowserWindow} from "electron";
 import {AuthProtocolListener} from "../listeners/AuthProtocolListener";
 import {msalConfig, REDIRECT_URI} from "../config/AuthConfig";
 import {Account, CacheProvider} from "mine4ease-ipc-api";
-import {CURRENT_ACCOUNT_STORAGE_CACHE, CURRENT_ACCOUNT_STORAGE_KEY} from "../config/CacheConfig.ts";
+import {CURRENT_ACCOUNT_STORAGE_KEY} from "../config/CacheConfig.ts";
 import {logger} from "../config/ObjectFactoryConfig.ts";
 
 export interface TokenResponse {
@@ -25,16 +25,15 @@ const headers = {
 export class AuthProvider {
   clientApplication;
   cryptoProvider;
-  authCodeUrlParams;
-  authCodeRequest;
-  pkceCodes;
+  authCodeUrlParams: any;
+  authCodeRequest: any;
+  pkceCodes: any;
   accessToken: string | undefined;
   customFileProtocolName;
 
   constructor(cacheProvider: CacheProvider) {
     this.clientApplication = new PublicClientApplication(msalConfig);
 
-    cacheProvider.put(CURRENT_ACCOUNT_STORAGE_KEY, CURRENT_ACCOUNT_STORAGE_CACHE);
     cacheProvider.loadObject(CURRENT_ACCOUNT_STORAGE_KEY)
       .then(object => this.accessToken = object?.accessToken)
       .catch(e => logger.error("Error when retrieving account profile settings", e))
@@ -48,7 +47,7 @@ export class AuthProvider {
 
     Object.defineProperty(globalThis, 'crypto', {
       value: {
-        getRandomValues: arr => crypto.randomBytes(arr.length)
+        getRandomValues: (arr: string) => crypto.randomBytes(arr.length)
       }
     });
 
@@ -109,7 +108,7 @@ export class AuthProvider {
     };
 
     return fetch("https://user.auth.xboxlive.com/user/authenticate", request)
-      .then(response => response.json())
+      .then((response: Response) => response.json())
       .then(data => this.getXboxXstsToken(data.Token))
   }
 
@@ -130,7 +129,7 @@ export class AuthProvider {
     };
 
     return fetch("https://xsts.auth.xboxlive.com/xsts/authorize", request)
-      .then(response => response.json())
+      .then((response: Response) => response.json())
   }
 
   async loginMinecraft(userHash: string, xstsToken: string): Promise<Account> {
@@ -143,7 +142,7 @@ export class AuthProvider {
     };
 
     this.accessToken = await fetch("https://api.minecraftservices.com/authentication/login_with_xbox", request)
-      .then(response => response.json())
+      .then((response: Response) => response.json())
       .then(response => response.access_token);
 
     return this.getProfile();
