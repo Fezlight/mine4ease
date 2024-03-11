@@ -26,12 +26,10 @@ process.env.VITE_PUBLIC = process.env.VITE_DEV_SERVER_URL
   : process.env.DIST
 
 export let win: BrowserWindow | null
-// 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 // Here, you can also use other preload
 const preload = join(__dirname, '../preload/index.js')
-const url = process.env.VITE_DEV_SERVER_URL
 const indexHtml = join(process.env.DIST, 'index.html')
 
 app.setAppLogsPath(process.env.LOG_DIRECTORY);
@@ -67,7 +65,7 @@ function createWindow() {
   }
 
   if (VITE_DEV_SERVER_URL) {
-    win.loadURL(url);
+    win.loadURL(VITE_DEV_SERVER_URL);
     // Open devTool if the app is not packaged
     win.webContents.openDevTools();
   } else {
@@ -112,6 +110,14 @@ protocol.registerSchemesAsPrivileged([
       secure: true,
       supportFetchAPI: true
     }
+  },
+  {
+    scheme: 'mine4ease-instance',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true
+    }
   }
 ]);
 
@@ -131,6 +137,18 @@ app.whenReady().then(() => {
 
     const url = join(appDirectory, INSTANCE_PATH, instanceId, ASSETS_PATH, assetsName);
     return net.fetch('file://' + url);
+  });
+
+  protocol.handle('mine4ease-instance', async (request) => {
+    const appDirectory = process.env.APP_DIRECTORY ?? "";
+    const instanceAsset = request.url.replace('..', '').slice('mine4ease-instance://'.length);
+    const [instanceId, type] = instanceAsset.split('/');
+
+    if (type === 'mods') {
+      const url = join(appDirectory, INSTANCE_PATH, instanceId, "mods.json");
+      return net.fetch('file://' + url);
+    }
+    return Promise.resolve(new Response());
   })
   createWindow()
 });

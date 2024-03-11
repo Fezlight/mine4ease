@@ -5,6 +5,7 @@ import {msalConfig, REDIRECT_URI} from "../config/AuthConfig";
 import {Account, CacheProvider} from "mine4ease-ipc-api";
 import {CURRENT_ACCOUNT_STORAGE_KEY} from "../config/CacheConfig.ts";
 import {logger} from "../config/ObjectFactoryConfig.ts";
+import crypto from "crypto";
 
 export interface TokenResponse {
   IssueInstant: Date,
@@ -42,8 +43,6 @@ export class AuthProvider {
 
     this.cryptoProvider = new CryptoProvider();
     this.customFileProtocolName = REDIRECT_URI.split(":")[0];
-
-    const crypto = require('crypto');
 
     Object.defineProperty(globalThis, 'crypto', {
       value: {
@@ -176,7 +175,7 @@ export class AuthProvider {
     this.accessToken = undefined;
   }
 
-  async getTokenInteractive(tokenRequest) {
+  async getTokenInteractive(tokenRequest: any) {
     /**
      * Proof Key for Code Exchange (PKCE) Setup
      *

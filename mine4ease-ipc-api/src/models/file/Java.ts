@@ -3,7 +3,7 @@ import {File} from "./File";
 const JAVA_PATH = "/runtimes"
 
 export class Java extends File {
-  type: string;
+  type?: string;
 
   mainPath(): string {
     const path = require("node:path");

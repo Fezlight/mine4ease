@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import {inject, Ref, ref} from "vue";
 import {v4 as uuidv4} from 'uuid';
-import InstanceCard from "../../../shared/components/InstanceCard.vue";
+import InstanceCard from "../../../shared/components/instance/InstanceCard.vue";
 import {ApiService, IInstanceService, Instance, InstanceSettings, ModLoader, Version} from "mine4ease-ipc-api";
-import InstanceIcon from "../../../shared/components/InstanceIcon.vue";
+import InstanceIcon from "../../../shared/components/instance/InstanceIcon.vue";
 import ModLoaderVersionsList from "../../../shared/components/ModLoaderVersionsList.vue";
 
 const $apiService: ApiService | undefined = inject('apiService');
@@ -38,6 +38,7 @@ function createInstance() {
   if (selectedModLoader.value) {
     instance.value.modLoader = selectedModLoader.value;
   }
+  instance.value.installSide = "client";
 
   $instanceService?.createInstance(instance.value).then(i => {
     emit("createInstance", i);
@@ -117,7 +118,7 @@ function searchModpack() {
           <div class="space-y-2 required">
             <label for="minecraftVersion">Minecraft version</label>
             <select id="minecraftVersion" v-model="instance.versions.minecraft"
-                    v-on:change="$refs.modLoaderVersionList?.retrieveVersions()" class="w-full" required>
+                    v-on:change="($refs.modLoaderVersionList as typeof ModLoaderVersionsList).retrieveVersions()" class="w-full" required>
               <option v-for="version of minecraftVersions" :value="version">{{ version.name }}</option>
             </select>
           </div>
@@ -127,7 +128,7 @@ function searchModpack() {
               <li>
                 <input type="radio" id="forge" name="modloaders" value="Forge"
                        class="hidden peer" v-model="selectedModLoader"
-                       v-on:change="$refs.modLoaderVersionList?.retrieveVersions(ModLoader.FORGE)">
+                       v-on:change="($refs.modLoaderVersionList as typeof ModLoaderVersionsList).retrieveVersions(ModLoader.FORGE)">
                 <label for="forge" class="inline-flex items-center w-full p-3 gap-2 border rounded-lg cursor-pointer hover:text-gray-300 border-gray-700 peer-checked:bg-gray-700 text-white bg-gray-800 hover:bg-gray-700">
                   <div class="w-5">
                     <img src="../../../assets/forge_logo.ico" alt="Forge logo">
@@ -138,8 +139,8 @@ function searchModpack() {
               <li>
                 <input type="radio" id="fabric" name="modloaders" value="Fabric"
                        class="hidden peer" v-model="selectedModLoader" disabled
-                       v-on:change="$refs.modLoaderVersionList?.retrieveVersions(ModLoader.FABRIC)">
-                <label for="fabric" class="flex items-center w-full p-3 gap-2 border rounded-lg cursor-pointer hover:text-gray-300 border-gray-700 peer-checked:bg-gray-700 text-white bg-gray-800 hover:bg-gray-700 peer-disabled:bg-gray-700/30 peer-disabled:text-gray-800">
+                       v-on:change="($refs.modLoaderVersionList as typeof ModLoaderVersionsList).retrieveVersions(ModLoader.FABRIC)">
+                <label for="fabric" class="flex items-center w-full p-3 gap-2 border rounded-lg cursor-pointer hover:text-gray-300 border-gray-700 peer-checked:bg-gray-700 text-white bg-gray-800 hover:bg-gray-700 peer-disabled:bg-gray-700/30 peer-disabled:text-gray-600">
                   <div class="w-5">
                     <img src="../../../assets/fabric_logo.png" alt="Fabric logo">
                   </div>
@@ -149,8 +150,8 @@ function searchModpack() {
               <li>
                 <input type="radio" id="quilt" name="modloaders" value="Quilt"
                        class="hidden peer" v-model="selectedModLoader" disabled
-                       v-on:change="$refs.modLoaderVersionList?.retrieveVersions(ModLoader.QUILT)">
-                <label for="quilt" class="flex items-center w-full p-3 gap-2 border rounded-lg cursor-pointer group-hover:text-gray-300 border-gray-700 peer-checked:bg-gray-700 text-white bg-gray-800 hover:bg-gray-700 peer-disabled:bg-gray-700/30 peer-disabled:text-gray-800">
+                       v-on:change="($refs.modLoaderVersionList as typeof ModLoaderVersionsList).retrieveVersions(ModLoader.QUILT)">
+                <label for="quilt" class="flex items-center w-full p-3 gap-2 border rounded-lg cursor-pointer group-hover:text-gray-300 border-gray-700 peer-checked:bg-gray-700 text-white bg-gray-800 hover:bg-gray-700 peer-disabled:bg-gray-700/30 peer-disabled:text-gray-600">
                   <div class="w-5">
                     <img src="../../../assets/quilt_logo.svg" alt="Quilt logo">
                   </div>

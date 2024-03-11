@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import InstanceIcon from "../../shared/components/InstanceIcon.vue";
+import InstanceIcon from "../../shared/components/instance/InstanceIcon.vue";
 import {inject, provide, Ref, ref} from "vue";
 import {useRouter} from "vue-router";
 import {IAuthService, IGlobalSettingService, IInstanceService, Instance, Settings} from "mine4ease-ipc-api";
@@ -86,10 +86,10 @@ $globalSettingsService?.retrieveSettings().then(data => {
 </script>
 <template>
   <div class="grid grid-cols-[80px_1fr]">
-    <section class="sticky flex flex-col menu-left max-window-height bg-gray-800">
-      <div id="scroll-container" class="flex flex-col flex-grow gap-4 overflow-y-auto py-2">
+    <section class="flex flex-col menu-left max-window-height bg-gray-800">
+      <div class="flex flex-col flex-grow gap-4 overflow-y-auto py-2">
         <InstanceIcon :id="instance.id"
-                      :class="{ 'active': selectedInstance == instance }"
+                      :class="{ 'active': selectedInstance === instance }"
                       v-for="instance in settings?.instances"
                       @click="selectInstance(instance)">
           <img :src="'mine4ease-icon://' + `${instance.id}/${instance.iconName}`"
@@ -119,10 +119,6 @@ $globalSettingsService?.retrieveSettings().then(data => {
   </div>
 </template>
 <style scoped>
-::-webkit-scrollbar {
-  display: none;
-}
-
 .menu-left {
   @apply max-h-screen shadow-xl shadow-black/80 border-r-[1px] border-gray-500/60;
 }

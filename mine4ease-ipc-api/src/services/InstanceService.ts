@@ -30,6 +30,12 @@ export interface IInstanceService {
   deleteInstance(id: string): Promise<void>;
 
   /**
+   * Open instance folder by id
+   * @param id instance id shared with the external server
+   */
+  openFolder(id: string);
+
+  /**
    * Save instance settings
    *
    * @param instanceSettings instance specific settings to save

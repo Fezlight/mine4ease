@@ -70,7 +70,7 @@ export class CacheProvider implements ICacheProvider {
 
   async load(key: string): Promise<Cache | undefined> {
     return Promise.resolve(this.caches.get(key))
-    .then(cache => cache?.load(f => this.utils.readFile(f)))
+    .then(cache => cache?.load((f: any) => this.utils.readFile(f)))
     .catch(() => undefined);
   }
 
@@ -96,7 +96,7 @@ export class CacheProvider implements ICacheProvider {
     let promises: Promise<void>[] = [];
 
     this.caches.forEach((v) => {
-      promises.push(v.save(f => this.utils.saveFile(f)));
+      promises.push(v.save((f: any) => this.utils.saveFile(f)));
     });
 
     return Promise.all(promises);

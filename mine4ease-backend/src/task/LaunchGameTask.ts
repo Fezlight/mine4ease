@@ -72,7 +72,7 @@ async function buildCommandLine(instance: InstanceSettings, versionsManifest: Ve
 
   let regexIdentifier = /\${(\w*)}/;
   for (let i = 0; i < argLine.length; i++) {
-    let newValue = null;
+    let newValue: string | undefined = undefined;
     if (!RegExp(regexIdentifier).exec(argLine[i])) {
       continue;
     }

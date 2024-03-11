@@ -1,4 +1,4 @@
-import {CacheProvider, IGlobalSettingService, IUtils, Settings} from "mine4ease-ipc-api";
+import {CacheProvider, IGlobalSettingService, Instance, IUtils, Settings} from "mine4ease-ipc-api";
 import {SETTINGS_FILE, SETTINGS_KEY} from "../config/CacheConfig";
 import {Logger} from "winston";
 import {$cacheProvider, $utils, logger} from "../config/ObjectFactoryConfig.ts";
@@ -41,7 +41,7 @@ export class GlobalSettingsService implements IGlobalSettingService {
       const {id, title, iconName} = instance;
       return {
         id, title, iconName: iconName
-      };
+      } as Instance;
     });
 
     if (this.cacheProvider.has(SETTINGS_KEY)) {

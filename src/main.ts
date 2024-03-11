@@ -7,13 +7,16 @@ import {
   faArrowLeft,
   faArrowRight,
   faCamera,
+  faCheck,
   faCircleCheck,
   faCircleXmark,
   faGear,
   faPlay,
   faRightFromBracket,
+  faSpinner,
   faStar,
-  faTrashCan
+  faTrashCan,
+  faUpRightFromSquare
 } from '@fortawesome/free-solid-svg-icons'
 import {createRouter, createWebHashHistory} from "vue-router";
 import CreateInstance from "./routes/instance/create-instance/CreateInstance.vue";
@@ -30,11 +33,12 @@ import {faMicrosoft} from "@fortawesome/free-brands-svg-icons";
 import {GlobalSettingsService} from "./shared/services/GlobalSettingsService.ts";
 import Mods from "./routes/mods/Mods.vue";
 import {ModService} from "./shared/services/ModService.ts";
+import ModDetails from "./routes/mods/mod-details/ModDetails.vue";
 
 library.add(
   faStar, faGear, faRightFromBracket, faAdd, faCamera, faMicrosoft,
   faTrashCan, faArrowRight, faArrowLeft, faPlay, faCircleXmark, faCircleCheck,
-  faGear
+  faGear, faSpinner, faCheck, faUpRightFromSquare
 );
 
 const routes = [
@@ -42,8 +46,14 @@ const routes = [
     path: '/instance', component: Instances, children: [
       { path: '/:id', name: 'instance', component: Instance },
       { path: '/:id/mods', name: 'instance-mods', component: Mods },
+      { path: '/:id/mods/:modId', name: 'instance-mods-details', component: ModDetails},
       { path: 'create', name: 'instance-create', component: CreateInstance },
       { path: 'not-found', name: 'instance-not-found', component: InstanceNotFound }
+    ]
+  },
+  {
+    path: '/mods', component: Mods, children: [
+      { path: '/:id', name: 'mod-details', component: ModDetails}
     ]
   },
   {

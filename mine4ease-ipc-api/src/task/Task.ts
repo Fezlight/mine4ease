@@ -48,7 +48,7 @@ export const ADD_TASK_EVENT_NAME = "add-task-event"
 export interface TaskEvent {
   id: string;
   name: string;
-  state: string;
+  state: TaskState;
 }
 
 export type TaskState = "FINISHED" | "CREATED" | "PAUSED" | "IN_PROGRESS" | "FAILED";
@@ -58,10 +58,12 @@ export class TaskRunner {
   private log: Logger;
   private isProcessing = false;
   private readonly autoWipeQueueOnFail: boolean;
+  private readonly propageError: boolean;
 
-  constructor(log: Logger, eventEmitter: EventEmitter, autoWipeQueueOnFail: boolean = true) {
+  constructor(log: Logger, eventEmitter: EventEmitter, autoWipeQueueOnFail: boolean = true, propageError: boolean = true) {
     this.log = log;
     this.autoWipeQueueOnFail = autoWipeQueueOnFail;
+    this.propageError = propageError;
     eventEmitter.on(ADD_TASK_EVENT_NAME, (task: Task, processing: boolean = true) => {
       this.addTask(task, processing);
     })
@@ -94,7 +96,9 @@ export class TaskRunner {
     if (this.autoWipeQueueOnFail) {
       this.queue.wipe();
     }
-    throw error;
+    if(this.propageError) {
+      throw error;
+    }
   }
 
   currentTask(): Task {

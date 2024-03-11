@@ -22,6 +22,10 @@ export class InstanceService implements IInstanceService {
     return window.ipcRenderer.invoke('instanceService.deleteInstance', id);
   }
 
+  openFolder(id: string) {
+    return window.ipcRenderer.invoke('instanceService.openFolder', id);
+  }
+
   async saveInstanceSettings(instanceSettings: InstanceSettings): Promise<InstanceSettings> {
     return await window.ipcRenderer.invoke('instanceService.saveInstanceSettings', JSON.stringify(instanceSettings));
   }

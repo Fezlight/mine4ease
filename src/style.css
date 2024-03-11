@@ -9,6 +9,11 @@
   .max-window-height {
     height: calc(100vh - 30px);
   }
+
+  /* Chrome, Edge, and Safari */
+  *::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 body {
@@ -22,7 +27,7 @@ body {
 }
 
 .content {
-  @apply flex flex-col bg-black/40 p-6 bg-gray-800 flex-grow overflow-y-auto max-h-screen;
+  @apply flex flex-col bg-black/40 p-6 bg-gray-800 flex-grow overflow-y-auto max-window-height;
 }
 
 h1 {
@@ -60,4 +65,8 @@ button[type=submit] {
 
 button {
   @apply bg-gray-800 focus:ring-4 focus:outline-none font-medium rounded-lg text-sm text-center text-white items-center focus:ring-sky-600/20;
+}
+
+a {
+  @apply text-center text-white items-center focus:ring-sky-600/20;
 }

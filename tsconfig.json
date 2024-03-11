@@ -4,7 +4,8 @@
     "useDefineForClassFields": true,
     "module": "ESNext",
     "lib": [
-      "ES2023"
+      "ES2023",
+      "DOM"
     ],
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -16,8 +17,9 @@
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": false,
+    "strictPropertyInitialization": false
   },
   "include": [
     "src/**/*.ts",

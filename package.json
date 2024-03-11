@@ -1,7 +1,8 @@
 {
   "name": "mine4ease",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "author": "FezLight",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
@@ -18,7 +19,7 @@
     "@types/child-process-promise": "^2.2.6",
     "decompress": "^4.2.1",
     "jszip": "^3.10.1",
-    "mine4ease-ipc-api": "file:mine4ease-ipc-api",
+    "mine4ease-ipc-api": "file:./mine4ease-ipc-api",
     "semver": "^7.6.0",
     "uuid": "^9.0.1",
     "winston": "^3.11.0",

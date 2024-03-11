@@ -153,19 +153,22 @@ export class Utils implements IUtils {
       .update(Buffer.from(data))
       .digest('hex');
     })
-    .catch(err => this.logger.error(err.message));
+    .catch(err => {
+      this.logger.error(err.message)
+      return "";
+    });
   }
 
-  async readFileMainClass(filePath: string): Promise<string> {
+  async readFileMainClass(filePath: string): Promise<string | undefined> {
     this.logger.debug(`Reading file main class : ${filePath} ...`);
 
     let zip = new JSZip();
     return this.readFile(filePath, true, true)
     .then(async (data: ArrayBuffer) => {
       await zip.loadAsync(data);
-      return zip.file("META-INF/MANIFEST.MF").async("string");
+      return zip.file("META-INF/MANIFEST.MF")?.async("string");
     }).then(str => {
-      return str.split('\n')
+      return str?.split('\n')
       .map(line => line.split(': '))
       .find(arr => arr[0] === 'Main-Class')?.[1]
       .trim();

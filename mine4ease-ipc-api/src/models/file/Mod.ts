@@ -5,7 +5,7 @@ export const MODS_PATH = "/mods"
 
 export class Mod extends File {
   id: string;
-  eventId: string;
+  eventId?: string;
   displayName: string;
   authors: { id: string, name: string }[];
   description: string;
@@ -26,6 +26,7 @@ export class Category {
   id: number;
   name: string;
   iconUrl: string;
+  selected: boolean;
 }
 
 export enum ModLoader {

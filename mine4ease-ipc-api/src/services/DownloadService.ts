@@ -3,7 +3,7 @@ import {Utils} from "../utils/Utils";
 import {File} from "../models/file/File";
 import {Logger} from "winston";
 
-export const fetchWithRetry = (url: string, logger: Logger, options = {}, retry = 3) => {
+export const fetchWithRetry = async (url: string, logger: Logger, options = {}, retry = 3) => {
   return fetch(url, options)
   .then(r => {
     if (r.ok) {
@@ -71,7 +71,7 @@ export class DownloadService implements IDownloadService {
         return reject(error);
       }
 
-      request.file.currentHash = await this.initFileHash(request.file);
+      await this.initFileHash(request.file);
 
       if (!request.needDownload()) {
         let error = new Error(`No need to download file, use already downloaded file : ${request.file.fileName()}`);
@@ -95,7 +95,6 @@ export class DownloadService implements IDownloadService {
     const path = require("node:path");
     let destFile = path.join(file.fullPath(), file.fileName());
     return this.utils.readFileHash(destFile)
-    .then(hash => file.currentHash = hash)
-    .catch(() => "");
+    .then(hash => file.currentHash = hash);
   }
 }

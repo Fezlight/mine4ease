@@ -1,5 +1,5 @@
 import {Version} from "../models/file/Version";
-import {Mod, ModLoader, ModLoaderCurse} from "../models/file/Mod";
+import {Category, Mod, ModLoader, ModLoaderCurse} from "../models/file/Mod";
 import {Shader} from "../models/file/Shader";
 import {ResourcePack} from "../models/file/ResourcePack";
 import {Versions} from "../models/Manifest";
@@ -23,8 +23,9 @@ export interface ApiService {
    * @param filter text to search
    * @param gameVersion minecraft version
    * @param modLoader modloader type (FORGE, FABRIC, etc...)
+   * @param category categories used to filter result
    */
-  searchMods(filter: string, gameVersion: string, modLoader: ModLoader): Promise<Mod[]>;
+  searchMods(filter: string, gameVersion: string, modLoader: ModLoader, category?: Category[]): Promise<Mod[]>;
 
   /**
    * Search item by its id can be mod, shaders, etc...
@@ -46,6 +47,11 @@ export interface ApiService {
   searchResourcesPacks(): Promise<ResourcePack[]>;
 
   /**
+   * Retrieve all available category to search on
+   */
+  getAllCategories(): Promise<Category[]>;
+
+  /**
    * Mapping method to return our domain object
    * @param v api object
    * @param gameVersion minecraft version
@@ -57,16 +63,19 @@ export interface ApiService {
 const CURSE_FORGE_API_URL = 'https://api.curseforge.com';
 const CURSE_FORGE_API_KEY = '$2a$10$idXrFq7MNKIurw71MVrlo.O6g0SO.zwzcQh6Ibslb9WfOLh21VgC.';
 const CURSE_FORGE_MINECRAFT_GAME_ID = '432';
+const CURSE_FORGE_MINECRAFT_MOD_CLASS_ID = '6';
 
 export class CurseApiService implements ApiService {
-  async searchMods(filter: string, gameVersion: string, modLoader: ModLoader): Promise<Mod[]> {
+  async searchMods(filter: string, gameVersion: string, modLoader: ModLoader, category?: Category[]): Promise<Mod[]> {
     const modLoaderCurse = ModLoaderCurse[modLoader.toString() as keyof ModLoaderCurse];
 
     return fetch(CURSE_FORGE_API_URL + '/v1/mods/search?' + new URLSearchParams({
       gameId: CURSE_FORGE_MINECRAFT_GAME_ID,
+      classId: CURSE_FORGE_MINECRAFT_MOD_CLASS_ID,
       searchFilter: filter,
       gameVersion: gameVersion,
       modLoaderType: modLoaderCurse.toString(),
+      categoryIds: JSON.stringify(category?.map(cat => cat.id)),
       sortOrder: 'desc',
       sortField: '2'
     }), {
@@ -122,6 +131,22 @@ export class CurseApiService implements ApiService {
 
   async searchShaders(): Promise<Shader[]> {
     throw new Error("Not yet implemented");
+  }
+
+  async getAllCategories(): Promise<Category[]> {
+    return fetch(CURSE_FORGE_API_URL + '/v1/categories/?' + new URLSearchParams({
+      gameId: CURSE_FORGE_MINECRAFT_GAME_ID,
+      classId: CURSE_FORGE_MINECRAFT_MOD_CLASS_ID
+    }), {
+      method: 'GET',
+      headers: {
+        'x-api-key': CURSE_FORGE_API_KEY
+      }
+    }).then(response => {
+      return response.json();
+    }).then((response: any) => {
+      return response.data;
+    });
   }
 
   async searchModLoaderManifest(name: string): Promise<Versions> {
@@ -190,7 +215,7 @@ export class CurseApiService implements ApiService {
     mod._url = v.downloadUrl ?? v.latestFiles?.[0].downloadUrl;
     mod.size = v.fileLength ??  v.latestFiles?.[0].fileLength;
     mod.sha1 = v.hashes?.[0].value ?? v.latestFiles?.[0].hashes[0]?.value;
-    mod.dependencies = (v.dependencies ?? v.latestFiles?.[0].dependencies).map(dep => {
+    mod.dependencies = (v.dependencies ?? v.latestFiles?.[0].dependencies).map((dep: any) => {
       return {
         id: dep.modId,
         relationType: dep.relationType,

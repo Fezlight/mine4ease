@@ -1,5 +1,14 @@
-import {ApiType, DownloadRequest, INSTANCE_PATH, InstanceSettings, Mod, Task, TaskRunner} from "mine4ease-ipc-api";
-import {$apiService, $downloadService, $eventEmitter, logger} from "../config/ObjectFactoryConfig";
+import {
+  ApiType,
+  DownloadRequest,
+  INSTANCE_PATH,
+  InstanceSettings,
+  Mod,
+  ModSettings,
+  Task,
+  TaskRunner
+} from "mine4ease-ipc-api";
+import {$apiService, $downloadService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig";
 import {join} from "path";
 import {EventEmitter} from "events";
 
@@ -18,11 +27,17 @@ export class InstallModTask extends Task {
   }
 
   async run(): Promise<void> {
-    if(this._mod.apiType === ApiType.CURSE) {
+    let mod: Mod | undefined;
+
+    if (this._mod.apiType === ApiType.CURSE) {
       let mods = await $apiService.getFileById(this._mod.id, this._instance.versions.minecraft.name, this._instance.modLoader!);
 
-      let mod = Object.assign(new Mod(), mods[0]);
+      logger.debug(`getFileById (id: ${this._mod.id}, version: ${this._instance.versions.minecraft.name}, modLoader: ${this._instance.modLoader}): ${JSON.stringify(mods)}`);
+
+      mod = Object.assign(new Mod(), mods[0]);
       mod.url = mod._url;
+
+      if(!mod._url) throw new Error(`No url found to download mod id: ${mod.id}`);
 
       logger.info(`Adding mod ${mod.name} to instance ${this._instance.id}`);
       mod.relativePath = join(INSTANCE_PATH, this._instance.id);
@@ -38,8 +53,23 @@ export class InstallModTask extends Task {
       });
     }
 
+    if(!mod) throw new Error("No mod found to download");
+
     await this._taskRunner.process();
 
-    // TODO ADD mod to mods.json file
+    let modsJson: ModSettings = await $utils.readFile(join(INSTANCE_PATH, this._instance.id, "mods.json"))
+      .then(JSON.parse)
+      .catch(() => {});
+
+    if (!modsJson) {
+      modsJson = new ModSettings();
+    }
+
+    modsJson.mods[mod.id] = mod;
+
+    await $utils.saveFile({
+      data: JSON.stringify(modsJson, null, 2),
+      path: join(INSTANCE_PATH, this._instance.id), filename: "mods.json"
+    });
   }
 }

@@ -99,7 +99,7 @@ export class InstallForgeTask extends Task {
     // Extract forge version.json
     await $utils.extractFile(extractRequest);
 
-    let libs = installProfile.versionInfo.libraries.filter(lib => !lib.name.includes(installProfile.install.path));
+    let libs = installProfile.versionInfo.libraries.filter((lib: any) => !lib.name.includes(installProfile.install.path));
 
     this._taskRunner.addTask(new DownloadLibrariesTask(libs, this._minecraftVersion, this._installSide, true));
   }
@@ -131,7 +131,7 @@ export class InstallForgeTask extends Task {
 
     const processors: [] = installProfile.processors;
 
-    processors.forEach(processor => {
+    processors.forEach((processor: any) => {
       if (processor.sides && !processor.sides.includes(this._installSide)) {
         return;
       }
@@ -194,7 +194,7 @@ export class InstallForgeProcessorTask extends Task {
     }
     let javaPath = join(process.env.APP_DIRECTORY, process.env.JAVA_PATH);
 
-    let classpath = [];
+    let classpath: string[] = [];
     for (const lib of this._classpath) {
       let library = Library.resolve(lib);
       classpath.push(join(process.env.APP_DIRECTORY, library.fullPath(), library.fileName()))
@@ -203,11 +203,11 @@ export class InstallForgeProcessorTask extends Task {
     let library = Library.resolve(this._jar);
     classpath.push(join(process.env.APP_DIRECTORY, library.fullPath(), library.fileName()));
 
-    let mainClass = await $utils.readFileMainClass(join(library.fullPath(), library.fileName()));
+    let mainClass: string | undefined = await $utils.readFileMainClass(join(library.fullPath(), library.fileName()));
 
     let regexIdentifier = /{(\w*)}/;
     for (let i = 0; i < this._args.length; i++) {
-      let newValue = null;
+      let newValue: string | undefined = undefined;
 
       if (RegExp(regexIdentifier).exec(this._args[i])) {
         let argIdentifier;
@@ -246,12 +246,16 @@ export class InstallForgeProcessorTask extends Task {
       this._args[i] = this.replaceLibPath(this._args[i]);
     }
 
+    if(!mainClass) {
+      throw new Error("Cannot find mainClass");
+    }
+
     let cp = classpath.join(SEPARATOR);
     let cmdLine = ["-cp", `${cp}`, mainClass, ...this._args];
     this._log.debug(`Command Line : ${cmdLine}`);
 
     return new Promise((resolve, reject) => {
-      const processus = spawn(join(javaPath, $utils.getJavaExecutablePath()), cmdLine, {
+      const processus: any = spawn(join(javaPath, $utils.getJavaExecutablePath()), cmdLine, {
         cwd: join(process.env.APP_DIRECTORY)
       });
 

@@ -6,4 +6,3 @@
     <router-view class="flex-grow"></router-view>
   </div>
 </template>
-
