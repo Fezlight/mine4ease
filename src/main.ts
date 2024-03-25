@@ -6,10 +6,15 @@ import {
   faAdd,
   faArrowLeft,
   faArrowRight,
+  faArrowUpRightFromSquare,
+  faBook,
   faCamera,
   faCheck,
   faCircleCheck,
+  faCircleUp,
   faCircleXmark,
+  faCode,
+  faDownload,
   faGear,
   faPlay,
   faRightFromBracket,
@@ -25,35 +30,32 @@ import Login from "./routes/authentication/Login.vue";
 import './style.css'
 import Instance from "./routes/instance/instance/Instance.vue";
 import {CurseApiService} from "mine4ease-ipc-api";
-import {InstanceService} from "./shared/services/InstanceService.ts";
+import {InstanceService} from "./shared/services/InstanceService";
 import InstanceNotFound from "./routes/instance/instance-error/InstanceNotFound.vue";
-import {MinecraftService} from "./shared/services/MinecraftService.ts";
-import {AuthService} from "./shared/services/AuthService.ts";
+import {MinecraftService} from "./shared/services/MinecraftService";
+import {AuthService} from "./shared/services/AuthService";
 import {faMicrosoft} from "@fortawesome/free-brands-svg-icons";
-import {GlobalSettingsService} from "./shared/services/GlobalSettingsService.ts";
+import {GlobalSettingsService} from "./shared/services/GlobalSettingsService";
 import Mods from "./routes/mods/Mods.vue";
-import {ModService} from "./shared/services/ModService.ts";
+import {ModService} from "./shared/services/ModService";
 import ModDetails from "./routes/mods/mod-details/ModDetails.vue";
+import InstanceMods from "./routes/instance/instance-mods/InstanceMods.vue";
 
 library.add(
   faStar, faGear, faRightFromBracket, faAdd, faCamera, faMicrosoft,
   faTrashCan, faArrowRight, faArrowLeft, faPlay, faCircleXmark, faCircleCheck,
-  faGear, faSpinner, faCheck, faUpRightFromSquare
+  faGear, faSpinner, faCheck, faUpRightFromSquare, faDownload, faBook, faCode,
+  faArrowUpRightFromSquare, faCircleUp
 );
-
 const routes = [
   {
     path: '/instance', component: Instances, children: [
       { path: '/:id', name: 'instance', component: Instance },
-      { path: '/:id/mods', name: 'instance-mods', component: Mods },
-      { path: '/:id/mods/:modId', name: 'instance-mods-details', component: ModDetails},
-      { path: 'create', name: 'instance-create', component: CreateInstance },
-      { path: 'not-found', name: 'instance-not-found', component: InstanceNotFound }
-    ]
-  },
-  {
-    path: '/mods', component: Mods, children: [
-      { path: '/:id', name: 'mod-details', component: ModDetails}
+      { path: '/:id/mods', component: InstanceMods },
+      { path: '/create', component: CreateInstance },
+      { path: '/not-found', component: InstanceNotFound },
+      { path: '/mods', component: Mods },
+      { path: '/mods/:id', component: ModDetails },
     ]
   },
   {
@@ -66,7 +68,7 @@ const routes = [
 
 const router = createRouter({
   history: createWebHashHistory(),
-  routes,
+  routes
 })
 
 const app = createApp(App)

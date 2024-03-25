@@ -1,5 +1,5 @@
-export interface ObjectWithState {
-  state?: State;
-}
+import {TaskEvent} from "mine4ease-ipc-api/src/task/Task.ts";
 
-export type State = "loading" | "finished" | "errored";
+export interface EventsState {
+  events: TaskEvent[];
+}

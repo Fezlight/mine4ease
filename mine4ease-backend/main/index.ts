@@ -82,6 +82,15 @@ function createWindow() {
     if (url.startsWith('https:')) shell.openExternal(url)
     return { action: 'deny' }
   })
+
+  win.webContents.on('will-navigate', (event) => {
+    if(!event.url.includes('localhost')) {
+      event.preventDefault();
+      shell.openExternal(event.url);
+    } else {
+      event.preventDefault();
+    }
+  })
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common

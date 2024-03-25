@@ -2,7 +2,7 @@ import {IModService} from "mine4ease-ipc-api/src/services/ModService";
 import {ADD_TASK_EVENT_NAME, INSTANCE_PATH, InstanceSettings, Mod, ModSettings} from "mine4ease-ipc-api";
 import {InstallModTask} from "../task/InstallModTask";
 import {$eventEmitter, $utils} from "../config/ObjectFactoryConfig";
-import {join} from "path";
+import {join} from "node:path";
 
 export class ModService implements IModService {
   async addMod(mod: Mod, instance: InstanceSettings): Promise<string> {
@@ -11,8 +11,8 @@ export class ModService implements IModService {
     return task.id;
   }
 
-  deleteMod(mod: Mod, instance: InstanceSettings): Promise<void> {
-    return Promise.resolve(undefined);
+  deleteMod(mod: Mod, instance: InstanceSettings): Promise<string> {
+    return Promise.resolve("");
   }
 
   updateMod(previousMod: Mod, instance: InstanceSettings): Promise<string> {
@@ -26,7 +26,6 @@ export class ModService implements IModService {
 
     return modsJson.mods.size;
   }
-
 }
 
 export const $modService = new ModService();

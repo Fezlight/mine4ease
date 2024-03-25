@@ -63,6 +63,10 @@ button[type=submit] {
   @apply bg-sky-600/60 hover:bg-sky-600/50 focus:ring-sky-600/20;
 }
 
+.secondary {
+  @apply bg-amber-600/60 hover:bg-amber-600/50 focus:ring-amber-600/20;
+}
+
 button {
   @apply bg-gray-800 focus:ring-4 focus:outline-none font-medium rounded-lg text-sm text-center text-white items-center focus:ring-sky-600/20;
 }

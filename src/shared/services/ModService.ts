@@ -6,8 +6,8 @@ export class ModService implements IModService {
     return window.ipcRenderer.invoke('modService.addMod', JSON.stringify(mod), JSON.stringify(instance));
   }
 
-  deleteMod(mod: Mod, instance: InstanceSettings): Promise<void> {
-    return Promise.resolve(undefined);
+  deleteMod(mod: Mod, instance: InstanceSettings): Promise<string> {
+    return Promise.resolve("");
   }
 
   updateMod(targetMod: Mod, instance: InstanceSettings): Promise<string> {

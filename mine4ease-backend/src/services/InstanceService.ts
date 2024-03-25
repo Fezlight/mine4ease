@@ -120,7 +120,7 @@ export class InstanceService implements IInstanceService {
 
     return this.utils.saveFile({
       data: JSON.stringify(instance, null, 2),
-      path: INSTANCE_PATH + instance.id,
+      path: path.join(INSTANCE_PATH, instance.id),
       filename: "instance.json"
     }).then(() => instanceSettings);
   }

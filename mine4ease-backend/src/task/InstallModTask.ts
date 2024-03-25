@@ -31,11 +31,18 @@ export class InstallModTask extends Task {
 
     if (this._mod.apiType === ApiType.CURSE) {
       let mods = await $apiService.getFileById(this._mod.id, this._instance.versions.minecraft.name, this._instance.modLoader!);
+      let modInfo = await $apiService.searchItemById(this._mod.id, this._instance.versions.minecraft.name, this._instance.modLoader!);
 
       logger.debug(`getFileById (id: ${this._mod.id}, version: ${this._instance.versions.minecraft.name}, modLoader: ${this._instance.modLoader}): ${JSON.stringify(mods)}`);
 
       mod = Object.assign(new Mod(), mods[0]);
       mod.url = mod._url;
+      mod.displayName = modInfo.displayName;
+      mod.authors = modInfo.authors;
+      mod.summary = modInfo.summary;
+      mod.categories = modInfo.categories;
+      mod.iconUrl = modInfo.iconUrl;
+      mod.downloadCount = modInfo.downloadCount;
 
       if(!mod._url) throw new Error(`No url found to download mod id: ${mod.id}`);
 

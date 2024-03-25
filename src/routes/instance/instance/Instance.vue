@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import {inject, Ref, ref, watchEffect} from "vue";
-import {IInstanceService, IMinecraftService, Instance, InstanceSettings, Mod, TaskEvent} from "mine4ease-ipc-api";
-import {RouteLocationRaw, useRoute} from "vue-router";
+import {IInstanceService, IMinecraftService, InstanceSettings, Mod, TaskEvent} from "mine4ease-ipc-api";
+import {useRoute} from "vue-router";
 import Tile from "../../../shared/components/Tile.vue";
 import {TaskListeners} from "../../../shared/listeners/TaskListeners";
 import {Transitions} from "../../../shared/models/Transitions";
+import {redirect} from "../../../shared/utils/Utils";
 
 const instance: Ref<InstanceSettings | undefined> | undefined = inject('currentInstance');
 
@@ -34,15 +35,6 @@ function launchGame() {
     $minecraftService?.launchGame(instance.value)
       .then(() => loadingGame.value = false);
   }
-}
-
-function redirect(route: RouteLocationRaw, instance: Instance) {
-  let transition: Transitions = {
-    route: route,
-    instance: instance
-  }
-
-  emit('redirect', transition);
 }
 
 const events: Ref<{ [key: string]: TaskEvent }> = ref({});
@@ -133,15 +125,15 @@ watchEffect(() => {
       <div class="grid grid-cols-3 gap-3">
         <Tile v-if="isModded()" title="Mods" :subtitle="`You have ${mods ? Object.keys(mods).length : 0} mods installed`"
               button-title="Manage mods"
-              @action="redirect({name: 'instance-mods', params: {id: id}}, instance)"></Tile>
+              @action="redirect({path: `/${instance.id}/mods`}, emit)"></Tile>
         <Tile v-if="isModded()" title="Shaders" subtitle="You have ?? shaders installed"
               :disabled="true"
               button-title="Manage shaders"
-              @action="redirect({name: 'instance-shaders', params: {id: id}}, instance)"></Tile>
+              @action="redirect({name: 'instance-shaders', params: {id: id}}, emit)"></Tile>
         <Tile title="Resource Packs" subtitle="You have ?? resources packs installed"
               :disabled="true"
               button-title="Manage resource packs"
-              @action="redirect({name: 'instance-ressource-packs', params: {id: id}}, instance)"></Tile>
+              @action="redirect({name: 'instance-ressource-packs', params: {id: id}}, emit)"></Tile>
       </div>
       <div class="flex flex-col">
         <span v-for="event in events">{{ event.name }} : {{ event.state }}</span>

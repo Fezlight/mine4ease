@@ -8,6 +8,7 @@ export class Mod extends File {
   eventId?: string;
   displayName: string;
   authors: { id: string, name: string }[];
+  summary: string;
   description: string;
   gameVersion: string;
   iconUrl: string;
@@ -16,6 +17,8 @@ export class Mod extends File {
   dependencies: Mod[];
   categories: Category[];
   relationType?: number;
+  links?: Links;
+  downloadCount: number;
 
   mainPath(): string {
     return MODS_PATH;
@@ -27,6 +30,13 @@ export class Category {
   name: string;
   iconUrl: string;
   selected: boolean;
+}
+
+export class Links {
+  websiteUrl: string;
+  wikiUrl: string;
+  issuesUrl: string;
+  sourceUrl: string;
 }
 
 export enum ModLoader {

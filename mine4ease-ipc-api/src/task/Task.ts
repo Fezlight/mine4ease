@@ -51,7 +51,7 @@ export interface TaskEvent {
   state: TaskState;
 }
 
-export type TaskState = "FINISHED" | "CREATED" | "PAUSED" | "IN_PROGRESS" | "FAILED";
+export type TaskState = "FINISHED" | "CREATED" | "PAUSED" | "IN_PROGRESS" | "FAILED" | "RETRY_NEEDED";
 
 export class TaskRunner {
   private queue = new Queue<Task>();

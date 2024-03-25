@@ -20,7 +20,7 @@ $authService?.getProfile()
 
 function createInstance() {
   selectedInstance.value = undefined;
-  router.push({name: 'instance-create'});
+  router.push({path: '/create'});
 }
 
 function selectInstance(instance: Instance) {
@@ -40,7 +40,7 @@ function selectInstance(instance: Instance) {
     router.push({name: 'instance', params: {id: instance.id}});
   })
   .catch(() => {
-    router.push({name: 'instance-not-found', query: {id: instance.id}});
+    router.push({name: '/not-found', query: {id: instance.id}});
   });
 }
 

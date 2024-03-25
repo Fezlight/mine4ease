@@ -16,7 +16,7 @@ export interface IModService {
    * @param mod mod to add
    * @param instance instance object
    */
-  deleteMod(mod: Mod, instance: InstanceSettings): Promise<void>;
+  deleteMod(mod: Mod, instance: InstanceSettings): Promise<string>;
 
   /**
    * Update a mod from an instance

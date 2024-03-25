@@ -34,7 +34,14 @@ export interface ApiService {
    * @param gameVersion minecraft version
    * @param modLoader modloader type (FORGE, FABRIC, etc...)
    */
-  searchItemById(id: string, gameVersion: string, modLoader: ModLoader): Promise<Mod | Shader>;
+  searchItemById(id: string, gameVersion: string | undefined, modLoader: ModLoader | undefined): Promise<Mod>;
+
+  /**
+   * Get mod description
+   *
+   * @param id mod id
+   */
+  getModDescription(id: string): Promise<string>;
 
   /**
    * Not yet implemented for first version
@@ -112,7 +119,7 @@ export class CurseApiService implements ApiService {
     });
   }
 
-  async searchItemById(id: string, gameVersion: string, modLoader: ModLoader): Promise<Mod | Shader> {
+  async searchItemById(id: string, gameVersion: string | undefined, modLoader: ModLoader | undefined): Promise<Mod> {
     return fetch(CURSE_FORGE_API_URL + '/v1/mods/' + id, {
       method: 'GET',
       headers: {
@@ -122,6 +129,19 @@ export class CurseApiService implements ApiService {
       return response.json();
     }).then((response: any) => {
       return this.toMod(response.data, gameVersion, modLoader);
+    });
+  }
+
+  async getModDescription(id: string): Promise<string> {
+    return fetch(CURSE_FORGE_API_URL + `/v1/mods/${id}/description`, {
+      method: 'GET',
+      headers: {
+        'x-api-key': CURSE_FORGE_API_KEY
+      }
+    }).then(response => {
+      return response.json();
+    }).then((response: any) => {
+      return response.data;
     });
   }
 
@@ -208,10 +228,12 @@ export class CurseApiService implements ApiService {
     mod.gameVersion = gameVersion;
     mod.modLoader = modLoader;
     mod.apiType = ApiType.CURSE;
-    mod.description = v.summary;
+    mod.summary = v.summary;
     mod.iconUrl = v.logo?.url;
     mod.authors = v.authors;
     mod.categories = v.categories;
+    mod.links = v.links;
+    mod.downloadCount = v.downloadCount;
     mod._url = v.downloadUrl ?? v.latestFiles?.[0].downloadUrl;
     mod.size = v.fileLength ??  v.latestFiles?.[0].fileLength;
     mod.sha1 = v.hashes?.[0].value ?? v.latestFiles?.[0].hashes[0]?.value;

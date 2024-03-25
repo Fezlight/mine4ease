@@ -4,8 +4,6 @@ import {CURRENT_ACCOUNT_STORAGE_CACHE, CURRENT_ACCOUNT_STORAGE_KEY} from "../con
 import {Logger} from "winston";
 import {$authProvider, $cacheProvider, logger} from "../config/ObjectFactoryConfig.ts";
 
-export const ACCOUNTS_STORAGE_KEY = "ACCOUNTS"
-
 export class AuthService implements IAuthService {
   private authProvider: AuthProvider;
   private cacheProvider: CacheProvider;
