@@ -4,7 +4,7 @@ import {File} from "./File";
 export const MODS_PATH = "/mods"
 
 export class Mod extends File {
-  id: string;
+  id: number;
   eventId?: string;
   displayName: string;
   authors: { id: string, name: string }[];

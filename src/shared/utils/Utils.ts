@@ -1,8 +1,6 @@
 import {RouteLocationRaw} from "vue-router";
 import {Transitions} from "../models/Transitions";
 import {TaskEvent} from "mine4ease-ipc-api";
-import {EventsState} from "../models/State";
-import {TaskState} from "../../../mine4ease-ipc-api";
 
 export function redirect(route: RouteLocationRaw, emit: Function) {
   let transition: Transitions = {
@@ -24,25 +22,13 @@ export function transformDownloadCount(downloadCount: number | undefined) {
   }
 }
 
-export function addNewEvent(object: EventsState, eventId: string, state: TaskState) {
-  let event: TaskEvent = {
-    id: eventId,
-    name: "",
-    state: state
-  }
-
-  if(!object.events) {
-    object.events = [];
-  }
-
-  object.events.push(event);
-}
-
-export function updateState(object: TaskEvent, _event: any, value: TaskEvent) {
+export function updateState(object: TaskEvent, _event: any, value: TaskEvent, endCallback?: Function) {
   if(object.id == value.id) {
     object.state = value.state;
     if(value.state === 'FAILED') {
       setTimeout(() => object.state = "RETRY_NEEDED", 3000);
+    } else if(value.state === 'FINISHED' && endCallback) {
+      endCallback()
     }
   }
 }

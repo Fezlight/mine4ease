@@ -27,7 +27,7 @@ function uniqueCat(): IterableIterator<Category> {
       <button @click="redirect({path: `/mods/${mod.id}`}, emit)" class="w-[96px] h-[96px]">
         <img v-bind:src="mod.iconUrl" v-bind:alt="mod.displayName + ' icon'" class="object-cover">
       </button>
-      <div class="flex flex-col justify-between flex-grow max-w-2xl xl:max-w-none">
+      <div class="flex flex-col justify-between flex-grow max-w-xl xl:max-w-none">
         <h3 class="truncate">{{ mod.displayName }} <span class="text-gray-400 text-sm">by {{mod.authors?.map(a => a.name).join(', ')}}</span></h3>
         <p class="text-sm">{{ mod.summary }}</p>
         <span class="inline-block space-x-2">
@@ -41,7 +41,7 @@ function uniqueCat(): IterableIterator<Category> {
     </div>
     <div class="border-b-2 border-amber-400"></div>
     <div class="flex flex-row gap-4 px-4 py-5">
-      <div class="justify-self-start flex flex-row items-center gap-2 justify-between" v-for="categorie in uniqueCat()">
+      <div class="justify-self-start flex flex-row items-center gap-2 justify-between" v-for="categorie in uniqueCat()" v-bind:key="categorie.id">
         <img v-bind:src="categorie.iconUrl" v-bind:alt="categorie.name + ' icon'" class="w-7 h-7">
         <span class="text-sm">{{categorie.name}}</span>
       </div>

@@ -126,7 +126,7 @@ const listener = new TaskListeners();
         </div>
       </section>
       <section class="flex flex-col overflow-y-auto flex-grow">
-        <ModTile v-for="mod in mods" :mod="mod" @redirect="(t: Transitions) => redirect(t.route, emit)" class="mb-4">
+        <ModTile v-for="mod in mods" :mod="mod" @redirect="(t: Transitions) => redirect(t.route, emit)" class="mb-4" v-bind:key="mod.id">
           <EventWrapper :listener="listener" v-slot:default="s">
             <button type="button" class="px-5 py-2.5 primary inline-block space-x-1" v-on:click="s.createEvent(addMod(mod))" >
               <font-awesome-icon :icon="['fas', 'add']" />
@@ -138,12 +138,12 @@ const listener = new TaskListeners();
     </section>
     <section class="rounded-lg bg-black/30 shadow-md shadow-black/40 overflow-y-auto min-w-[200px] max-w-[200px] mb-1">
       <div class="flex flex-col gap-3 p-4">
-        <button type="button" v-for="category in selectedCategories" @click="addRemoveCat(category); searchMod()" class="flex flex-row text-left gap-2 rounded border-2 border-gray-800 px-2 py-1 bg-gray-800">
+        <button type="button" v-for="category in selectedCategories" v-bind:key="category.id" @click="addRemoveCat(category); searchMod()" class="flex flex-row text-left gap-2 rounded border-2 border-gray-800 px-2 py-1 bg-gray-800">
           <img v-bind:src="category.iconUrl" v-bind:alt="category.name + ' icon'" class="w-7 h-7">
           <span class="text-sm">{{category.name}}</span>
         </button>
         <hr class="border-amber-400" v-if="selectedCategories.length">
-        <button type="button" v-for="category in orderedCategories(categories)" @click="addRemoveCat(category); searchMod()" class="flex flex-row text-left gap-2 px-2 py-1">
+        <button type="button" v-for="category in orderedCategories(categories)" v-bind:key="category.id" @click="addRemoveCat(category); searchMod()" class="flex flex-row text-left gap-2 px-2 py-1">
           <img v-bind:src="category.iconUrl" v-bind:alt="category.name + ' icon'" class="w-7 h-7">
           <span class="text-sm">{{category.name}}</span>
         </button>

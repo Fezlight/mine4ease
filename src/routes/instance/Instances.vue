@@ -91,6 +91,7 @@ $globalSettingsService?.retrieveSettings().then(data => {
         <InstanceIcon :id="instance.id"
                       :class="{ 'active': selectedInstance === instance }"
                       v-for="instance in settings?.instances"
+                      v-bind:key="instance.id"
                       @click="selectInstance(instance)">
           <img :src="'mine4ease-icon://' + `${instance.id}/${instance.iconName}`"
                alt="Instance logo"

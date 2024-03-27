@@ -3,6 +3,7 @@ import {ADD_TASK_EVENT_NAME, INSTANCE_PATH, InstanceSettings, Mod, ModSettings} 
 import {InstallModTask} from "../task/InstallModTask";
 import {$eventEmitter, $utils} from "../config/ObjectFactoryConfig";
 import {join} from "node:path";
+import {UninstallModTask} from "../task/UninstallModTask.ts";
 
 export class ModService implements IModService {
   async addMod(mod: Mod, instance: InstanceSettings): Promise<string> {
@@ -11,13 +12,38 @@ export class ModService implements IModService {
     return task.id;
   }
 
-  deleteMod(mod: Mod, instance: InstanceSettings): Promise<string> {
-    return Promise.resolve("");
+  async deleteMod(mod: Mod, instance: InstanceSettings): Promise<string> {
+    let task = new UninstallModTask(mod, instance);
+    $eventEmitter.emit(ADD_TASK_EVENT_NAME, task);
+    return task.id;
   }
 
   updateMod(previousMod: Mod, instance: InstanceSettings): Promise<string> {
     return Promise.resolve("");
   }
+
+  async getInstanceMods(instanceId: string): Promise<ModSettings> {
+    return $utils.readFile(join(INSTANCE_PATH, instanceId, "mods.json"))
+      .then(JSON.parse)
+      .then(modSettings => {
+        modSettings.mods = new Map(Object.entries(modSettings.mods));
+        return modSettings;
+      })
+      .catch(() => new ModSettings());
+  }
+
+  async saveAllMods(modSettings: ModSettings, instanceId: string): Promise<void> {
+    let modsJson = {
+      mods: Object.fromEntries(modSettings.mods)
+    };
+
+    await $utils.saveFile({
+      data: JSON.stringify(modsJson, null, 2),
+      path: join(INSTANCE_PATH, instanceId),
+      filename: "mods.json"
+    });
+  }
+
 
   async countMod(instanceId: string) {
     let modsJson: ModSettings = await $utils.readFile(join(INSTANCE_PATH, instanceId, "mods.json"))

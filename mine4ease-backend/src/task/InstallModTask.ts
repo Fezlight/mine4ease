@@ -8,9 +8,10 @@ import {
   Task,
   TaskRunner
 } from "mine4ease-ipc-api";
-import {$apiService, $downloadService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig";
+import {$apiService, $downloadService, $eventEmitter, logger} from "../config/ObjectFactoryConfig";
 import {join} from "path";
 import {EventEmitter} from "events";
+import {$modService} from "../services/ModService.ts";
 
 export class InstallModTask extends Task {
   private readonly _instance: InstanceSettings;
@@ -64,19 +65,11 @@ export class InstallModTask extends Task {
 
     await this._taskRunner.process();
 
-    let modsJson: ModSettings = await $utils.readFile(join(INSTANCE_PATH, this._instance.id, "mods.json"))
-      .then(JSON.parse)
-      .catch(() => {});
+    let modsJson: ModSettings = await $modService.getInstanceMods(this._instance.id);
 
-    if (!modsJson) {
-      modsJson = new ModSettings();
-    }
+    console.log(modsJson.mods);
+    modsJson.mods.set(mod.id, mod);
 
-    modsJson.mods[mod.id] = mod;
-
-    await $utils.saveFile({
-      data: JSON.stringify(modsJson, null, 2),
-      path: join(INSTANCE_PATH, this._instance.id), filename: "mods.json"
-    });
+    await $modService.saveAllMods(modsJson, this._instance.id);
   }
 }

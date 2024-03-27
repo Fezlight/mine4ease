@@ -52,11 +52,11 @@ function selectVersion(version: Version) {
 
 <template>
   <div class="space-y-2" v-if="modLoader != null">
-    <label for="version">{{title}} version</label>
+    <label for="version">{{ title }} version</label>
     <select id="version" class="w-full" v-model="selectedVersion">
       <option v-show="modloaderVersions?.length == 0" disabled :value="undefined">No {{ title }} version available</option>
       <option v-for="version of modloaderVersions" :value="version" :selected="version.recommended">
-        {{ version.name }} {{ version.recommended ? '<RECOMMENDED>' : ''}}
+        {{ version.name }} {{ version.recommended ? "<RECOMMENDED>" : ''}}
       </option>
     </select>
   </div>

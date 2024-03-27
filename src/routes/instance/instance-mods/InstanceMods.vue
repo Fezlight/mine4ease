@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import {inject, ref, Ref, watchEffect} from "vue";
-import {InstanceSettings, Mod} from "mine4ease-ipc-api";
+import {InstanceSettings, Mod, ModSettings} from "mine4ease-ipc-api";
 import {useRoute, useRouter} from "vue-router";
 import ModTile from "../../../shared/components/mods/ModTile.vue";
 import {TaskListeners} from "../../../shared/listeners/TaskListeners";
-import {EventsState} from "../../../shared/models/State";
 import {ModService} from "../../../shared/services/ModService.ts";
 import EventWrapper from "../../../shared/components/events/EventWrapper.vue";
 import {Transitions} from "../../../shared/models/Transitions.ts";
@@ -14,27 +13,29 @@ const route = useRoute();
 const router = useRouter();
 const instance: Ref<InstanceSettings | undefined> | undefined = inject('currentInstance');
 const $modService: ModService | undefined = inject('modService');
-const mods: Ref<(Mod & EventsState)[]> = ref([]);
+const mods: Ref<Map<string, Mod> | undefined> = ref(new Map);
 
 const emit = defineEmits<{
   (e: 'redirect', to: Transitions): void
 }>();
 
 async function getMods() {
-  let modsReq = await fetch(`mine4ease-instance://${instance?.value?.id}/mods`)
+  mods.value = await fetch(`mine4ease-instance://${instance?.value?.id}/mods`)
   .then(res => res.json())
+  .then((mods: ModSettings) => {
+    return new Map(Object.entries(mods.mods));
+  })
   .catch(() => undefined);
-
-  mods.value = modsReq?.mods;
 }
 
-async function updateMod(mod: Mod & EventsState) {
+async function updateMod(mod: Mod) {
   if (!instance?.value) return;
 
+  // TODO
   return $modService?.updateMod(mod, instance.value);
 }
 
-async function deleteMod(mod: Mod & EventsState) {
+async function deleteMod(mod: Mod) {
   if (!instance?.value) return;
 
   return $modService?.deleteMod(mod, instance.value);
@@ -72,7 +73,7 @@ const listener = new TaskListeners();
     </section>
   </div>
   <section class="flex flex-col overflow-y-auto">
-    <ModTile v-for="mod in mods" :mod="mod" @redirect="(t: Transitions) => redirect(t.route, emit)" class="mb-4">
+    <ModTile v-for="[modId, mod] in mods" :mod="mod" @redirect="(t: Transitions) => redirect(t.route, emit)" class="mb-4" v-bind:key="modId">
       <EventWrapper :listener="listener" v-slot:default="s">
         <button type="button" class="px-5 py-2.5 secondary inline-block space-x-1" v-on:click="s.createEvent(updateMod(mod))">
           <font-awesome-icon :icon="['fas', 'circle-up']" />
@@ -80,7 +81,8 @@ const listener = new TaskListeners();
         </button>
       </EventWrapper>
       <EventWrapper :listener="listener" v-slot:default="s">
-        <button type="button" class="px-5 py-2.5 danger inline-block space-x-1" v-on:click="s.createEvent(deleteMod(mod))">
+        <button type="button" class="px-5 py-2.5 danger inline-block space-x-1"
+                v-on:click="s.createEvent(deleteMod(mod), () => mods?.delete(modId))">
           <font-awesome-icon :icon="['fas', 'trash-can']" />
           <span>Delete</span>
         </button>
