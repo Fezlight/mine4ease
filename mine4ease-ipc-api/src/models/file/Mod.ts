@@ -9,6 +9,8 @@ export class Mod extends File {
   displayName: string;
   authors: { id: string, name: string }[];
   summary: string;
+  installedFileId: number;
+  installedFileDate: Date;
   description: string;
   gameVersion: string;
   iconUrl: string;

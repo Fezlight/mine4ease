@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import {inject, Ref, ref, watchEffect} from "vue";
-import {ApiService, InstanceSettings, Mod, ModLoader} from "mine4ease-ipc-api";
+import {inject, Ref, ref} from "vue";
+import {ApiType, getByType, InstanceSettings, Mod, ModLoader} from "mine4ease-ipc-api";
 import {useRoute} from "vue-router";
 import {transformDownloadCount} from "../../../shared/utils/Utils";
+import BackToLastPage from "../../../shared/components/buttons/BackToLastPage.vue";
+import LoadingComponent from "../../../shared/components/LoadingComponent.vue";
 
 const route = useRoute();
 const instance: Ref<InstanceSettings | undefined> | undefined = inject('currentInstance');
-const $apiService: ApiService | undefined = inject('apiService');
 const mod: Ref<Mod | undefined> = ref();
 
-async function getModDetails(id: string): Promise<Mod> {
+async function getModDetails(id: string): Promise<Mod | undefined> {
   let gameVersion: string | undefined;
   let modLoader: ModLoader | undefined;
   if (instance?.value) {
@@ -17,36 +18,48 @@ async function getModDetails(id: string): Promise<Mod> {
     modLoader = instance.value?.modLoader;
   }
 
-  return $apiService?.searchItemById(id, gameVersion, modLoader)
+  return getByType(ApiType.CURSE).searchItemById(Number(id), gameVersion, modLoader)
     .then(m => mod.value! = m);
 }
 
-async function getModDescription(id: string): Promise<string> {
-  return $apiService?.getModDescription(id)
+async function getModDescription(id: string): Promise<string | undefined> {
+  return getByType(ApiType.CURSE).getModDescription(Number(id))
   .then(desc => mod.value!.description = desc);
 }
-
-watchEffect(() => {
-  if (route.params.id) {
-    getModDetails(<string>route.params.id)
-      .then(() => getModDescription(<string>route.params.id));
-  }
-})
-
 </script>
 <template>
   <div class="flex flex-col gap-4 mb-4">
     <section class="flex flex-row items-center gap-4 rounded-lg bg-black/30 shadow-md shadow-black/40 p-4">
-      <button @click="$router.back()" class="text-2xl bg-transparent">
-        <font-awesome-icon :icon="['fas', 'arrow-left']" class="flex" />
-      </button>
+      <BackToLastPage @back-to-last-page="() => $router.back()"></BackToLastPage>
     </section>
   </div>
   <div class="flex flex-row gap-4">
-    <section class="overflow-y-auto min-w-[250px] max-w-[250px]">
+    <LoadingComponent class="overflow-y-auto min-w-[250px] max-w-[250px]" :promise="() => getModDetails(<string>route.params.id)">
+      <template v-slot:loading>
+        <div class="flex flex-col rounded-lg bg-black/30 shadow-md shadow-black/40 p-4 gap-4 mb-4">
+          <div role="status" class="animate-pulse">
+            <div class="h-20 rounded-full bg-gray-600 mb-4 w-1/2"></div>
+            <div class="h-4 rounded-full bg-gray-600 mb-4"></div>
+            <div class="h-3 rounded-full bg-gray-600 mb-4"></div>
+            <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+            <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+            <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+            <div class="h-2 rounded-full bg-gray-600"></div>
+          </div>
+        </div>
+        <div class="flex flex-col rounded-lg bg-black/30 shadow-md shadow-black/40 p-4 gap-4 mb-4">
+          <div role="status" class="animate-pulse">
+            <div class="h-3 rounded-full bg-gray-600  mb-4"></div>
+            <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+            <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+            <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+            <div class="h-2 rounded-full bg-gray-600"></div>
+          </div>
+        </div>
+      </template>
       <div class="flex flex-col rounded-lg bg-black/30 shadow-md shadow-black/40 p-4 gap-4 mb-4">
         <div class="w-20 h-20">
-          <img v-bind:src="mod?.iconUrl" v-bind:alt="mod?.displayName + ' icon'" class="object-cover rounded-lg">
+          <img :src="mod?.iconUrl" :alt="mod?.displayName + ' icon'" class="object-cover rounded-lg">
         </div>
         <h3>{{ mod?.displayName }}</h3>
         <p class="text-sm">{{ mod?.summary }}</p>
@@ -70,10 +83,29 @@ watchEffect(() => {
           <a :href="mod?.links.sourceUrl">Source</a>
           <font-awesome-icon :icon="['fas', 'arrow-up-right-from-square']" class="w-3"/></span>
       </div>
-    </section>
-    <section class="flex-grow rounded-lg bg-black/30 shadow-md shadow-black/40 p-4">
+    </LoadingComponent>
+    <LoadingComponent class="flex-grow rounded-lg bg-black/30 shadow-md shadow-black/40 p-4" :promise="() => getModDescription(<string>route.params.id)">
+      <template v-slot:loading>
+        <div role="status" class="animate-pulse">
+          <div class="h-8 rounded-full bg-gray-600 mb-4"></div>
+          <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+          <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+          <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+          <div class="h-2 rounded-full bg-gray-600 mb-4"></div>
+          <div class="h-8 rounded-full bg-gray-600 mb-4"></div>
+          <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+          <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+          <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+          <div class="h-2 rounded-full bg-gray-600 mb-4"></div>
+          <div class="h-8 rounded-full bg-gray-600 mb-4"></div>
+          <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+          <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+          <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
+          <div class="h-2 rounded-full bg-gray-600"></div>
+        </div>
+      </template>
       <span id="mod-description" v-html="mod?.description"></span>
-    </section>
+    </LoadingComponent>
   </div>
 </template>
 <style>

@@ -1,6 +1,7 @@
 import {
   ApiType,
   DownloadRequest,
+  getByType,
   INSTANCE_PATH,
   InstanceSettings,
   Mod,
@@ -8,7 +9,7 @@ import {
   Task,
   TaskRunner
 } from "mine4ease-ipc-api";
-import {$apiService, $downloadService, $eventEmitter, logger} from "../config/ObjectFactoryConfig";
+import {$downloadService, $eventEmitter, logger} from "../config/ObjectFactoryConfig";
 import {join} from "path";
 import {EventEmitter} from "events";
 import {$modService} from "../services/ModService.ts";
@@ -19,7 +20,7 @@ export class InstallModTask extends Task {
   private readonly _subEventEmitter: EventEmitter;
   private readonly _taskRunner: TaskRunner;
 
-  constructor(mod: Mod, instance: InstanceSettings) {
+  constructor(mod: Mod, instance: InstanceSettings, version?: string) {
     super($eventEmitter, logger, () => `Installing mod ${mod._name}...`);
     this._mod = mod;
     this._instance = instance;
@@ -29,10 +30,11 @@ export class InstallModTask extends Task {
 
   async run(): Promise<void> {
     let mod: Mod | undefined;
+    let apiService = getByType(this._mod.apiType);
 
     if (this._mod.apiType === ApiType.CURSE) {
-      let mods = await $apiService.getFileById(this._mod.id, this._instance.versions.minecraft.name, this._instance.modLoader!);
-      let modInfo = await $apiService.searchItemById(this._mod.id, this._instance.versions.minecraft.name, this._instance.modLoader!);
+      let mods = await apiService.getFileById(this._mod.id, this._instance.versions.minecraft.name, this._instance.modLoader!);
+      let modInfo = await apiService.searchItemById(this._mod.id, this._instance.versions.minecraft.name, this._instance.modLoader!);
 
       logger.debug(`getFileById (id: ${this._mod.id}, version: ${this._instance.versions.minecraft.name}, modLoader: ${this._instance.modLoader}): ${JSON.stringify(mods)}`);
 
@@ -67,8 +69,7 @@ export class InstallModTask extends Task {
 
     let modsJson: ModSettings = await $modService.getInstanceMods(this._instance.id);
 
-    console.log(modsJson.mods);
-    modsJson.mods.set(mod.id, mod);
+    modsJson.mods.set(String(mod.id), mod);
 
     await $modService.saveAllMods(modsJson, this._instance.id);
   }

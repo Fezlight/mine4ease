@@ -1,7 +1,7 @@
 import * as winston from "winston";
 import {createLogger, format} from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
-import {CacheProvider, CurseApiService, DownloadService, TaskRunner, Utils} from "mine4ease-ipc-api";
+import {CacheProvider, DownloadService, TaskRunner, Utils} from "mine4ease-ipc-api";
 import {AuthProvider} from "../providers/AuthProvider";
 import path from "node:path";
 import {app} from "electron";
@@ -47,7 +47,6 @@ export const $taskRunner = new TaskRunner(logger, $eventEmitter, false, false);
 
 // Service
 export const $downloadService = new DownloadService($utils, logger);
-export const $apiService = new CurseApiService();
 
 // Add default caches
 defaultCaches.forEach((v, k) => $cacheProvider.put(k, v));

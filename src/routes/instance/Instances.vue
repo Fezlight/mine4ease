@@ -91,14 +91,26 @@ $globalSettingsService?.retrieveSettings().then(data => {
         <InstanceIcon :id="instance.id"
                       :class="{ 'active': selectedInstance === instance }"
                       v-for="instance in settings?.instances"
-                      v-bind:key="instance.id"
+                      :key="instance.id"
                       @click="selectInstance(instance)">
-          <img :src="'mine4ease-icon://' + `${instance.id}/${instance.iconName}`"
-               alt="Instance logo"
-               class="object-cover" />
+          <template v-slot:pre-icon>
+            <span class="h-1/2 my-auto border-l-4 border-white/30 rounded-br-2xl rounded-tr-2xl hidden group-[.active]:hidden group-hover:block"></span>
+            <span class="border-l-4 border-white/30 rounded-br-2xl rounded-tr-2xl invisible group-hover:hidden group-[.active]:visible group-[.active]:block"></span>
+          </template>
+          <template v-slot:default>
+            <img :src="'mine4ease-icon://' + `${instance.id}/${instance.iconName}`"
+                 alt="Instance logo"
+                 class="object-cover" />
+          </template>
         </InstanceIcon>
         <InstanceIcon @click="createInstance()" custom-class="bg-sky-600/60">
-          <font-awesome-icon class="text-2xl text-white" :icon="['fas', 'add']" />
+          <template v-slot:pre-icon>
+            <span class="h-1/2 my-auto border-l-4 border-white/30 rounded-br-2xl rounded-tr-2xl hidden group-[.active]:hidden group-hover:block"></span>
+            <span class="border-l-4 border-white/30 rounded-br-2xl rounded-tr-2xl invisible group-hover:hidden group-[.active]:visible group-[.active]:block"></span>
+          </template>
+          <template v-slot:default>
+            <font-awesome-icon class="text-2xl text-white" :icon="['fas', 'add']" />
+          </template>
         </InstanceIcon>
       </div>
       <div class=" z-10 shadow-black/50 p-2 rounded-t-md border-t-[1px] border-gray-500/60 flex flex-col justify-center gap-2">
@@ -115,7 +127,7 @@ $globalSettingsService?.retrieveSettings().then(data => {
       </div>
     </section>
     <section class="content">
-      <router-view @create-instance="addInstance" @delete-instance="deleteInstance" @redirect="(t: Transitions) => redirect(t)" :instance="selectedInstance"></router-view>
+      <router-view @create-instance="addInstance" @delete-instance="deleteInstance" @redirect="(t: Transitions) => redirect(t)"></router-view>
     </section>
   </div>
 </template>

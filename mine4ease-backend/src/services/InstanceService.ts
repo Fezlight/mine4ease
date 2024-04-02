@@ -99,12 +99,12 @@ export class InstanceService implements IInstanceService {
     });
   }
 
-  openFolder(id: string) {
+  async openFolder(id: string) {
     this.logger.info("Opening instance folder with id : " + id);
     const shell = require('electron').shell;
 
     const instancePath = path.join(process.env.APP_DIRECTORY, INSTANCE_PATH, id);
-    shell.openPath(instancePath);
+    await shell.openPath(instancePath);
   }
 
   async saveInstanceSettings(instanceSettings: InstanceSettings): Promise<InstanceSettings> {

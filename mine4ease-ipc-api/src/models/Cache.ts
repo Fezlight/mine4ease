@@ -7,7 +7,7 @@ export class Cache {
     if(!this.path) return;
 
     const file = {
-      data: JSON.stringify(this.object),
+      data: JSON.stringify(this.object, null, 2),
       ...this
     };
 

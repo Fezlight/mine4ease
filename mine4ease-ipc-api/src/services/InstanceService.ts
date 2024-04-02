@@ -33,7 +33,7 @@ export interface IInstanceService {
    * Open instance folder by id
    * @param id instance id shared with the external server
    */
-  openFolder(id: string);
+  openFolder(id: string): Promise<void>;
 
   /**
    * Save instance settings

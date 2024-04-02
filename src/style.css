@@ -27,7 +27,7 @@ body {
 }
 
 .content {
-  @apply flex flex-col bg-black/40 p-6 bg-gray-800 flex-grow overflow-y-auto max-window-height;
+  @apply flex flex-col p-6 bg-gray-800 flex-grow overflow-y-auto max-window-height;
 }
 
 h1 {

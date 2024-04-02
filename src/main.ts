@@ -6,6 +6,7 @@ import {
   faAdd,
   faArrowLeft,
   faArrowRight,
+  faArrowRotateRight,
   faArrowUpRightFromSquare,
   faBook,
   faCamera,
@@ -16,6 +17,7 @@ import {
   faCode,
   faDownload,
   faGear,
+  faMagnifyingGlass,
   faPlay,
   faRightFromBracket,
   faSpinner,
@@ -29,7 +31,6 @@ import Instances from "./routes/instance/Instances.vue";
 import Login from "./routes/authentication/Login.vue";
 import './style.css'
 import Instance from "./routes/instance/instance/Instance.vue";
-import {CurseApiService} from "mine4ease-ipc-api";
 import {InstanceService} from "./shared/services/InstanceService";
 import InstanceNotFound from "./routes/instance/instance-error/InstanceNotFound.vue";
 import {MinecraftService} from "./shared/services/MinecraftService";
@@ -45,7 +46,7 @@ library.add(
   faStar, faGear, faRightFromBracket, faAdd, faCamera, faMicrosoft,
   faTrashCan, faArrowRight, faArrowLeft, faPlay, faCircleXmark, faCircleCheck,
   faGear, faSpinner, faCheck, faUpRightFromSquare, faDownload, faBook, faCode,
-  faArrowUpRightFromSquare, faCircleUp
+  faArrowUpRightFromSquare, faCircleUp, faArrowRotateRight, faMagnifyingGlass
 );
 const routes = [
   {
@@ -75,7 +76,6 @@ const app = createApp(App)
 .use(router)
 .component('font-awesome-icon', FontAwesomeIcon);
 
-app.provide('apiService', new CurseApiService());
 app.provide('instanceService', new InstanceService());
 app.provide('modService', new ModService());
 app.provide('minecraftService', new MinecraftService());

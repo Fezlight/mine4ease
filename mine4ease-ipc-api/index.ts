@@ -1,9 +1,12 @@
+import {ApiService, ApiType, curseApiService} from "./src/services/ApiService";
+
 export * from './src/services/InstanceService'
 export * from './src/services/GlobalSettingService'
 export * from './src/services/ApiService'
 export * from './src/services/DownloadService'
 export * from './src/services/MinecraftService'
 export * from './src/services/AuthService'
+export * from './src/services/ModService'
 export * from './src/providers/CacheProvider'
 export * from './src/models/instance/Instance'
 export * from './src/models/instance/InstanceSettings'
@@ -26,3 +29,10 @@ export * from './src/models/ExtractRequest'
 export * from './src/models/Rule'
 export * from './src/utils/Utils'
 export * from './src/task/Task'
+
+export function getByType(type: ApiType): ApiService {
+  if(type === ApiType.CURSE) {
+    return curseApiService;
+  }
+  throw new Error("Not yet implemented");
+}

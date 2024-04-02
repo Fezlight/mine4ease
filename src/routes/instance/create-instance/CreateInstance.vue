@@ -2,11 +2,10 @@
 import {inject, Ref, ref} from "vue";
 import {v4 as uuidv4} from 'uuid';
 import InstanceCard from "../../../shared/components/instance/InstanceCard.vue";
-import {ApiService, IInstanceService, Instance, InstanceSettings, ModLoader, Version} from "mine4ease-ipc-api";
+import {ApiType, getByType, IInstanceService, Instance, ModLoader, Version} from "mine4ease-ipc-api";
 import InstanceIcon from "../../../shared/components/instance/InstanceIcon.vue";
 import ModLoaderVersionsList from "../../../shared/components/ModLoaderVersionsList.vue";
 
-const $apiService: ApiService | undefined = inject('apiService');
 const $instanceService: IInstanceService | undefined = inject('instanceService');
 
 const minecraftVersions: Ref<Version[] | undefined> = ref();
@@ -14,7 +13,7 @@ const selectedModLoader: Ref<ModLoader | undefined> = ref();
 const modpackId = ref();
 const icon = ref();
 
-const instance: Ref<InstanceSettings> = ref({
+const instance: Ref<any> = ref({
   id: "",
   title: "",
   versions: {
@@ -28,7 +27,7 @@ const instance: Ref<InstanceSettings> = ref({
 
 const emit = defineEmits<(e: 'createInstance', instance: Instance) => void>();
 
-$apiService?.searchVersions().then(mv => {
+getByType(ApiType.CURSE)?.searchVersions().then(mv => {
   minecraftVersions.value = mv;
 
   instance.value.versions.minecraft = mv[0];
@@ -102,7 +101,7 @@ function searchModpack() {
         <div class="flex flex-col space-y-4 justify-center w-full px-12">
           <div class="flex flex-row gap-4">
             <div class="mt-auto">
-              <InstanceIcon @click="sendClickEvent()" v-bind:custom-class="!icon ? 'border' : ''">
+              <InstanceIcon @click="sendClickEvent()" :custom-class="!icon ? 'border' : ''">
                 <img v-if="icon" :src="icon" alt="Instance icon">
                 <font-awesome-icon v-else class="text-2xl text-white" :icon="['fas', 'camera']" />
               </InstanceIcon>
@@ -130,10 +129,10 @@ function searchModpack() {
                        class="hidden peer" v-model="selectedModLoader"
                        v-on:change="($refs.modLoaderVersionList as typeof ModLoaderVersionsList).retrieveVersions(ModLoader.FORGE)">
                 <label for="forge" class="inline-flex items-center w-full p-3 gap-2 border rounded-lg cursor-pointer hover:text-gray-300 border-gray-700 peer-checked:bg-gray-700 text-white bg-gray-800 hover:bg-gray-700">
-                  <div class="w-5">
+                  <span class="w-5">
                     <img src="../../../assets/forge_logo.ico" alt="Forge logo">
-                  </div>
-                  <div class="w-full text-lg font-semibold">Forge</div>
+                  </span>
+                  <span class="w-full text-lg font-semibold">Forge</span>
                 </label>
               </li>
               <li>
@@ -141,10 +140,10 @@ function searchModpack() {
                        class="hidden peer" v-model="selectedModLoader" disabled
                        v-on:change="($refs.modLoaderVersionList as typeof ModLoaderVersionsList).retrieveVersions(ModLoader.FABRIC)">
                 <label for="fabric" class="flex items-center w-full p-3 gap-2 border rounded-lg cursor-pointer hover:text-gray-300 border-gray-700 peer-checked:bg-gray-700 text-white bg-gray-800 hover:bg-gray-700 peer-disabled:bg-gray-700/30 peer-disabled:text-gray-600">
-                  <div class="w-5">
+                  <span class="w-5">
                     <img src="../../../assets/fabric_logo.png" alt="Fabric logo">
-                  </div>
-                  <div class="w-full text-lg font-semibold">Fabric</div>
+                  </span>
+                  <span class="w-full text-lg font-semibold">Fabric</span>
                 </label>
               </li>
               <li>
@@ -152,20 +151,20 @@ function searchModpack() {
                        class="hidden peer" v-model="selectedModLoader" disabled
                        v-on:change="($refs.modLoaderVersionList as typeof ModLoaderVersionsList).retrieveVersions(ModLoader.QUILT)">
                 <label for="quilt" class="flex items-center w-full p-3 gap-2 border rounded-lg cursor-pointer group-hover:text-gray-300 border-gray-700 peer-checked:bg-gray-700 text-white bg-gray-800 hover:bg-gray-700 peer-disabled:bg-gray-700/30 peer-disabled:text-gray-600">
-                  <div class="w-5">
+                  <span class="w-5">
                     <img src="../../../assets/quilt_logo.svg" alt="Quilt logo">
-                  </div>
-                  <div class="w-full text-lg font-semibold">Quilt</div>
+                  </span>
+                  <span class="w-full text-lg font-semibold">Quilt</span>
                 </label>
               </li>
               <li>
                 <input type="radio" id="vanilla" name="modloaders" class="hidden peer"
                        v-on:change="selectedModLoader = undefined">
                 <label for="vanilla" class="flex items-center w-full p-3 gap-2 border rounded-lg cursor-pointer hover:text-gray-300 border-gray-700 peer-checked:bg-gray-700 text-white bg-gray-800 hover:bg-gray-700">
-                  <div class="w-5">
+                  <span class="w-5">
                     <img src="../../../assets/minecraft_logo.ico" alt="vanilla minecraft logo">
-                  </div>
-                  <div class="w-full text-lg font-semibold">Vanilla</div>
+                  </span>
+                  <span class="w-full text-lg font-semibold">Vanilla</span>
                 </label>
               </li>
             </ul>

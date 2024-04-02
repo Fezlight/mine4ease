@@ -103,7 +103,7 @@ watchEffect(() => {
             <img src="../../../assets/quilt_logo.svg" class="w-4 h-4 mr-1.5" alt="Quilt logo" />
             <span class="text-white font-medium text-xs">Quilt version {{ instance.versions.quilt.name }}</span>
           </span>
-          <button class="flex items-center gap-2" @click="openInstanceFolder()">
+          <button class="flex items-center gap-2 p-1.5" @click="openInstanceFolder()">
             Open folder
             <font-awesome-icon :icon="['fas', 'up-right-from-square']" />
           </button>

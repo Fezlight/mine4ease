@@ -34,14 +34,23 @@ export interface ApiService {
    * @param gameVersion minecraft version
    * @param modLoader modloader type (FORGE, FABRIC, etc...)
    */
-  searchItemById(id: string, gameVersion: string | undefined, modLoader: ModLoader | undefined): Promise<Mod>;
+  searchItemById(id: number, gameVersion: string | undefined, modLoader: ModLoader | undefined): Promise<Mod>;
+
+  /**
+   * Get a file by its identifier with filter by gameVersion, modLoader.
+   *
+   * @param id mod id
+   * @param gameVersion minecraft version
+   * @param modLoader modloader type (FORGE, FABRIC, etc...)
+   */
+  getFileById(id: number, gameVersion: string, modLoader: ModLoader): Promise<Mod[]>;
 
   /**
    * Get mod description
    *
    * @param id mod id
    */
-  getModDescription(id: string): Promise<string>;
+  getModDescription(id: number): Promise<string>;
 
   /**
    * Not yet implemented for first version
@@ -99,7 +108,7 @@ export class CurseApiService implements ApiService {
     });
   }
 
-  async getFileById(id: string, gameVersion: string, modLoader: ModLoader): Promise<Mod[]> {
+  async getFileById(id: number, gameVersion: string, modLoader: ModLoader): Promise<Mod[]> {
     const modLoaderCurse = ModLoaderCurse[modLoader.toString() as keyof ModLoaderCurse];
 
     return fetch(CURSE_FORGE_API_URL + `/v1/mods/${id}/files?`+ new URLSearchParams({
@@ -119,7 +128,7 @@ export class CurseApiService implements ApiService {
     });
   }
 
-  async searchItemById(id: string, gameVersion: string | undefined, modLoader: ModLoader | undefined): Promise<Mod> {
+  async searchItemById(id: number, gameVersion: string | undefined, modLoader: ModLoader | undefined): Promise<Mod> {
     return fetch(CURSE_FORGE_API_URL + '/v1/mods/' + id, {
       method: 'GET',
       headers: {
@@ -132,7 +141,7 @@ export class CurseApiService implements ApiService {
     });
   }
 
-  async getModDescription(id: string): Promise<string> {
+  async getModDescription(id: number): Promise<string> {
     return fetch(CURSE_FORGE_API_URL + `/v1/mods/${id}/description`, {
       method: 'GET',
       headers: {
@@ -224,6 +233,8 @@ export class CurseApiService implements ApiService {
   toMod(v: any, gameVersion: string, modLoader: ModLoader): Mod {
     let mod: Mod = new Mod();
     mod.id = v.modId ?? v.id;
+    mod.installedFileId = v.modId ? v.id : undefined;
+    mod.installedFileDate = new Date(v.fileDate);
     mod.displayName = v.name;
     mod.gameVersion = gameVersion;
     mod.modLoader = modLoader;
@@ -260,3 +271,5 @@ export class CurseApiService implements ApiService {
     })
   }
 }
+
+export const curseApiService = new CurseApiService();

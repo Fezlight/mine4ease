@@ -15,8 +15,6 @@ export function transformDownloadCount(downloadCount: number | undefined) {
 
   if ((downloadCount / 1000000) > 1) {
     return (downloadCount / 1000000).toFixed(2) + " M";
-  } else if ((downloadCount / 100000) > 1) {
-    return (downloadCount / 100000).toFixed(2) + " m";
   } else if ((downloadCount / 1000) > 1) {
     return (downloadCount / 1000).toFixed(2) + " K";
   }

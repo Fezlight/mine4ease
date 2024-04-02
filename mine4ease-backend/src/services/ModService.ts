@@ -1,9 +1,9 @@
-import {IModService} from "mine4ease-ipc-api/src/services/ModService";
-import {ADD_TASK_EVENT_NAME, INSTANCE_PATH, InstanceSettings, Mod, ModSettings} from "mine4ease-ipc-api";
+import {ADD_TASK_EVENT_NAME, IModService, INSTANCE_PATH, InstanceSettings, Mod, ModSettings} from "mine4ease-ipc-api";
 import {InstallModTask} from "../task/InstallModTask";
 import {$eventEmitter, $utils} from "../config/ObjectFactoryConfig";
 import {join} from "node:path";
-import {UninstallModTask} from "../task/UninstallModTask.ts";
+import {UninstallModTask} from "../task/UninstallModTask";
+import {UpdateModTask} from "../task/UpdateModTask.ts";
 
 export class ModService implements IModService {
   async addMod(mod: Mod, instance: InstanceSettings): Promise<string> {
@@ -18,8 +18,10 @@ export class ModService implements IModService {
     return task.id;
   }
 
-  updateMod(previousMod: Mod, instance: InstanceSettings): Promise<string> {
-    return Promise.resolve("");
+  async updateMod(previousMod: Mod, instance: InstanceSettings): Promise<string> {
+    let task = new UpdateModTask(previousMod, instance);
+    $eventEmitter.emit(ADD_TASK_EVENT_NAME, task);
+    return task.id;
   }
 
   async getInstanceMods(instanceId: string): Promise<ModSettings> {
@@ -43,7 +45,6 @@ export class ModService implements IModService {
       filename: "mods.json"
     });
   }
-
 
   async countMod(instanceId: string) {
     let modsJson: ModSettings = await $utils.readFile(join(INSTANCE_PATH, instanceId, "mods.json"))

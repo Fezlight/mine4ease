@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import {ApiService, ModLoader, Version} from "mine4ease-ipc-api";
-import {inject, ref} from "vue";
-
-const $apiService: ApiService | undefined = inject('apiService');
+import {getByType, ApiType, ModLoader, Version} from "mine4ease-ipc-api";
+import {ref} from "vue";
 
 const props = defineProps<{
   modLoader: ModLoader | undefined,
@@ -21,7 +19,7 @@ function retrieveVersions(modLoader: ModLoader | undefined = props.modLoader) {
   modloaderVersions.value = [];
   selectedVersion.value = undefined;
 
-  $apiService?.searchVersions(props.gameVersion.name, modLoader).then(mlVersions => {
+  getByType(ApiType.CURSE).searchVersions(props.gameVersion.name, modLoader).then(mlVersions => {
     modloaderVersions.value = mlVersions;
 
     if(!mlVersions) return;
@@ -51,7 +49,7 @@ function selectVersion(version: Version) {
 </script>
 
 <template>
-  <div class="space-y-2" v-if="modLoader != null">
+  <div class="space-y-2" v-if="modLoader">
     <label for="version">{{ title }} version</label>
     <select id="version" class="w-full" v-model="selectedVersion">
       <option v-show="modloaderVersions?.length == 0" disabled :value="undefined">No {{ title }} version available</option>
