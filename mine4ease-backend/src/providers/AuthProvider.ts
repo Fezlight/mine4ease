@@ -202,6 +202,7 @@ export class AuthProvider {
       scopes: tokenRequest.scopes,
       codeChallenge: this.pkceCodes.challenge, // PKCE Code Challenge
       codeChallengeMethod: this.pkceCodes.challengeMethod, // PKCE Code Challenge Method
+      prompt: 'select_account'
     };
 
     try {

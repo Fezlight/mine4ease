@@ -126,9 +126,7 @@ $globalSettingsService?.retrieveSettings().then(data => {
         </button>
       </div>
     </section>
-    <section class="content">
-      <router-view @create-instance="addInstance" @delete-instance="deleteInstance" @redirect="(t: Transitions) => redirect(t)"></router-view>
-    </section>
+    <router-view @create-instance="addInstance" @delete-instance="deleteInstance" @redirect="(t: Transitions) => redirect(t)"></router-view>
   </div>
 </template>
 <style scoped>

@@ -10,8 +10,8 @@ export class UninstallModTask extends Task {
   private readonly _taskRunner: TaskRunner;
   private readonly _subEventEmitter: EventEmitter;
 
-  constructor(mod: Mod, instance: InstanceSettings) {
-    super($eventEmitter, logger, () => `Uninstalling mod ${mod._name}...`);
+  constructor(mod: Mod, instance: InstanceSettings, eventEmitter: EventEmitter = $eventEmitter) {
+    super(eventEmitter, logger, () => `Uninstalling mod ${mod._name}...`);
     this._mod = Object.assign(new Mod(), mod);
     this._instance = instance;
     this._subEventEmitter = new EventEmitter();
@@ -28,18 +28,10 @@ export class UninstallModTask extends Task {
     }
 
     let modDependent: Mod[] = [];
-    modsSettings.mods.forEach((mod: Mod, modId: string) => {
+    modsSettings.mods.forEach((mod: Mod) => {
       let isDependent = this.isModHaveDependency(mod, mod.dependencies);
       if (isDependent) {
         modDependent.push(mod);
-      }
-    });
-
-    let dependencies: Mod[] = [];
-    this._mod.dependencies?.forEach(dep => {
-      let isOtherModDependency = this.isModHaveDependency(dep, [...modsSettings.mods.values()]);
-      if (!isOtherModDependency) {
-        dependencies.push(dep);
       }
     });
 
@@ -58,7 +50,7 @@ export class UninstallModTask extends Task {
 
     await $modService.saveAllMods(modsSettings, this._instance.id);
 
-    [...modDependent, ...dependencies].forEach(dep => {
+    modDependent.forEach(dep => {
       this._taskRunner.addTask(new UninstallModTask(dep, this._instance));
     });
 

@@ -26,6 +26,7 @@
     "winston-daily-rotate-file": "^4.7.1"
   },
   "devDependencies": {
+    "@babel/types": "^7.24.0",
     "@types/child-process-promise": "^2.2.6",
     "@types/decompress": "^4.2.7",
     "@types/uuid": "^9.0.4",

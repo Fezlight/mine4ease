@@ -66,7 +66,11 @@ export class DownloadLibrariesTask extends Task {
       lib.rules = lib.rules ? rules : undefined;
 
       if (lib.downloads?.artifact) {
-        this._taskRunner.addTask(new DownloadLibTask(this._subEventEmitter, lib, this._installSide, this._isAddingToClassPath));
+        if (lib.downloads?.artifact.url) {
+          this._taskRunner.addTask(new DownloadLibTask(this._subEventEmitter, lib, this._installSide, this._isAddingToClassPath));
+        } else {
+          addToClassPath(Library.resolve(lib.name), this._isAddingToClassPath);
+        }
       } else if(!lib.natives) {
         this._taskRunner.addTask(new DownloadLibOldWayTask(this._subEventEmitter, lib, this._installSide, this._isAddingToClassPath));
       }

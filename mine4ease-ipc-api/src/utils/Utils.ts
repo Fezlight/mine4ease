@@ -218,7 +218,6 @@ export class Utils implements IUtils {
     return decompress(fullPath, destFullPath, {
       filter: file => {
         let valid = true;
-        debugger;
         if (extractRequest.includes) {
           if (file.type === 'file') {
             valid &&= extractRequest.includes.includes(file.path);
@@ -240,6 +239,9 @@ export class Utils implements IUtils {
       map: file => {
         if (extractRequest.destName) {
           file.path = extractRequest.destName;
+        }
+        if (extractRequest.destNameFilter) {
+          file.path = file.path.replace(extractRequest.destNameFilter, '');
         }
         return file;
       }

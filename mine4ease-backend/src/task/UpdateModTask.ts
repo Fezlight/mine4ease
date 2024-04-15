@@ -19,8 +19,8 @@ export class UpdateModTask extends Task {
   }
 
   async run(): Promise<void> {
-    this._taskRunner.addTask(new UninstallModTask(this._mod, this._instance));
-    this._taskRunner.addTask(new InstallModTask(this._mod, this._instance));
+    this._taskRunner.addTask(new UninstallModTask(this._mod, this._instance, this._subEventEmitter));
+    this._taskRunner.addTask(new InstallModTask(this._mod, this._instance, this._subEventEmitter));
 
     await this._taskRunner.process();
   }

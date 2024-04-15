@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import {Category, Mod} from "mine4ease-ipc-api";
-import {Transitions} from "../../models/Transitions";
-import {redirect, transformDownloadCount} from "../../utils/Utils";
+import {redirect, transformDownloadCount} from "../../utils/Utils.ts";
+import {Category, ModPack} from "mine4ease-ipc-api";
+import {Transitions} from "../../models/Transitions.ts";
 
 const props = defineProps<{
-  mod: Mod
+  modpack: ModPack
 }>();
 
 const emit = defineEmits<{
@@ -13,26 +13,27 @@ const emit = defineEmits<{
 
 function uniqueCat(): IterableIterator<Category> {
   let cat = new Map<number, Category>();
-  props.mod.categories?.forEach((c: Category) =>  {
+  props.modpack.categories?.forEach((c: Category) =>  {
     if(!cat.has(c.id)) {
       cat.set(c.id, c);
     }
   })
   return cat.values();
 }
+
 </script>
 <template>
   <article class="rounded-lg bg-black/30 shadow-md shadow-black/40">
     <div class="grid grid-cols-[96px_3fr_1fr] gap-4 px-4 py-5">
-      <button @click="redirect({path: `/mods/${mod.id}`}, emit)" class="w-[96px] h-[96px]">
-        <img :src="mod.iconUrl" :alt="mod.displayName + ' icon'" class="object-cover">
+      <button @click="redirect({path: `/modpacks/${modpack.id}`}, emit)" class="w-[96px] h-[96px]">
+        <img :src="modpack.iconUrl" :alt="modpack.displayName + ' icon'" class="object-cover">
       </button>
       <div class="flex flex-col justify-between max-w-lg xl:max-w-screen-2xl">
-        <h3 class="truncate">{{ mod.displayName }} <span class="text-gray-400 text-sm">by {{mod.authors?.map(a => a.name).join(', ')}}</span></h3>
-        <p class="text-sm">{{ mod.summary }}</p>
+        <h3 class="truncate">{{ modpack.displayName }} <span class="text-gray-400 text-sm">by {{modpack.authors?.map(a => a.name).join(', ')}}</span></h3>
+        <p class="text-sm">{{ modpack.summary }}</p>
         <span class="inline-block space-x-2">
           <font-awesome-icon :icon="['fas', 'download']" />
-          <span>{{ transformDownloadCount(mod?.downloadCount) }}</span>
+          <span>{{ transformDownloadCount(modpack?.downloadCount) }}</span>
         </span>
       </div>
       <div class="flex items-center justify-end flex-grow gap-2">

@@ -6,6 +6,7 @@ import Tile from "../../../shared/components/Tile.vue";
 import {TaskListeners} from "../../../shared/listeners/TaskListeners";
 import {Transitions} from "../../../shared/models/Transitions";
 import {redirect} from "../../../shared/utils/Utils";
+import InstanceContent from "../../../shared/components/instance/InstanceContent.vue";
 
 const instance: Ref<InstanceSettings | undefined> | undefined = inject('currentInstance');
 
@@ -74,13 +75,13 @@ watchEffect(() => {
 })
 </script>
 <template>
-  <div class="w-full h-screen flex flex-col" v-if="instance">
+  <InstanceContent v-if="instance">
     <section class="border-b-2 border-gray-700/30 py-4">
-      <h1>{{ instance.title }}
+      <h2>{{ instance.title }}
         <span class="text-xs" v-if="instance?.versions?.self">
           v{{ instance?.versions?.self }}
         </span>
-      </h1>
+      </h2>
       <div class="flex flex-row items-end">
         <span class="inline-flex items-center gap-2 flex-grow h-[20px]">
           <span class="text-sm font-medium mr-2 p-3 rounded bg-green-900 text-green-300 inline-flex items-center h-full"
@@ -129,11 +130,11 @@ watchEffect(() => {
         <Tile v-if="isModded()" title="Shaders" subtitle="You have ?? shaders installed"
               :disabled="true"
               button-title="Manage shaders"
-              @action="redirect({name: 'instance-shaders', params: {id: id}}, emit)"></Tile>
+              @action="redirect({path: `/${instance.id}/shaders`}, emit)"></Tile>
         <Tile title="Resource Packs" subtitle="You have ?? resources packs installed"
               :disabled="true"
               button-title="Manage resource packs"
-              @action="redirect({name: 'instance-ressource-packs', params: {id: id}}, emit)"></Tile>
+              @action="redirect({path: `/${instance.id}/resource-packs`}, emit)"></Tile>
       </div>
       <div class="flex flex-col">
         <span v-for="event in events">{{ event.name }} : {{ event.state }}</span>
@@ -142,5 +143,5 @@ watchEffect(() => {
     <section class="flex flex-row border-t-2 border-gray-700/30 py-4 space-x-6">
       Footer
     </section>
-  </div>
+  </InstanceContent>
 </template>

@@ -10,6 +10,7 @@ import {Transitions} from "../../../shared/models/Transitions.ts";
 import {redirect} from "../../../shared/utils/Utils.ts";
 import BackToLastPage from "../../../shared/components/buttons/BackToLastPage.vue";
 import {WithUpdate} from "../../../shared/models/Update.ts";
+import InstanceContent from "../../../shared/components/instance/InstanceContent.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -35,10 +36,10 @@ async function getMods() {
   .catch(() => undefined);
 }
 
-async function updateMod(mod: Mod) {
-  if (!instance?.value) return;
+async function updateMod(mod: Mod): Promise<string> {
+  if (!instance?.value || !$modService) return Promise.reject();
 
-  return $modService?.updateMod(mod, instance.value);
+  return $modService.updateMod(mod, instance.value);
 }
 
 async function updateAllMod() {
@@ -64,9 +65,9 @@ async function checkForUpdates() {
 }
 
 async function deleteMod(mod: Mod) {
-  if (!instance?.value) return;
+  if (!instance?.value || !$modService) return Promise.reject();
 
-  return $modService?.deleteMod(mod, instance.value);
+  return $modService.deleteMod(mod, instance.value);
 }
 
 function backtoLastPage() {
@@ -94,48 +95,50 @@ watchEffect(() => {
 const listener = new TaskListeners();
 </script>
 <template>
-  <div class="flex flex-col gap-4 mb-4">
-    <section class="flex flex-row items-center gap-4 rounded-lg bg-black/30 shadow-md shadow-black/40 p-4">
-      <BackToLastPage @back-to-last-page="() => backtoLastPage()"></BackToLastPage>
-      <button type="button" class="px-5 py-2.5 space-x-2 primary" @click="$router.push('/mods')">
-        <font-awesome-icon :icon="['fas', 'add']" />
-        <span>Add a new mod</span>
-      </button>
-      <button type="button" class="px-5 py-2.5 space-x-2 secondary"
-              v-if="mods && [...mods.values()].findIndex((m: Mod & WithUpdate)  => m.isUpdateNeeded) != -1"
-              @click="updateAllMod()">
-        <font-awesome-icon :icon="['fas', 'circle-up']" />
-        <span>Update all mods</span>
-        <span class="inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-amber-800 bg-amber-200 rounded-full">
+  <InstanceContent>
+    <div class="flex flex-col gap-4 mb-4">
+      <section class="flex flex-row items-center gap-4 rounded-lg bg-black/30 shadow-md shadow-black/40 p-4">
+        <BackToLastPage @back-to-last-page="() => backtoLastPage()"></BackToLastPage>
+        <button type="button" class="px-5 py-2.5 space-x-2 primary" @click="$router.push('/mods')">
+          <font-awesome-icon :icon="['fas', 'add']" />
+          <span>Add a new mod</span>
+        </button>
+        <button type="button" class="px-5 py-2.5 space-x-2 secondary"
+                v-if="mods && [...mods.values()].findIndex((m: Mod & WithUpdate)  => m.isUpdateNeeded) != -1"
+                @click="updateAllMod()">
+          <font-awesome-icon :icon="['fas', 'circle-up']" />
+          <span>Update all mods</span>
+          <span class="inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-amber-800 bg-amber-200 rounded-full">
           {{ mods && [...mods.values()].filter((m: Mod & WithUpdate) => m.isUpdateNeeded).length }}
         </span>
-      </button>
-      <div class="flex flex-row items-center gap-2" v-if="mods?.size">
-        <button type="button" class="rounded-lg p-1.5 bg-transparent hover:bg-gray-800 hover:text-white ring-gray-700" @click="checkForUpdates()">
-          <font-awesome-icon :icon="['fas', 'arrow-rotate-right']" :class="isReloading ? 'fa-spin': ''" size="2xl" />
         </button>
-        <span>Check for update</span>
-      </div>
+        <div class="flex flex-row items-center gap-2" v-if="mods?.size">
+          <button type="button" class="rounded-lg p-1.5 bg-transparent hover:bg-gray-800 hover:text-white ring-gray-700" @click="checkForUpdates()">
+            <font-awesome-icon :icon="['fas', 'arrow-rotate-right']" :class="isReloading ? 'fa-spin': ''" size="2xl" />
+          </button>
+          <span>Check for update</span>
+        </div>
+      </section>
+    </div>
+    <section class="flex flex-col overflow-y-auto">
+      <ModTile v-for="mod in orderedByUpdateNeeded()" :mod="mod" @redirect="(t: Transitions) => redirect(t.route, emit)"
+               class="mb-4" :key="mod.id">
+        <EventWrapper :listener="listener" v-slot:default="s" v-if="mod.isUpdateNeeded">
+          <button type="button" class="px-5 py-2.5 secondary inline-block space-x-2"
+                  ref="updateButton"
+                  v-on:click="s.createEvent(updateMod(mod), () => mod.isUpdateNeeded = false)">
+            <font-awesome-icon :icon="['fas', 'circle-up']" />
+            <span>Update</span>
+          </button>
+        </EventWrapper>
+        <EventWrapper :listener="listener" v-slot:default="s">
+          <button type="button" class="px-5 py-2.5 danger inline-block space-x-2"
+                  v-on:click="s.createEvent(deleteMod(mod), () => getMods())">
+            <font-awesome-icon :icon="['fas', 'trash-can']" />
+            <span>Delete</span>
+          </button>
+        </EventWrapper>
+      </ModTile>
     </section>
-  </div>
-  <section class="flex flex-col overflow-y-auto">
-    <ModTile v-for="mod in orderedByUpdateNeeded()" :mod="mod" @redirect="(t: Transitions) => redirect(t.route, emit)"
-             class="mb-4" :key="mod.id">
-      <EventWrapper :listener="listener" v-slot:default="s" v-if="mod.isUpdateNeeded">
-        <button type="button" class="px-5 py-2.5 secondary inline-block space-x-2"
-                ref="updateButton"
-                v-on:click="s.createEvent(updateMod(mod), () => mod.isUpdateNeeded = false)">
-          <font-awesome-icon :icon="['fas', 'circle-up']" />
-          <span>Update</span>
-        </button>
-      </EventWrapper>
-      <EventWrapper :listener="listener" v-slot:default="s">
-        <button type="button" class="px-5 py-2.5 danger inline-block space-x-2"
-                v-on:click="s.createEvent(deleteMod(mod), () => getMods())">
-          <font-awesome-icon :icon="['fas', 'trash-can']" />
-          <span>Delete</span>
-        </button>
-      </EventWrapper>
-    </ModTile>
-  </section>
+  </InstanceContent>
 </template>

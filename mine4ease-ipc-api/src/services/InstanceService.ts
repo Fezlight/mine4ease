@@ -1,4 +1,5 @@
 import {InstanceSettings} from "../models/instance/InstanceSettings";
+import {ModPack} from "../models/ModPack";
 
 export interface IInstanceService {
   /**
@@ -7,6 +8,13 @@ export interface IInstanceService {
    * @param instanceSettings instance object containing all information for creation
    */
   createInstance(instanceSettings: InstanceSettings): Promise<InstanceSettings>;
+
+  /**
+   * Create an instance with an existing mod pack
+   *
+   * @param modpack mod pack used to create an instance
+   */
+  createInstanceByModPack(modpack: ModPack): Promise<string>;
 
   /**
    * Select an instance

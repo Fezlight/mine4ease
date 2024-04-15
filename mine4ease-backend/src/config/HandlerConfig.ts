@@ -7,6 +7,7 @@ import IpcMainInvokeEvent = Electron.IpcMainInvokeEvent;
 
 export const handlerMap = new Map<string, any>();
 handlerMap.set('instanceService.createInstance', (ev: IpcMainInvokeEvent, args: string) => $instanceService.createInstance(JSON.parse(args)));
+handlerMap.set('instanceService.createInstanceByModPack', (ev: IpcMainInvokeEvent, args: string) => $instanceService.createInstanceByModPack(JSON.parse(args)));
 handlerMap.set('instanceService.selectInstance', (ev: IpcMainInvokeEvent, args: string) => $instanceService.selectInstance(args));
 handlerMap.set('instanceService.deleteInstance', (ev: IpcMainInvokeEvent, args: string) => $instanceService.deleteInstance(args))
 handlerMap.set('instanceService.getInstanceById', (ev: IpcMainInvokeEvent, args: string) => $instanceService.getInstanceById(args));

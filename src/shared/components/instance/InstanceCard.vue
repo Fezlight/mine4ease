@@ -3,13 +3,12 @@ import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import {InstanceSettings} from "mine4ease-ipc-api";
 
 defineProps<{
-  instance: InstanceSettings,
-  isLoading: boolean
+  instance: InstanceSettings
 }>()
 </script>
 <template>
   <div class="relative items-center inline-flex p-4 border rounded-lg shadow-md border-gray-700 hover:bg-gray-700">
-    <div class="space-y-2 flex-grow" v-if="!isLoading">
+    <div class="space-y-2 flex-grow">
       <h3 class="text-2xl tracking-tight text-white">{{ instance?.title }}</h3>
       <span class="inline-grid grid-cols-3 items-center gap-2">
         <span class="text-sm font-medium p-2 rounded bg-green-900 text-green-300 inline-flex items-center h-full"
@@ -35,17 +34,10 @@ defineProps<{
       </span>
       <p class="text-gray-400">{{ instance?.description }}</p>
     </div>
-    <div v-if="instance?.id && !isLoading">
-      <button class="bg-transparent rounded-full p-1.5" :disabled="isLoading">
+    <div v-if="instance?.id">
+      <button class="bg-transparent rounded-full p-1.5">
         <font-awesome-icon class="text-2xl text-white" :icon="['fas', 'add']" />
       </button>
-    </div>
-    <div role="status" class="animate-pulse" v-if="isLoading">
-      <div class="h-4 rounded-full bg-gray-600 w-72 mb-4"></div>
-      <div class="h-3 rounded-full bg-gray-600 w-72 mb-4"></div>
-      <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
-      <div class="h-2 rounded-full bg-gray-600 mb-2.5"></div>
-      <div class="h-2 rounded-full bg-gray-600"></div>
     </div>
   </div>
 </template>

@@ -11,6 +11,7 @@ export function redirect(route: RouteLocationRaw, emit: Function) {
 }
 
 export function transformDownloadCount(downloadCount: number | undefined) {
+  if(downloadCount === 0) return 0;
   if (!downloadCount) return "";
 
   if ((downloadCount / 1000000) > 1) {

@@ -1,4 +1,4 @@
-import {IInstanceService, InstanceSettings} from "mine4ease-ipc-api";
+import {IInstanceService, InstanceSettings, ModPack} from "mine4ease-ipc-api";
 import {v4 as uuidv4} from "uuid";
 
 export class InstanceService implements IInstanceService {
@@ -8,6 +8,10 @@ export class InstanceService implements IInstanceService {
     instance.installSide = 'client';
 
     return window.ipcRenderer.invoke('instanceService.createInstance', JSON.stringify(instance));
+  }
+
+  async createInstanceByModPack(modpack: ModPack): Promise<string> {
+    return window.ipcRenderer.invoke('instanceService.createInstanceByModPack', JSON.stringify(modpack));
   }
 
   selectInstance(id: string): Promise<void> {

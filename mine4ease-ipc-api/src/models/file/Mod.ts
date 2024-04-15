@@ -6,13 +6,14 @@ export const MODS_PATH = "/mods"
 export class Mod extends File {
   id: number;
   eventId?: string;
+  slug: string;
   displayName: string;
   authors: { id: string, name: string }[];
   summary: string;
   installedFileId: number;
   installedFileDate: Date;
   description: string;
-  gameVersion: string;
+  gameVersion?: string;
   iconUrl: string;
   modLoader: ModLoader;
   apiType: ApiType;

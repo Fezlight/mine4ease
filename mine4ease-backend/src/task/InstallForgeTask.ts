@@ -5,6 +5,7 @@ import {
   ExtractRequest,
   File,
   InstallSide,
+  LIBRARIES_PATH,
   Library,
   Task,
   TaskRunner,
@@ -119,6 +120,18 @@ export class InstallForgeTask extends Task {
     const versionJson = await $utils.readFile(join(forgeVersionPath, this._versionJsonName))
       .then(JSON.parse);
 
+    extractRequest = new ExtractRequest();
+    extractRequest.file = installerFile;
+    extractRequest.destPath = LIBRARIES_PATH;
+    extractRequest.destNameFilter = "maven/";
+    extractRequest.includes = [
+      `maven/net/minecraftforge/forge/${this._minecraftVersion}-${this._forgeVersion}/forge-${this._minecraftVersion}-${this._forgeVersion}.jar`,
+      `maven/net/minecraftforge/forge/${this._minecraftVersion}-${this._forgeVersion}/forge-${this._minecraftVersion}-${this._forgeVersion}-universal.jar`
+    ];
+
+    // Extract maven folder into libraries
+    await $utils.extractFile(extractRequest);
+
     this._taskRunner.addTask(new DownloadLibrariesTask(versionJson.libraries, this._minecraftVersion, this._installSide, true));
 
     this._taskRunner.addTask(new DownloadLibrariesTask(installProfile.libraries, this._minecraftVersion, this._installSide));
@@ -131,6 +144,7 @@ export class InstallForgeTask extends Task {
 
     const processors: [] = installProfile.processors;
 
+    let needDeleteLZMA = false;
     processors.forEach((processor: any) => {
       if (processor.sides && !processor.sides.includes(this._installSide)) {
         return;
@@ -144,12 +158,15 @@ export class InstallForgeTask extends Task {
         ];
 
         this._taskRunner.addTask(new ExtractFileTask(extractRequest, false));
+        needDeleteLZMA = true;
       }
 
       this._taskRunner.addTask(new InstallForgeProcessorTask(processor.jar, processor.classpath, processor.args, this._installSide, this._minecraftVersion, map));
     });
 
-    this._taskRunner.addTask(new DeleteFileTask(join(CACHE_PATH, `${this._installSide}.lzma`)));
+    if (needDeleteLZMA) {
+      this._taskRunner.addTask(new DeleteFileTask(join(CACHE_PATH, `${this._installSide}.lzma`)));
+    }
   }
 
   async downloadInstaller(): Promise<File> {

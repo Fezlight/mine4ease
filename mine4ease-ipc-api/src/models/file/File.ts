@@ -12,6 +12,7 @@ export abstract class File implements FileControl {
   currentHash?: string;
   size?: number;
   totalSize?: number;
+  filename: string;
   _name: string;
   _extension: string;
   relativePath?: string;

@@ -26,10 +26,6 @@ body {
   -webkit-app-region: drag;
 }
 
-.content {
-  @apply flex flex-col p-6 bg-gray-800 flex-grow overflow-y-auto max-window-height;
-}
-
 h1 {
   @apply text-6xl font-semibold text-white;
 }

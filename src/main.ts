@@ -41,6 +41,9 @@ import Mods from "./routes/mods/Mods.vue";
 import {ModService} from "./shared/services/ModService";
 import ModDetails from "./routes/mods/mod-details/ModDetails.vue";
 import InstanceMods from "./routes/instance/instance-mods/InstanceMods.vue";
+import CreateInstanceCustom from './routes/instance/create-instance/CreateInstanceCustom.vue';
+import ModPacks from "./routes/modpacks/ModPacks.vue";
+import ModPackDetails from "./routes/modpacks/modpacks-details/ModPackDetails.vue";
 
 library.add(
   faStar, faGear, faRightFromBracket, faAdd, faCamera, faMicrosoft,
@@ -54,9 +57,12 @@ const routes = [
       { path: '/:id', name: 'instance', component: Instance },
       { path: '/:id/mods', component: InstanceMods },
       { path: '/create', component: CreateInstance },
+      { path: '/create/custom', component: CreateInstanceCustom },
+      { path: '/create/modpack', component: ModPacks },
       { path: '/not-found', component: InstanceNotFound },
       { path: '/mods', component: Mods },
       { path: '/mods/:id', component: ModDetails },
+      { path: '/modpacks/:id', component: ModPackDetails },
     ]
   },
   {

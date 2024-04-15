@@ -1,4 +1,5 @@
 import {getByType, IModService, InstanceSettings, Mod} from "mine4ease-ipc-api";
+import {ApiType} from "../../../mine4ease-ipc-api";
 
 export class ModService implements IModService {
   addMod(mod: Mod, instance: InstanceSettings): Promise<string> {
@@ -14,7 +15,7 @@ export class ModService implements IModService {
   }
 
   async isUpdateNeeded(mod: Mod, instance: InstanceSettings): Promise<boolean> {
-    return getByType(mod.apiType).getFileById(mod.id, instance.versions.minecraft.name, mod.modLoader)
+    return getByType(ApiType.CURSE).getFileById(undefined, mod.id, new Mod(), instance.versions.minecraft.name, mod.modLoader)
       .then((mods: Mod[]) => {
         return mods.findIndex(m => m.installedFileDate.getTime() > new Date(mod.installedFileDate).getTime()) != -1;
       });

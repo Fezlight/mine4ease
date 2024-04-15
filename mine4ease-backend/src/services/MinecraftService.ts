@@ -20,6 +20,7 @@ import {InstallForgeTask} from "../task/InstallForgeTask";
 import {EventEmitter} from "events";
 import {LaunchGameTask} from "../task/LaunchGameTask.ts";
 import {$downloadService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig.ts";
+import {DownloadModsTask} from "../task/DownloadModsTask.ts";
 
 export class MinecraftService implements IMinecraftService {
   private readonly downloadService: DownloadService;
@@ -45,7 +46,6 @@ export class MinecraftService implements IMinecraftService {
     .then(JSON.parse);
   }
 
-  // TODO REWORK to be more flexible on the merge of each manifest
   async beforeLaunch(instance: InstanceSettings): Promise<Versions> {
     let minecraftVersion = instance.versions.minecraft.name;
     let taskRunner = new TaskRunner(this.logger, new EventEmitter());
@@ -73,8 +73,12 @@ export class MinecraftService implements IMinecraftService {
 
     taskRunner.addTask(new DownloadLibrariesTask(version.libraries, minecraftVersion, instance.installSide, true));
 
-    if (instance.modLoader === 'Forge' && instance.versions.forge) {
-      taskRunner.addTask(new InstallForgeTask(minecraftVersion, instance.versions.forge, instance.installSide));
+    if(instance.modLoader) {
+      if (instance.modLoader === 'Forge' && instance.versions.forge) {
+        taskRunner.addTask(new InstallForgeTask(minecraftVersion, instance.versions.forge, instance.installSide));
+      }
+
+      taskRunner.addTask(new DownloadModsTask(instance));
     }
 
     await taskRunner.process();
@@ -102,8 +106,8 @@ export class MinecraftService implements IMinecraftService {
         // TODO newVersionManifest.minecraftArguments += version.minecraftArguments ?? '';
         newVersionManifest.minecraftArguments = v.minecraftArguments ?? '';
       } else {
-        newVersionManifest.arguments.jvm.push(...v.arguments.jvm);
-        newVersionManifest.arguments.game.push(...v.arguments.game);
+        if(v.arguments.jvm) newVersionManifest.arguments.jvm.push(...v.arguments.jvm);
+        if(v.arguments.game) newVersionManifest.arguments.game.push(...v.arguments.game);
       }
     });
 

@@ -1,11 +1,15 @@
 import {
+  ADD_TASK_EVENT_NAME,
   ASSETS_PATH,
+  CachedFile,
   CacheProvider,
+  DownloadRequest,
   IGlobalSettingService,
   IInstanceService,
   IMinecraftService,
   INSTANCE_PATH,
   InstanceSettings,
+  ModPack,
   Settings,
   Utils,
   Version
@@ -13,9 +17,11 @@ import {
 import path from "node:path";
 import {Logger} from "winston";
 import {SETTINGS_KEY} from "../config/CacheConfig";
-import {$cacheProvider, $utils, logger} from "../config/ObjectFactoryConfig.ts";
+import {$cacheProvider, $downloadService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig.ts";
 import {$globalSettingsService} from "./GlobalSettingsService.ts";
 import {$minecraftService} from "./MinecraftService.ts";
+import {InstallModPackTask} from "../task/InstallModPackTask.ts";
+import {join} from "path";
 
 export const INSTANCE_FILE = "instance.json";
 
@@ -47,6 +53,12 @@ export class InstanceService implements IInstanceService {
     await this.globalSettingsService.saveSettings(settings);
 
     return Promise.resolve(instance);
+  }
+
+  async createInstanceByModPack(modpack: ModPack): Promise<string> {
+    let task = new InstallModPackTask(modpack.id, modpack.apiType, modpack.gameVersion);
+    $eventEmitter.emit(ADD_TASK_EVENT_NAME, task);
+    return task.id;
   }
 
   async selectInstance(id: string): Promise<void> {
@@ -134,6 +146,18 @@ export class InstanceService implements IInstanceService {
     }
 
     let assetsPath = path.join(INSTANCE_PATH, instanceSettings.id, ASSETS_PATH);
+    if (icon.indexOf("http") > -1) {
+      let cacheFile = new CachedFile();
+      cacheFile.url = icon;
+
+      let downloadReq = new DownloadRequest();
+      downloadReq.file = cacheFile;
+
+      await $downloadService.download(downloadReq);
+
+      icon = join(process.env.APP_DIRECTORY, cacheFile.fullPath(), cacheFile.fileName());
+    }
+
     let iconFile = await this.utils.readFile(icon, false, true);
     let filename = "icon" + path.parse(icon).ext;
     instanceSettings.iconName = filename;
