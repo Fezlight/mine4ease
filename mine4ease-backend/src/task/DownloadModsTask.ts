@@ -3,6 +3,7 @@ import {$eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig.ts";
 import {join} from "path";
 import {EventEmitter} from "events";
 import {InstallModTask} from "./InstallModTask.ts";
+import {MODS_PATH} from "../../../mine4ease-ipc-api";
 
 export class DownloadModsTask extends Task {
   private readonly _instance: InstanceSettings;
@@ -30,7 +31,11 @@ export class DownloadModsTask extends Task {
     logger.info(`Checking ${mods.size} mods...`);
 
     for (const [, mod] of mods) {
-      this._taskRunner.addTask(new InstallModTask(mod, this._instance, this._subEventEmitter, mod.installedFileId));
+      let hash= await $utils.readFileHash(join(INSTANCE_PATH, this._instance.id, MODS_PATH, mod.filename));
+
+      if (hash !== mod.sha1) {
+        this._taskRunner.addTask(new InstallModTask(mod, this._instance, this._subEventEmitter, mod.installedFileId));
+      }
     }
 
     await this._taskRunner.process();

@@ -147,11 +147,11 @@ export class AuthProvider {
     return this.getProfile();
   }
 
-  async getProfile(): Promise<Account> {
+  async getProfile(accessToken?: string): Promise<Account> {
     const request = {
       headers: {
         ...headers,
-        "Authorization": `Bearer ${this.accessToken}`
+        "Authorization": `Bearer ${accessToken ?? this.accessToken}`
       }
     };
 
@@ -165,7 +165,7 @@ export class AuthProvider {
     .then(response => {
       return {
         uuid: response.id,
-        accessToken: this.accessToken,
+        accessToken: accessToken ?? this.accessToken,
         username: response.name
       }
     });

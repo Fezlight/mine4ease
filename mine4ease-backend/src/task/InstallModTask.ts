@@ -1,5 +1,6 @@
 import {
   ApiType,
+  CURSE_FORGE_TEMPLATE_FILE_DOWNLOAD_URL,
   DownloadRequest,
   getByType,
   INSTANCE_PATH,
@@ -14,22 +15,23 @@ import {join} from "path";
 import {EventEmitter} from "events";
 import {$modService} from "../services/ModService.ts";
 
-const url = 'https://media.forgecdn.net/files/<file-id-first4>/<file-id-last3>/<fileName>'
-
 export class InstallModTask extends Task {
   private readonly _instance: InstanceSettings;
   private readonly _mod: Mod;
   private readonly _subEventEmitter: EventEmitter;
   private readonly _taskRunner: TaskRunner;
   private readonly _ignoreDependencies: boolean;
+  private readonly _download: boolean;
   private _version: number | undefined;
 
-  constructor(mod: Mod, instance: InstanceSettings, eventEmitter: EventEmitter = $eventEmitter, version?: number, ignoreDependencies: boolean = false) {
+  constructor(mod: Mod, instance: InstanceSettings, eventEmitter: EventEmitter = $eventEmitter, 
+              version?: number, ignoreDependencies: boolean = false, download: boolean = true) {
     super(eventEmitter, logger, () => `Installing mod ${mod._name}...`);
     this._mod = mod;
     this._instance = instance;
     this._version = version;
     this._ignoreDependencies = ignoreDependencies;
+    this._download = download;
     this._subEventEmitter = new EventEmitter();
     this._taskRunner = new TaskRunner(logger, this._subEventEmitter);
   }
@@ -54,10 +56,10 @@ export class InstallModTask extends Task {
       this._version ??= selectedMod.installedFileId;
       mod = Object.assign(new Mod(), selectedMod);
       if (!mod._url) {
-        mod._url = url
+        mod._url = CURSE_FORGE_TEMPLATE_FILE_DOWNLOAD_URL
         .replace('<file-id-first4>', String(this._version).substring(0, 4))
         .replace('<file-id-last3>', String(this._version).substring(4))
-        .replace('<fileName>', selectedMod.filename);
+        .replace('<fileName>', encodeURIComponent(selectedMod.filename));
       }
 
       mod.url = mod._url;
@@ -71,14 +73,17 @@ export class InstallModTask extends Task {
       logger.info(`Adding mod ${mod.name} to instance ${this._instance.id}`);
       mod.relativePath = join(INSTANCE_PATH, this._instance.id);
 
-      let downloadRequest = new DownloadRequest();
-      downloadRequest.file = mod;
+      if (this._download) {
+        let downloadRequest = new DownloadRequest();
+        downloadRequest.file = mod;
 
-      await $downloadService.download(downloadRequest);
+        await $downloadService.download(downloadRequest);
+      }
 
       if (!this._ignoreDependencies) {
         mod.dependencies.filter(mod => mod.relationType == 3).forEach(mod => {
-          this._taskRunner.addTask(new InstallModTask(mod, this._instance, this._subEventEmitter));
+          this._taskRunner.addTask(new InstallModTask(mod, this._instance, this._subEventEmitter,
+            undefined, this._ignoreDependencies, this._download));
         });
       }
     } else {

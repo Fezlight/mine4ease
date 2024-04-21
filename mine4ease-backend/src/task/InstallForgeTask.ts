@@ -67,7 +67,8 @@ export class InstallForgeTask extends Task {
       const versionJson = await $utils.readFile(join(forgeVersionPath, this._versionJsonName))
         .then(JSON.parse);
 
-      this._taskRunner.addTask(new DownloadLibrariesTask(versionJson.libraries, this._minecraftVersion, this._installSide, true));
+      this._taskRunner.addTask(new DownloadLibrariesTask(versionJson.libraries, this._minecraftVersion,
+        this._installSide, true, this._subEventEmitter));
     }
 
     await this._taskRunner.process();
@@ -102,7 +103,7 @@ export class InstallForgeTask extends Task {
 
     let libs = installProfile.versionInfo.libraries.filter((lib: any) => !lib.name.includes(installProfile.install.path));
 
-    this._taskRunner.addTask(new DownloadLibrariesTask(libs, this._minecraftVersion, this._installSide, true));
+    this._taskRunner.addTask(new DownloadLibrariesTask(libs, this._minecraftVersion, this._installSide, true, this._subEventEmitter));
   }
 
   async runProcess(forgeVersionPath: string, installerFile: File, installProfile: any) {
@@ -132,9 +133,11 @@ export class InstallForgeTask extends Task {
     // Extract maven folder into libraries
     await $utils.extractFile(extractRequest);
 
-    this._taskRunner.addTask(new DownloadLibrariesTask(versionJson.libraries, this._minecraftVersion, this._installSide, true));
+    this._taskRunner.addTask(new DownloadLibrariesTask(versionJson.libraries, this._minecraftVersion,
+      this._installSide, true, this._subEventEmitter));
 
-    this._taskRunner.addTask(new DownloadLibrariesTask(installProfile.libraries, this._minecraftVersion, this._installSide));
+    this._taskRunner.addTask(new DownloadLibrariesTask(installProfile.libraries, this._minecraftVersion,
+      this._installSide, false, this._subEventEmitter));
 
     const map = new Map<string, string>;
     const data: Map<string, string> = Object.assign(new Map<string, string>, installProfile.data);
@@ -161,7 +164,8 @@ export class InstallForgeTask extends Task {
         needDeleteLZMA = true;
       }
 
-      this._taskRunner.addTask(new InstallForgeProcessorTask(processor.jar, processor.classpath, processor.args, this._installSide, this._minecraftVersion, map));
+      this._taskRunner.addTask(new InstallForgeProcessorTask(processor.jar, processor.classpath, processor.args,
+        this._installSide, this._minecraftVersion, map, this._subEventEmitter));
     });
 
     if (needDeleteLZMA) {
@@ -195,8 +199,8 @@ export class InstallForgeProcessorTask extends Task {
   private readonly _mappings: Map<string, string>;
   private readonly _minecraftVersion: string;
 
-  constructor(jar: string, classpath: string[], args: string[], installSide: InstallSide, minecraftVersion: string, mappings: Map<string, string>) {
-    super($eventEmitter, logger, () => `Installing forge processor ${jar} ...`);
+  constructor(jar: string, classpath: string[], args: string[], installSide: InstallSide, minecraftVersion: string, mappings: Map<string, string>, eventEmitter: EventEmitter = $eventEmitter) {
+    super(eventEmitter, logger, () => `Installing forge processor ${jar} ...`);
     this._jar = jar;
     this._classpath = classpath;
     this._args = args;

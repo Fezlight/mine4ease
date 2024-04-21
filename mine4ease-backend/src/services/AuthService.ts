@@ -28,15 +28,17 @@ export class AuthService implements IAuthService {
 
   async getProfile(): Promise<Account | undefined> {
     this.logger.info("Retrieving minecraft profile ...");
+
+    let account: Account | undefined;
     if (this.cacheProvider.has(CURRENT_ACCOUNT_STORAGE_KEY)) {
-      return this.cacheProvider.loadObject(CURRENT_ACCOUNT_STORAGE_KEY);
+      account = await this.cacheProvider.loadObject(CURRENT_ACCOUNT_STORAGE_KEY);
     }
 
-    return this.authProvider.getProfile()
-    .then(account => {
+    return this.authProvider.getProfile(account?.accessToken)
+    .then(acc => {
       this.logger.info("Minecraft token validated successfully");
-      this.initAuthCache(account);
-      return account;
+      this.initAuthCache(acc);
+      return acc;
     }).catch(e => {
       this.logger.error("Minecraft token invalid, re-authentication needed");
       throw e;

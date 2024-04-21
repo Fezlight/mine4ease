@@ -45,6 +45,10 @@ function selectInstance(instance: Instance) {
 }
 
 function addInstance(instance: Instance) {
+  if (settings.value && !settings.value.instances) {
+    settings.value.instances = [];
+  }
+  
   settings.value?.instances?.push(instance);
   selectInstance(instance);
 }
@@ -78,9 +82,11 @@ function redirect(t: Transitions) {
 
 $globalSettingsService?.retrieveSettings().then(data => {
   settings.value = data;
-  let selectedModpack = data.instances.filter(i => i.id === data.selectedInstance);
+  let selectedModpack = data.instances?.filter(i => i.id === data.selectedInstance);
   if (selectedModpack && selectedModpack.length > 0) {
     selectInstance(selectedModpack[0]);
+  } else {
+    createInstance();
   }
 });
 </script>

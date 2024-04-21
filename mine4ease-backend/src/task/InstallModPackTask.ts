@@ -1,6 +1,7 @@
 import {
   ApiType,
   CACHE_PATH,
+  CURSE_FORGE_TEMPLATE_FILE_DOWNLOAD_URL,
   DownloadRequest,
   ExtractRequest,
   getByType,
@@ -72,6 +73,12 @@ export class InstallModPackCurseTask extends Task {
 
     let file = modPackFile[0];
     file.url = file._url;
+    if (!file._url) {
+      file._url = CURSE_FORGE_TEMPLATE_FILE_DOWNLOAD_URL
+      .replace('<file-id-first4>', String(file.installedFileId).substring(0, 4))
+      .replace('<file-id-last3>', String(file.installedFileId).substring(4))
+      .replace('<fileName>', encodeURIComponent(file.filename));
+    }
 
     let downloadReq = new DownloadRequest();
     downloadReq.file = file;
@@ -92,7 +99,7 @@ export class InstallModPackCurseTask extends Task {
 
     let modLoader: ModLoader | undefined;
     let modloaderId: string | undefined;
-    for (let m: { id: string, primary: boolean } of manifest.minecraft.modLoaders) {
+    for (let m of manifest.minecraft.modLoaders) {
       modLoader = this.findModloaderByString(m.id);
       modloaderId = m.id;
       if (modLoader) break;
@@ -116,12 +123,12 @@ export class InstallModPackCurseTask extends Task {
     this._instance.versions.self = manifest.version;
     this._instance = await $instanceService.createInstance(this._instance);
 
-    for (const file: { projectID: string, fileID: string, required: boolean } of manifest.files) {
+    for (const file of manifest.files) {
       if (file.required) {
         let mod = new Mod();
         mod.apiType = this._apiType;
         mod.id = file.projectID;
-        this._taskRunner.addTask(new InstallModTask(mod, this._instance, this._subEventEmitter, file.fileID, true));
+        this._taskRunner.addTask(new InstallModTask(mod, this._instance, this._subEventEmitter, file.fileID, true, false));
       }
     }
 

@@ -45,7 +45,7 @@ export abstract class File implements FileControl {
   }
 
   set name(name: string) {
-    this._name = name;
+    this._name = decodeURIComponent(name);
   }
 
   get name() {

@@ -95,6 +95,7 @@ const CURSE_FORGE_MINECRAFT_MOD_CLASS_ID = '6';
 const CURSE_FORGE_MINECRAFT_MODPACK_CLASS_ID = '4471';
 const CURSE_FORGE_MINECRAFT_RESOURCEPACKS_CLASS_ID = '12';
 const CURSE_FORGE_MINECRAFT_SHADERPACKS_CLASS_ID = '6552';
+export const CURSE_FORGE_TEMPLATE_FILE_DOWNLOAD_URL = "https://media.forgecdn.net/files/<file-id-first4>/<file-id-last3>/<fileName>";
 
 export class CurseApiService implements ApiService {
   private static toFile(object: Mod | ModPack, v: any) {

@@ -83,12 +83,7 @@ export class DownloadService implements IDownloadService {
       return resolve("");
     })
     .then(() => fetchWithRetry(request.file.url, this.logger))
-    .then(r => {
-      if (!r.ok) {
-        throw new Error(`Error when trying to download file . : ${r.status}`);
-      }
-      return r.arrayBuffer();
-    })
+    .then(r => r.arrayBuffer())
   }
 
   async initFileHash(file: File): Promise<string> {

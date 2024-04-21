@@ -176,17 +176,11 @@ export class LaunchGameTask extends Task {
 
     logger.debug(`Java executable path : ${javaPath}`);
 
-    const processus = exec.spawn(join(javaPath, $utils.getJavaExecutablePath()), cmdLine, {
+    exec.spawn(join(javaPath, $utils.getJavaExecutablePath()), cmdLine, {
       cwd: join(process.env.APP_DIRECTORY, INSTANCE_PATH, this.instance.id),
       detached: true
     });
 
-    processus.stdout.on('data', (data: Buffer) => {
-      console.log(data.toString());
-    });
-
-    processus.stderr.on('data', (data: Buffer) => {
-      console.error(data.toString());
-    });
+    // TODO Listen on process exit to reopen launcher
   }
 }

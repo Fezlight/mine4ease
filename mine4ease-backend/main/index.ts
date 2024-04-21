@@ -47,6 +47,7 @@ function createWindow() {
     height: 700,
     webPreferences: {
       contextIsolation: true,
+      nodeIntegrationInWorker: true,
       preload
     },
   })
