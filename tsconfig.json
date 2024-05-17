@@ -5,7 +5,8 @@
     "module": "ESNext",
     "lib": [
       "ES2023",
-      "DOM"
+      "DOM",
+      "dom.iterable"
     ],
     /* Bundler mode */
     "moduleResolution": "bundler",

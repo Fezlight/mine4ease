@@ -48,7 +48,7 @@ import ModPackDetails from "./routes/modpacks/modpacks-details/ModPackDetails.vu
 library.add(
   faStar, faGear, faRightFromBracket, faAdd, faCamera, faMicrosoft,
   faTrashCan, faArrowRight, faArrowLeft, faPlay, faCircleXmark, faCircleCheck,
-  faGear, faSpinner, faCheck, faUpRightFromSquare, faDownload, faBook, faCode,
+  faSpinner, faCheck, faUpRightFromSquare, faDownload, faBook, faCode,
   faArrowUpRightFromSquare, faCircleUp, faArrowRotateRight, faMagnifyingGlass
 );
 const routes = [

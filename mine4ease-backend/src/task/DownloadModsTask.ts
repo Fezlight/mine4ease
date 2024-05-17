@@ -38,6 +38,6 @@ export class DownloadModsTask extends Task {
       }
     }
 
-    await this._taskRunner.process();
+    await this._taskRunner.process(false);
   }
 }

@@ -39,7 +39,7 @@ async function buildCommandLine(instance: InstanceSettings, versionsManifest: Ve
   if (!versionsManifest.arguments) {
     args = [...defaultJvmArg, ...args, ...versionsManifest.minecraftArguments.split(' ')];
   } else {
-    args = [...versionsManifest.arguments.jvm, ...args, ...versionsManifest.arguments.game];
+    args = [versionsManifest.logging.client.argument, ...versionsManifest.arguments.jvm, ...args, ...versionsManifest.arguments.game];
   }
 
   args.forEach(arg => {
@@ -86,6 +86,9 @@ async function buildCommandLine(instance: InstanceSettings, versionsManifest: Ve
       }
 
       switch (argIdentifier[1]) {
+        case "path":
+          newValue = process.env.LOGGER_PATH;
+          break;
         case "natives_directory":
           newValue = join(process.env.APP_DIRECTORY, VERSIONS_PATH, versionName, "natives");
           break;
@@ -180,7 +183,6 @@ export class LaunchGameTask extends Task {
       cwd: join(process.env.APP_DIRECTORY, INSTANCE_PATH, this.instance.id),
       detached: true
     });
-
     // TODO Listen on process exit to reopen launcher
   }
 }

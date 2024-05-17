@@ -54,12 +54,12 @@ export class DownloadJavaTask extends Task {
         java.type = this.javaType;
         downloadReq.file = java;
 
-        this.taskRunner.addTask(new DownloadFileTask(downloadReq));
+        this.taskRunner.addTask(new DownloadFileTask(downloadReq, true));
       }
     } else {
       throw new Error(`No files found for ${this.javaType}`);
     }
 
-    await this.taskRunner.process();
+    await this.taskRunner.process(false);
   }
 }

@@ -21,6 +21,7 @@ import {EventEmitter} from "events";
 import {LaunchGameTask} from "../task/LaunchGameTask.ts";
 import {$downloadService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig.ts";
 import {DownloadModsTask} from "../task/DownloadModsTask.ts";
+import {DownloadLoggerTask} from "../task/DownloadLoggerTask.ts";
 
 export class MinecraftService implements IMinecraftService {
   private readonly downloadService: DownloadService;
@@ -71,8 +72,6 @@ export class MinecraftService implements IMinecraftService {
 
     taskRunner.addTask(new DownloadAssetsTask(version));
 
-    taskRunner.addTask(new DownloadLibrariesTask(version.libraries, minecraftVersion, instance.installSide, true));
-
     if(instance.modLoader) {
       if (instance.modLoader === 'Forge' && instance.versions.forge) {
         taskRunner.addTask(new InstallForgeTask(minecraftVersion, instance.versions.forge, instance.installSide));
@@ -80,6 +79,10 @@ export class MinecraftService implements IMinecraftService {
 
       taskRunner.addTask(new DownloadModsTask(instance));
     }
+
+    taskRunner.addTask(new DownloadLibrariesTask(version.libraries, minecraftVersion, instance.installSide, true));
+
+    taskRunner.addTask(new DownloadLoggerTask(version));
 
     await taskRunner.process();
 

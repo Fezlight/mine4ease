@@ -1,17 +1,7 @@
-import {
-  ADD_TASK_EVENT_NAME,
-  Asset,
-  Assets,
-  DownloadRequest,
-  MINECRAFT_RESSOURCES_URL,
-  Task,
-  TaskRunner,
-  Versions
-} from "mine4ease-ipc-api";
+import {Asset, Assets, DownloadRequest, MINECRAFT_RESSOURCES_URL, Task, TaskRunner, Versions} from "mine4ease-ipc-api";
 import {$downloadService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig";
 import {EventEmitter} from "events";
 import {join, parse} from "path";
-import {DownloadFileTask} from "./FileTask";
 
 export class DownloadAssetsTask extends Task {
   private readonly taskRunner: TaskRunner;
@@ -42,7 +32,7 @@ export class DownloadAssetsTask extends Task {
       this.taskRunner.addTask(new DownloadAssetTask(this.subEventEmitter, asset, name, assetsFile.virtual));
     }
 
-    await this.taskRunner.process();
+    await this.taskRunner.process(false);
   }
 }
 
@@ -78,7 +68,7 @@ export class DownloadAssetTask extends Task {
       let downloadReq = new DownloadRequest();
       downloadReq.file = asset;
 
-      this._eventEmitter.emit(ADD_TASK_EVENT_NAME, new DownloadFileTask(downloadReq), false);
+      await $downloadService.download(downloadReq);
     }
   }
 }

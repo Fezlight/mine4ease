@@ -36,6 +36,10 @@ export class Queue<T> {
   get length() {
     return this.tailIndex - this.headIndex;
   }
+
+  get items() {
+    return Object.values(this._items);
+  }
 }
 
 export interface TaskOptions {
@@ -69,18 +73,46 @@ export class TaskRunner {
     })
   }
 
-  async process() {
+  private splitToChunks(items: Task[], chunkSize = 20): Task[][] {
+    const result: Task[][] = [];
+    for (let i = 0; i < items.length; i += chunkSize) {
+      result.push(items.slice(i, i + chunkSize));
+    }
+    return result;
+  }
+
+  async process(sequential = true) {
     if (this.isProcessing) return;
     this.isProcessing = true;
 
+    if (sequential) {
+      await this.processSequential()
+    } else {
+      await this.processParallel();
+    }
+
+    this.isProcessing = false;
+  }
+
+  async processParallel(): Promise<void> {
+    const chunkTask = this.splitToChunks(this.queue.items);
+
+    for (const task of chunkTask) {
+      const promises = task.map(task => {
+        return task.runTask().catch(error => this.onFailed(error))
+      });
+
+      await Promise.all(promises);
+    }
+  }
+
+  async processSequential() {
     while (this.queue.length > 0) {
       const task = this.queue.pop();
 
       await task.runTask()
-        .catch(error => this.onFailed(error));
+      .catch(error => this.onFailed(error));
     }
-
-    this.isProcessing = false;
   }
 
   addTask(task: Task, processing: boolean = false) {

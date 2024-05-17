@@ -2,6 +2,7 @@ import {File} from "./file/File";
 import {Rule} from "./Rule";
 import {Library} from "./file/Library";
 import {Asset} from "./file/Asset";
+import {LogConfig} from "./file/LogConfig";
 
 export class Versions {
   arguments: {
@@ -27,7 +28,7 @@ export class Versions {
   logging: {
     client: {
       argument: string;
-      file: File;
+      file: LogConfig;
       type: string;
     }
   };

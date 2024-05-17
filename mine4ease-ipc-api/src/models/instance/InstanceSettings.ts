@@ -7,6 +7,7 @@ export class InstanceSettings extends Instance {
   installSide: InstallSide;
   description?: string;
   modLoader?: ModLoader;
+  additionalJvmArgs: string;
   versions: {
     forge?: Version,
     minecraft: Version;

@@ -244,7 +244,8 @@ export class Utils implements IUtils {
           file.path = file.path.replace(extractRequest.destNameFilter, '');
         }
         return file;
-      }
+      },
+      strip: extractRequest.stripLeadingDirectory
     });
   }
 

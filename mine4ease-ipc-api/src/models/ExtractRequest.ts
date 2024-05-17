@@ -3,8 +3,9 @@ import {File} from "./file/File";
 export class ExtractRequest {
   file: File;
   destPath: string;
-  destName: string | undefined;
-  destNameFilter: string | undefined;
+  destName?: string;
+  destNameFilter?: string;
   excludes: string[];
   includes: string[];
+  stripLeadingDirectory?: number;
 }
