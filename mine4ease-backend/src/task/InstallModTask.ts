@@ -1,19 +1,21 @@
 import {
+  ADD_MOD_EVENT_NAME,
   ApiType,
-  CURSE_FORGE_TEMPLATE_FILE_DOWNLOAD_URL,
+  CURSE_FORGE_MIRRORS_URL,
   DownloadRequest,
   getByType,
+  getCurseForgeFileUrl,
   INSTANCE_PATH,
   InstanceSettings,
   Mod,
-  ModSettings,
+  MODS_PATH,
   Task,
   TaskRunner
 } from "mine4ease-ipc-api";
-import {$downloadService, $eventEmitter, logger} from "../config/ObjectFactoryConfig";
+import {$downloadService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig";
 import {join} from "path";
 import {EventEmitter} from "events";
-import {$modService} from "../services/ModService.ts";
+import {$modService} from "../services/ModService";
 
 export class InstallModTask extends Task {
   private readonly _instance: InstanceSettings;
@@ -25,19 +27,32 @@ export class InstallModTask extends Task {
   private _version: number | undefined;
 
   constructor(mod: Mod, instance: InstanceSettings, eventEmitter: EventEmitter = $eventEmitter, 
-              version?: number, ignoreDependencies: boolean = false, download: boolean = true) {
-    super(eventEmitter, logger, () => `Installing mod ${mod._name}...`);
+              version?: number, ignoreDependencies: boolean = false, download: boolean = true, eventCancelled = false) {
+    super(eventEmitter, logger, () => `Installing mod ${mod.id}...`, eventCancelled);
     this._mod = mod;
     this._instance = instance;
     this._version = version;
     this._ignoreDependencies = ignoreDependencies;
     this._download = download;
     this._subEventEmitter = new EventEmitter();
-    this._taskRunner = new TaskRunner(logger, this._subEventEmitter);
+    this._taskRunner = new TaskRunner(logger, this._subEventEmitter, this._eventEmitter);
   }
 
-  async run(): Promise<void> {
+  async run(): Promise<Mod> {
     let mod: Mod | undefined;
+
+    if (this._mod.filename) {
+      let hash= await $utils.readFileHash(join(INSTANCE_PATH, this._instance.id, MODS_PATH, this._mod.filename));
+
+      if (hash === this._mod.sha1) {
+        return this._mod;
+      }
+    }
+
+    if (this._version === undefined) {
+      this._version = await this.getModVersionFromManifest(this._mod.id);
+    }
+
     let apiService = getByType(this._mod.apiType);
 
     if (this._mod.apiType === ApiType.CURSE) {
@@ -56,10 +71,7 @@ export class InstallModTask extends Task {
       this._version ??= selectedMod.installedFileId;
       mod = Object.assign(new Mod(), selectedMod);
       if (!mod._url) {
-        mod._url = CURSE_FORGE_TEMPLATE_FILE_DOWNLOAD_URL
-        .replace('<file-id-first4>', String(this._version).substring(0, 4))
-        .replace('<file-id-last3>', String(this._version).substring(4))
-        .replace('<fileName>', encodeURIComponent(selectedMod.filename));
+        mod._url = getCurseForgeFileUrl(this._version, selectedMod.filename);
       }
 
       mod.url = mod._url;
@@ -76,6 +88,7 @@ export class InstallModTask extends Task {
       if (this._download) {
         let downloadRequest = new DownloadRequest();
         downloadRequest.file = mod;
+        downloadRequest.mirrors = CURSE_FORGE_MIRRORS_URL;
 
         await $downloadService.download(downloadRequest);
       }
@@ -83,7 +96,7 @@ export class InstallModTask extends Task {
       if (!this._ignoreDependencies) {
         mod.dependencies.filter(mod => mod.relationType == 3).forEach(mod => {
           this._taskRunner.addTask(new InstallModTask(mod, this._instance, this._subEventEmitter,
-            undefined, this._ignoreDependencies, this._download));
+            undefined, this._ignoreDependencies, this._download, this._eventCanceled));
         });
       }
     } else {
@@ -94,10 +107,13 @@ export class InstallModTask extends Task {
 
     await this._taskRunner.process();
 
-    let modsJson: ModSettings = await $modService.getInstanceMods(this._instance.id);
+    this._eventEmitter.emit(ADD_MOD_EVENT_NAME, mod, this._instance);
 
-    modsJson.mods.set(String(mod.id), mod);
+    return mod;
+  }
 
-    await $modService.saveAllMods(modsJson, this._instance.id);
+  async getModVersionFromManifest(modId: number): Promise<number | undefined> {
+    return $modService.getMod(modId, this._instance.id)
+      .then(mod => mod?.installedFileId);
   }
 }

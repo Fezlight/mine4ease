@@ -3,16 +3,27 @@ import {Utils} from "../utils/Utils";
 import {File} from "../models/file/File";
 import {Logger} from "winston";
 
-export const fetchWithRetry = async (url: string, logger: Logger, options = {}, retry = 3) => {
+export const fetchWithRetry = async (url: string, logger: Logger, options = {}, mirrors = [], retry = 3) => {
   return fetch(url, options)
   .then(r => {
     if (r.ok) {
       return r;
     }
 
+    logger.error(`Fetching url ${url} : Attempting failed with ${r.status} - ${r.statusText}`);
+    console.log(mirrors);
+    if(r.status === 404 && mirrors.length > 0) {
+      let mirror = mirrors[0];
+      let newUrl = new URL(url);
+      newUrl.hostname = mirror;
+      url = newUrl.href;
+      mirrors.splice(0, 1);
+      return fetchWithRetry(url, logger, options, mirrors);
+    }
+
     if (retry > 0) {
       logger.error(`Fetching url ${url} : ${retry - 1} attempts left`)
-      return fetchWithRetry(url, logger, options, retry - 1);
+      return fetchWithRetry(url, logger, options, mirrors, retry - 1);
     }
 
     throw new Error(`Fetching url ${url} with 3 failed attempts`);
@@ -82,7 +93,7 @@ export class DownloadService implements IDownloadService {
       this.logger.debug(`Downloading file ${request.file.fileName()} from ${request.file.url} ...`);
       return resolve("");
     })
-    .then(() => fetchWithRetry(request.file.url, this.logger))
+    .then(() => fetchWithRetry(request.file.url, this.logger, {}, request.mirrors))
     .then(r => r.arrayBuffer())
   }
 

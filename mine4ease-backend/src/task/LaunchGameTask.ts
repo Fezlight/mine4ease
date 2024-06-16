@@ -2,6 +2,8 @@ import {
   Account,
   ArgRule,
   ASSETS_PATH,
+  GAME_EXITED_EVENT_NAME,
+  GAME_LAUNCHED_EVENT_NAME,
   INSTANCE_PATH,
   InstanceSettings,
   LIBRARIES_PATH,
@@ -18,11 +20,7 @@ import {$authService} from "../services/AuthService";
 async function buildCommandLine(instance: InstanceSettings, versionsManifest: Versions) {
   let argLine: string[] = [];
   let versionName = instance.versions.minecraft.name;
-  let args = [
-    versionsManifest.mainClass
-  ];
   let userAccount: Account | undefined = await $authService.getProfile();
-
   if (!userAccount) {
     throw new Error("User account cannot be validated by auth server");
   }
@@ -33,14 +31,39 @@ async function buildCommandLine(instance: InstanceSettings, versionsManifest: Ve
     "-Dminecraft.launcher.brand=${launcher_name}",
     "-Dminecraft.launcher.version=${launcher_version}",
     "-cp",
-    "${classpath}",
+    "${classpath}"
   ]
 
-  if (!versionsManifest.arguments) {
-    args = [...defaultJvmArg, ...args, ...versionsManifest.minecraftArguments.split(' ')];
-  } else {
-    args = [versionsManifest.logging.client.argument, ...versionsManifest.arguments.jvm, ...args, ...versionsManifest.arguments.game];
+  let jvmArgs: string[] = [];
+  let minecraftArgs: string[] = [];
+  // TODO Use theses args to customize every instances title and icon
+  let extraArgs: string[] = [
+    "--title ${title}",
+    "--icon ${icon_path}"
+  ];
+
+  let memory = instance.memory;
+  if(memory) {
+    jvmArgs.push(...[
+      `-Xms${memory}`,
+      `-Xmx${memory}`
+    ]);
   }
+
+  let additionalJvmArgs = instance.additionalJvmArgs;
+  if (additionalJvmArgs && additionalJvmArgs.length > 0) {
+    jvmArgs.push(...additionalJvmArgs.split(' '));
+  }
+
+  if (!versionsManifest.arguments) {
+    jvmArgs.push(...defaultJvmArg);
+    minecraftArgs.push(...versionsManifest.minecraftArguments.split(' '));
+  } else {
+    jvmArgs.push(versionsManifest.logging.client.argument, ...versionsManifest.arguments.jvm);
+    minecraftArgs.push(...versionsManifest.arguments.game);
+  }
+
+  let args = [...jvmArgs, versionsManifest.mainClass, ...minecraftArgs, ...extraArgs];
 
   args.forEach(arg => {
     if (typeof (arg) === 'object') {
@@ -101,6 +124,14 @@ async function buildCommandLine(instance: InstanceSettings, versionsManifest: Ve
         case "launcher_version":
           newValue = String(versionsManifest.minimumLauncherVersion);
           break;
+        case "title":
+          newValue = instance.title;
+          break; // TODO Make this work as container title
+        case "icon_path":
+          if(instance.iconName) {
+            newValue = join(process.env.APP_DIRECTORY, INSTANCE_PATH, instance.id, ASSETS_PATH, instance.iconName);
+          }
+          break; // TODO Make this work as container icon
         case "auth_player_name":
           newValue = userAccount.username;
           break;
@@ -179,10 +210,23 @@ export class LaunchGameTask extends Task {
 
     logger.debug(`Java executable path : ${javaPath}`);
 
-    exec.spawn(join(javaPath, $utils.getJavaExecutablePath()), cmdLine, {
+    const processus = exec.spawn(join(javaPath, $utils.getJavaExecutablePath()), cmdLine, {
       cwd: join(process.env.APP_DIRECTORY, INSTANCE_PATH, this.instance.id),
       detached: true
     });
-    // TODO Listen on process exit to reopen launcher
+
+    processus.stdout.on('data', (data: Buffer) => {
+      console.log(data.toString());
+    });
+
+    processus.stderr.on('data', (data: Buffer) => {
+      console.error(data.toString());
+    });
+
+    this._eventEmitter.emit(GAME_LAUNCHED_EVENT_NAME);
+
+    processus.on('exit', () => {
+      this._eventEmitter.emit(GAME_EXITED_EVENT_NAME);
+    });
   }
 }

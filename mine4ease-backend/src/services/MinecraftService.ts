@@ -17,11 +17,11 @@ import {DownloadAssetsTask} from "../task/DownloadAssetsTask";
 import {DownloadLibrariesTask} from "../task/DownloadLibsTask";
 import {DownloadJavaTask} from "../task/DownloadJavaTask";
 import {InstallForgeTask} from "../task/InstallForgeTask";
-import {EventEmitter} from "events";
-import {LaunchGameTask} from "../task/LaunchGameTask.ts";
 import {$downloadService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig.ts";
 import {DownloadModsTask} from "../task/DownloadModsTask.ts";
 import {DownloadLoggerTask} from "../task/DownloadLoggerTask.ts";
+import {EventEmitter} from "events";
+import {LaunchGameTask} from "../task/LaunchGameTask.ts";
 
 export class MinecraftService implements IMinecraftService {
   private readonly downloadService: DownloadService;
@@ -49,7 +49,7 @@ export class MinecraftService implements IMinecraftService {
 
   async beforeLaunch(instance: InstanceSettings): Promise<Versions> {
     let minecraftVersion = instance.versions.minecraft.name;
-    let taskRunner = new TaskRunner(this.logger, new EventEmitter());
+    let taskRunner = new TaskRunner(this.logger, new EventEmitter(), $eventEmitter);
 
     // Reinit classpath array to avoid overflow
     process.env.CLASSPATH_ARRAY = "";

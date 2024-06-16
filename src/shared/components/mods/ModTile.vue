@@ -1,14 +1,9 @@
 <script setup lang="ts">
 import {Category, Mod} from "mine4ease-ipc-api";
-import {Transitions} from "../../models/Transitions";
-import {redirect, transformDownloadCount} from "../../utils/Utils";
+import {transformDownloadCount} from "../../utils/Utils";
 
 const props = defineProps<{
   mod: Mod
-}>();
-
-const emit = defineEmits<{
-  (redirect: string, transition: Transitions): void
 }>();
 
 function uniqueCat(): IterableIterator<Category> {
@@ -24,7 +19,7 @@ function uniqueCat(): IterableIterator<Category> {
 <template>
   <article class="rounded-lg bg-black/30 shadow-md shadow-black/40">
     <div class="grid grid-cols-[96px_3fr_1fr] gap-4 px-4 py-5">
-      <button @click="redirect({path: `/mods/${mod.id}`}, emit)" class="w-[96px] h-[96px]">
+      <button @click="$router.push({path: `/mods/${mod.id}`})" class="w-[96px] h-[96px]">
         <img :src="mod.iconUrl" :alt="mod.displayName + ' icon'" class="object-cover">
       </button>
       <div class="flex flex-col justify-between max-w-lg xl:max-w-screen-2xl">

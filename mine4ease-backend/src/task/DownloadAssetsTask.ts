@@ -11,7 +11,7 @@ export class DownloadAssetsTask extends Task {
   constructor(versionFile: Versions) {
     super($eventEmitter, logger, () => "Checking Assets ...");
     this.subEventEmitter = new EventEmitter();
-    this.taskRunner = new TaskRunner(logger, this.subEventEmitter);
+    this.taskRunner = new TaskRunner(logger, this.subEventEmitter, this._eventEmitter);
     this.assetsFile = Object.assign(new Asset(), versionFile.assetIndex);
     this.assetsFile.subPath = 'indexes';
   }

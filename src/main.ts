@@ -11,12 +11,14 @@ import {
   faBook,
   faCamera,
   faCheck,
+  faCircleArrowUp,
   faCircleCheck,
   faCircleUp,
   faCircleXmark,
   faCode,
   faDownload,
   faGear,
+  faGlobe,
   faMagnifyingGlass,
   faPlay,
   faRightFromBracket,
@@ -35,33 +37,40 @@ import {InstanceService} from "./shared/services/InstanceService";
 import InstanceNotFound from "./routes/instance/instance-error/InstanceNotFound.vue";
 import {MinecraftService} from "./shared/services/MinecraftService";
 import {AuthService} from "./shared/services/AuthService";
-import {faMicrosoft} from "@fortawesome/free-brands-svg-icons";
 import {GlobalSettingsService} from "./shared/services/GlobalSettingsService";
 import Mods from "./routes/mods/Mods.vue";
 import {ModService} from "./shared/services/ModService";
 import ModDetails from "./routes/mods/mod-details/ModDetails.vue";
-import InstanceMods from "./routes/instance/instance-mods/InstanceMods.vue";
+import InstanceMods from "./routes/instance/instance/mods/InstanceMods.vue";
 import CreateInstanceCustom from './routes/instance/create-instance/CreateInstanceCustom.vue';
 import ModPacks from "./routes/modpacks/ModPacks.vue";
 import ModPackDetails from "./routes/modpacks/modpacks-details/ModPackDetails.vue";
+import {faMicrosoft} from "@fortawesome/free-brands-svg-icons";
+import InstanceSettings from "./routes/instance/instance/settings/InstanceSettings.vue";
+import InstanceTiles from "./routes/instance/instance/tiles/InstanceTiles.vue";
 
 library.add(
   faStar, faGear, faRightFromBracket, faAdd, faCamera, faMicrosoft,
   faTrashCan, faArrowRight, faArrowLeft, faPlay, faCircleXmark, faCircleCheck,
   faSpinner, faCheck, faUpRightFromSquare, faDownload, faBook, faCode,
-  faArrowUpRightFromSquare, faCircleUp, faArrowRotateRight, faMagnifyingGlass
+  faArrowUpRightFromSquare, faCircleUp, faArrowRotateRight, faMagnifyingGlass,
+  faGlobe, faCircleArrowUp
 );
 const routes = [
   {
     path: '/instance', component: Instances, children: [
-      { path: '/:id', name: 'instance', component: Instance },
-      { path: '/:id/mods', component: InstanceMods },
-      { path: '/create', component: CreateInstance },
-      { path: '/create/custom', component: CreateInstanceCustom },
-      { path: '/create/modpack', component: ModPacks },
-      { path: '/not-found', component: InstanceNotFound },
+      { path: ':id', component: Instance, children : [
+          { path: 'settings', component: InstanceSettings },
+          { path: 'mods', component: InstanceMods },
+          { path: '', component: InstanceTiles },
+        ]
+      },
+      { path: 'create', component: CreateInstance },
+      { path: 'create/custom', component: CreateInstanceCustom },
+      { path: 'not-found', component: InstanceNotFound },
       { path: '/mods', component: Mods },
       { path: '/mods/:id', component: ModDetails },
+      { path: '/modpacks', component: ModPacks },
       { path: '/modpacks/:id', component: ModPackDetails },
     ]
   },

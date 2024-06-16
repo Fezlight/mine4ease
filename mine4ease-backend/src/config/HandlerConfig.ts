@@ -3,6 +3,8 @@ import {$globalSettingsService} from "../services/GlobalSettingsService";
 import {$minecraftService} from "../services/MinecraftService";
 import {$authService} from "../services/AuthService";
 import {$modService} from "../services/ModService";
+import {AddModListeners} from "../listeners/AddModListeners.ts";
+import {DeleteModListeners} from "../listeners/DeleteModListeners.ts";
 import IpcMainInvokeEvent = Electron.IpcMainInvokeEvent;
 
 export const handlerMap = new Map<string, any>();
@@ -11,6 +13,7 @@ handlerMap.set('instanceService.createInstanceByModPack', (ev: IpcMainInvokeEven
 handlerMap.set('instanceService.selectInstance', (ev: IpcMainInvokeEvent, args: string) => $instanceService.selectInstance(args));
 handlerMap.set('instanceService.deleteInstance', (ev: IpcMainInvokeEvent, args: string) => $instanceService.deleteInstance(args))
 handlerMap.set('instanceService.getInstanceById', (ev: IpcMainInvokeEvent, args: string) => $instanceService.getInstanceById(args));
+handlerMap.set('instanceService.updateInstance', (ev: IpcMainInvokeEvent, args: string) => $instanceService.updateInstance(args));
 handlerMap.set('instanceService.saveInstanceSettings', (ev: IpcMainInvokeEvent, args: string) => $instanceService.saveInstanceSettings(JSON.parse(args)));
 handlerMap.set('instanceService.openFolder', (ev: IpcMainInvokeEvent, args: string) => $instanceService.openFolder(args));
 handlerMap.set('modService.addMod', (ev: IpcMainInvokeEvent, mod: string, instance: string) => $modService.addMod(JSON.parse(mod), JSON.parse(instance)));
@@ -22,3 +25,5 @@ handlerMap.set('minecraftService.launchGame', (ev: IpcMainInvokeEvent, args: str
 handlerMap.set('authService.authenticate', () => $authService.authenticate());
 handlerMap.set('authService.getProfile', () => $authService.getProfile());
 
+new AddModListeners().start();
+new DeleteModListeners().start();

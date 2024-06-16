@@ -20,7 +20,7 @@ $authService?.getProfile()
 
 function createInstance() {
   selectedInstance.value = undefined;
-  router.push({path: '/create'});
+  router.push({path: '/instance/create'});
 }
 
 function selectInstance(instance: Instance) {
@@ -37,20 +37,22 @@ function selectInstance(instance: Instance) {
   .then(() => $instanceService?.getInstanceById(instance.id))
   .then(currInstance => {
     currentInstance.value = currInstance;
-    router.push({name: 'instance', params: {id: instance.id}});
+    router.push({path: `/instance/${instance.id}`});
   })
   .catch(() => {
-    router.push({name: '/not-found', query: {id: instance.id}});
+    router.push({name: '/instance/not-found', query: {id: instance.id}});
   });
 }
 
-function addInstance(instance: Instance) {
+function addInstance(instance: Instance, select: boolean = true) {
   if (settings.value && !settings.value.instances) {
     settings.value.instances = [];
   }
   
   settings.value?.instances?.push(instance);
-  selectInstance(instance);
+  if (select) {
+    selectInstance(instance);
+  }
 }
 
 function deleteInstance(id: string) {

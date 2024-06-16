@@ -1,4 +1,4 @@
-import {IInstanceService, InstanceSettings, ModPack} from "mine4ease-ipc-api";
+import {ApiType, CurseModPack, getByType, IInstanceService, InstanceSettings, ModPack} from "mine4ease-ipc-api";
 import {v4 as uuidv4} from "uuid";
 
 export class InstanceService implements IInstanceService {
@@ -22,6 +22,10 @@ export class InstanceService implements IInstanceService {
     return window.ipcRenderer.invoke('instanceService.getInstanceById', id);
   }
 
+  async updateInstance(id: string): Promise<string> {
+    return window.ipcRenderer.invoke('instanceService.updateInstance', id);
+  }
+
   async deleteInstance(id: string): Promise<void> {
     return window.ipcRenderer.invoke('instanceService.deleteInstance', id);
   }
@@ -32,5 +36,21 @@ export class InstanceService implements IInstanceService {
 
   async saveInstanceSettings(instanceSettings: InstanceSettings): Promise<InstanceSettings> {
     return await window.ipcRenderer.invoke('instanceService.saveInstanceSettings', JSON.stringify(instanceSettings));
+  }
+
+  async isUpdateNeeded(instance: InstanceSettings): Promise<boolean> {
+    if (instance.modPack && instance.apiType == ApiType.CURSE) {
+      let modpack: CurseModPack = <CurseModPack>instance.modPack;
+
+      return getByType(ApiType.CURSE).getFileById(undefined, instance.modPack.id, new ModPack(), instance.versions.minecraft.name, instance.modLoader)
+      .then((modPack: ModPack[] | ModPack) => {
+        if (Array.isArray(modPack)) {
+          return modPack.findIndex(m => m.installedFileDate.getTime() > new Date(modpack.installedFileDate).getTime()) != -1;
+        }
+        return modPack.installedFileDate.getTime() > new Date(modpack.installedFileDate).getTime();
+      });
+    }
+
+    return false;
   }
 }

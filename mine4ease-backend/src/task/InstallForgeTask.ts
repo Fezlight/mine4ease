@@ -31,7 +31,7 @@ export class InstallForgeTask extends Task {
     super($eventEmitter, logger, () => `Installing ${forge.name}...`);
     this._minecraftVersion = minecraftVersion;
     this._subEventEmitter = new EventEmitter();
-    this._taskRunner = new TaskRunner(logger, this._subEventEmitter);
+    this._taskRunner = new TaskRunner(logger, this._subEventEmitter, this._eventEmitter);
     this._forgeVersion = forge.name.replace('forge-', '');
     this._installSide = installSide;
     this._versionJsonName = `${this._minecraftVersion}-forge-${this._forgeVersion}.json`;

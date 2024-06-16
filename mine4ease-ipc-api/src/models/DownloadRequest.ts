@@ -3,6 +3,7 @@ import {RuleControl} from "./Rule";
 
 export class DownloadRequest extends RuleControl{
   file: File;
+  mirrors?: string[];
 
   needDownload(): boolean {
     // No rule = true or value of all rules with AND

@@ -15,7 +15,7 @@ process.env.APP_DIRECTORY = path.join(app.getPath('appData'), '.mine4ease');
 process.env.LOG_DIRECTORY = process.env.APP_DIRECTORY + '/logs'
 
 export const logger = createLogger({
-  level: 'debug',
+  level: 'info',
   format: combine(
     timestamp(),
     format.json()
@@ -43,7 +43,11 @@ export const $utils = new Utils(logger);
 export const $cacheProvider = new CacheProvider($utils);
 export const $authProvider = new AuthProvider($cacheProvider);
 export const $eventEmitter = new EventEmitter();
-export const $taskRunner = new TaskRunner(logger, $eventEmitter, false, false);
+export const $taskRunner = new TaskRunner(logger, $eventEmitter, undefined, {
+  autoWipeQueueOnFail: false,
+  propagateError: false,
+  eventCancelled: true
+});
 
 // Service
 export const $downloadService = new DownloadService($utils, logger);

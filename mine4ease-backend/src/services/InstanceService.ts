@@ -22,6 +22,7 @@ import {$globalSettingsService} from "./GlobalSettingsService.ts";
 import {$minecraftService} from "./MinecraftService.ts";
 import {InstallModPackTask} from "../task/InstallModPackTask.ts";
 import {join} from "path";
+import {UpdateInstanceTask} from "../task/UpdateInstanceTask.ts";
 
 export const INSTANCE_FILE = "instance.json";
 
@@ -84,6 +85,14 @@ export class InstanceService implements IInstanceService {
     .then(JSON.parse);
   }
 
+  async updateInstance(id: string) {
+    let instanceSettings = await this.getInstanceById(id);
+
+    let task = new UpdateInstanceTask(instanceSettings);
+    $eventEmitter.emit(ADD_TASK_EVENT_NAME, task);
+    return task.id;
+  }
+
   async deleteInstance(id: string): Promise<void> {
     this.logger.info("Delete instance with id : " + id);
     return this.utils.deleteFile(path.join(INSTANCE_PATH, id))
@@ -124,15 +133,21 @@ export class InstanceService implements IInstanceService {
 
     await this.saveIcon(instanceSettings);
 
-    // Save instance without iconPath
-    const {iconName, ...instance} = instanceSettings;
+    instanceSettings.additionalJvmArgs = [
+      "-XX:+UnlockExperimentalVMOptions",
+      "-XX:+UseG1GC",
+      "-XX:G1NewSizePercent=20",
+      "-XX:G1ReservePercent=20",
+      "-XX:MaxGCPauseMillis=50",
+      "-XX:G1HeapRegionSize=32M"
+    ].join(' ');
 
-    const manifestFile: Version = Object.assign(new Version(), instance.versions.minecraft);
+    const manifestFile: Version = Object.assign(new Version(), instanceSettings.versions.minecraft);
     await this.minecraftService.downloadManifest!(manifestFile);
 
     return this.utils.saveFile({
-      data: JSON.stringify(instance, null, 2),
-      path: path.join(INSTANCE_PATH, instance.id),
+      data: JSON.stringify(instanceSettings, null, 2),
+      path: path.join(INSTANCE_PATH, instanceSettings.id),
       filename: "instance.json"
     }).then(() => instanceSettings);
   }
@@ -156,6 +171,11 @@ export class InstanceService implements IInstanceService {
       await $downloadService.download(downloadReq);
 
       icon = join(process.env.APP_DIRECTORY, cacheFile.fullPath(), cacheFile.fileName());
+    }
+
+    let isFound = await this.utils.isFileExist(join(assetsPath, icon));
+    if (isFound) {
+      return;
     }
 
     let iconFile = await this.utils.readFile(icon, false, true);

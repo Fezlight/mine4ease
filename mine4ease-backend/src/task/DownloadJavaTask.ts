@@ -20,7 +20,7 @@ export class DownloadJavaTask extends Task {
     this.javaType = javaType;
     this.osSpecs = $utils.getPlatform();
     this.subEventEmitter = new EventEmitter();
-    this.taskRunner = new TaskRunner(logger, this.subEventEmitter);
+    this.taskRunner = new TaskRunner(logger, this.subEventEmitter, this._eventEmitter);
   }
 
   async run(): Promise<void> {

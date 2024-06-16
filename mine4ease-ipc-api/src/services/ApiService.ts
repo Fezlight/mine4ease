@@ -5,7 +5,7 @@ import {ResourcePack} from "../models/file/ResourcePack";
 import {ModPack} from "../models/file/ModPack";
 
 export enum ApiType {
-  CURSE = "CURSE", MODRINTH = "MODRINTH"
+  CURSE = "CURSE", MODRINTH = "MODRINTH", MINE4EASE = "MINE4EASE"
 }
 
 export interface ApiService {
@@ -85,17 +85,31 @@ export interface ApiService {
   /**
    * Retrieve all available category to search on
    */
-  getAllCategories(): Promise<Category[]>;
+  getAllCategories(classId: string): Promise<Category[]>;
 }
 
 const CURSE_FORGE_API_URL = 'https://api.curseforge.com';
 const CURSE_FORGE_API_KEY = '$2a$10$idXrFq7MNKIurw71MVrlo.O6g0SO.zwzcQh6Ibslb9WfOLh21VgC.';
 const CURSE_FORGE_MINECRAFT_GAME_ID = '432';
-const CURSE_FORGE_MINECRAFT_MOD_CLASS_ID = '6';
-const CURSE_FORGE_MINECRAFT_MODPACK_CLASS_ID = '4471';
-const CURSE_FORGE_MINECRAFT_RESOURCEPACKS_CLASS_ID = '12';
-const CURSE_FORGE_MINECRAFT_SHADERPACKS_CLASS_ID = '6552';
+export const CURSE_FORGE_MINECRAFT_MOD_CLASS_ID = '6';
+export const CURSE_FORGE_MINECRAFT_MODPACK_CLASS_ID = '4471';
+export const CURSE_FORGE_MINECRAFT_RESOURCEPACKS_CLASS_ID = '12';
+export const CURSE_FORGE_MINECRAFT_SHADERPACKS_CLASS_ID = '6552';
 export const CURSE_FORGE_TEMPLATE_FILE_DOWNLOAD_URL = "https://media.forgecdn.net/files/<file-id-first4>/<file-id-last3>/<fileName>";
+
+export const CURSE_FORGE_MIRRORS_URL = [
+  'edge.forgecdn.net',
+  'mediafiles.forgecdn.net'
+];
+
+export function getCurseForgeFileUrl(fileId: number, name: string) {
+  let id = fileId.toString();
+
+  return CURSE_FORGE_TEMPLATE_FILE_DOWNLOAD_URL
+  .replace('<file-id-first4>', id.substring(0, 4))
+  .replace('<file-id-last3>', id.substring(4))
+  .replace('<fileName>', encodeURIComponent(name));
+}
 
 export class CurseApiService implements ApiService {
   private static toFile(object: Mod | ModPack, v: any) {
@@ -200,10 +214,10 @@ export class CurseApiService implements ApiService {
     });
   }
 
-  async getAllCategories(): Promise<Category[]> {
+  async getAllCategories(classId: string): Promise<Category[]> {
     return fetch(CURSE_FORGE_API_URL + '/v1/categories/?' + new URLSearchParams({
       gameId: CURSE_FORGE_MINECRAFT_GAME_ID,
-      classId: CURSE_FORGE_MINECRAFT_MOD_CLASS_ID
+      classId: classId
     }), {
       method: 'GET',
       headers: {
@@ -318,6 +332,11 @@ export class CurseApiService implements ApiService {
     modPack.categories = v.categories;
     modPack.links = v.links;
     modPack.downloadCount = v.downloadCount;
+    if (v.latestFilesIndexes) {
+      modPack.gameVersions = [...new Set<string>(v.latestFilesIndexes
+      .filter((fileIndex: any) => !/[a-z]/.test(fileIndex.gameVersion))
+      .map((fileIndex: any) => fileIndex.gameVersion))];
+    }
     CurseApiService.toFile(modPack, v);
     return modPack;
   }

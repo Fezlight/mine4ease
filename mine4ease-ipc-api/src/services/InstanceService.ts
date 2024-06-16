@@ -1,5 +1,5 @@
 import {InstanceSettings} from "../models/instance/InstanceSettings";
-import {ModPack} from "../models/ModPack";
+import {ModPack} from "../models/file/ModPack";
 
 export interface IInstanceService {
   /**
@@ -29,6 +29,13 @@ export interface IInstanceService {
    * @param id instance id shared with the external server
    */
   getInstanceById(id: string): Promise<InstanceSettings>;
+
+  /**
+   * Update instance by it id
+   *
+   * @param id instance id shared with the external server
+   */
+  updateInstance(id: string): Promise<string>;
 
   /**
    * Delete an instance by its id

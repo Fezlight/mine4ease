@@ -11,6 +11,8 @@ import EventWrapper from "../../shared/components/events/EventWrapper.vue";
 import BackToLastPage from "../../shared/components/buttons/BackToLastPage.vue";
 import LoadingComponent from "../../shared/components/LoadingComponent.vue";
 import InstanceContent from "../../shared/components/instance/InstanceContent.vue";
+import {CURSE_FORGE_MINECRAFT_MOD_CLASS_ID} from "../../../mine4ease-ipc-api";
+import {SearchQuery} from "../../shared/models/SearchQuery.ts";
 
 const instance: Ref<InstanceSettings | undefined> | undefined = inject('currentInstance');
 const $modService: ModService | undefined = inject('modService');
@@ -59,11 +61,11 @@ function searchMod() {
   if (route.query.categories) {
     categoriesId = Array.isArray(route.query.categories) ? route.query.categories.map(cat => Number(cat)) : [Number(route.query.categories)];
   }
-  const query: { filter: string, categories: number[] } = {
+  const query: SearchQuery = {
     filter: filter.value,
     categories: selectedCategories.value.map(cat => cat.id) ?? categoriesId
   };
-  router.push({path: '/mods', query: query});
+  router.push({query: query});
 
   mods.value = [];
 
@@ -72,7 +74,7 @@ function searchMod() {
 }
 
 async function getAllCategories() {
-  return getByType(ApiType.CURSE).getAllCategories()
+  return getByType(ApiType.CURSE).getAllCategories(CURSE_FORGE_MINECRAFT_MOD_CLASS_ID)
   .then(cat => categories.value = cat);
 }
 
@@ -107,7 +109,7 @@ function orderedCategories(categories: Category[]) {
 
 function backToLastPage() {
   if (instance?.value) {
-    return router.push(`/${instance.value?.id}/mods`);
+    return router.push(`/instance/${instance.value?.id}/mods`);
   }
   return router.back();
 }

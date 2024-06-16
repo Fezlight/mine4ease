@@ -3,7 +3,7 @@ import {InstallModTask} from "../task/InstallModTask";
 import {$eventEmitter, $utils} from "../config/ObjectFactoryConfig";
 import {join} from "node:path";
 import {UninstallModTask} from "../task/UninstallModTask";
-import {UpdateModTask} from "../task/UpdateModTask.ts";
+import {UpdateModTask} from "../task/UpdateModTask";
 
 export class ModService implements IModService {
   async addMod(mod: Mod, instance: InstanceSettings): Promise<string> {
@@ -22,6 +22,15 @@ export class ModService implements IModService {
     let task = new UpdateModTask(previousMod, instance);
     $eventEmitter.emit(ADD_TASK_EVENT_NAME, task);
     return task.id;
+  }
+
+  async getMod(modId: number, instanceId: string): Promise<Mod | undefined> {
+    return $utils.readFile(join(INSTANCE_PATH, instanceId, "mods.json"))
+    .then(JSON.parse)
+    .then((modSettings: ModSettings) => {
+      return Object.values(modSettings.mods).find((mod:Mod)=> mod.id === modId);
+    })
+    .catch(() => undefined);
   }
 
   async getInstanceMods(instanceId: string): Promise<ModSettings> {

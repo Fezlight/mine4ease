@@ -2,10 +2,10 @@
 import {inject, Ref, ref} from "vue";
 import {ApiType, getByType, InstanceSettings, Mod, ModLoader} from "mine4ease-ipc-api";
 import {useRoute} from "vue-router";
-import BackToLastPage from "../../../shared/components/buttons/BackToLastPage.vue";
 import LoadingComponent from "../../../shared/components/LoadingComponent.vue";
 import InstanceContent from "../../../shared/components/instance/InstanceContent.vue";
-import {transformDownloadCount} from "../../../shared/utils/Utils.ts";
+import BottomNavBar from "../../../shared/components/bottom-nav-bar/BottomNavBar.vue";
+import {transformDownloadCount} from "../../../shared/utils/Utils";
 
 const route = useRoute();
 const instance: Ref<InstanceSettings | undefined> | undefined = inject('currentInstance');
@@ -21,16 +21,16 @@ async function getModDetails(id: string): Promise<Mod | undefined> {
   let modLoader: ModLoader | undefined = instance.value.modLoader;
 
   return getByType(apiType).getItemById(Number(id), new Mod(), gameVersion, modLoader)
-    .then(m => mod.value! = m);
+  .then(m => mod.value! = m);
 }
 
 async function getModDescription(id: string): Promise<string | undefined> {
   return getByType(apiType).getModDescription(Number(id))
-    .then(desc => description.value = desc)
-    .then(desc => {
-      eventListeners();
-      return desc;
-    });
+  .then(desc => description.value = desc)
+  .then(desc => {
+    eventListeners();
+    return desc;
+  });
 }
 
 function eventListeners() {
@@ -44,13 +44,8 @@ function eventListeners() {
 }
 </script>
 <template>
-  <InstanceContent>
-    <div class="flex flex-col gap-4 mb-4">
-      <section class="flex flex-row items-center gap-4 rounded-lg bg-black/30 shadow-md shadow-black/40 p-4">
-        <BackToLastPage @back-to-last-page="() => $router.back()"></BackToLastPage>
-      </section>
-    </div>
-    <div class="grid grid-cols-[250px_1fr] gap-4">
+  <InstanceContent :fluid="true">
+    <div class="grid grid-cols-[250px_1fr] gap-4 p-6">
       <LoadingComponent class="overflow-y-auto" :promise="() => getModDetails(<string>route.params.id)" :execute-automation="true">
         <template v-slot:loading>
           <div class="flex flex-col rounded-lg bg-black/30 shadow-md shadow-black/40 p-4 gap-4 mb-4">
@@ -83,22 +78,32 @@ function eventListeners() {
           <span class="text-gray-400 text-sm">by {{ mod?.authors?.map(a => a.name).join(', ') }}</span>
           <div class="border-t-2 border-amber-400"></div>
           <span class="inline-block space-x-2">
-          <font-awesome-icon :icon="['fas', 'download']" />
-          <span>{{ transformDownloadCount(mod?.downloadCount) }}</span>
-        </span>
+            <font-awesome-icon :icon="['fas', 'download']" />
+            <span>{{ transformDownloadCount(mod?.downloadCount) }}</span>
+          </span>
           <div class="border-t-2 border-amber-400"></div>
-          <a :href="mod?.links?.websiteUrl" target="_blank">See on CurseForge&nbsp<font-awesome-icon :icon="['fas', 'arrow-up-right-from-square']" /></a>
+          <a :href="mod?.links?.websiteUrl" target="_blank">See on CurseForge&nbsp
+            <font-awesome-icon :icon="['fas', 'arrow-up-right-from-square']" />
+          </a>
         </div>
-        <div class="flex flex-col rounded-lg bg-black/30 shadow-md shadow-black/40 p-4 gap-4">
+        <div class="flex flex-col rounded-lg bg-black/30 shadow-md shadow-black/40 p-4 gap-4"
+             v-if="mod?.links?.sourceUrl || mod?.links?.wikiUrl || mod?.links?.websiteUrl">
           <h3>External links</h3>
           <span v-if="mod?.links?.wikiUrl" class="flex flex-row items-center gap-2">
-          <font-awesome-icon :icon="['fas', 'book']" />
-          <a :href="mod.links.wikiUrl">Wiki</a>
-          <font-awesome-icon :icon="['fas', 'arrow-up-right-from-square']" class="w-3"/></span>
+            <font-awesome-icon :icon="['fas', 'book']" />
+            <a :href="mod.links.wikiUrl">Wiki</a>
+            <font-awesome-icon :icon="['fas', 'arrow-up-right-from-square']" class="w-3" />
+          </span>
           <span v-if="mod?.links?.sourceUrl" class="flex flex-row items-center gap-2">
-          <font-awesome-icon :icon="['fas', 'code']" />
-          <a :href="mod.links.sourceUrl">Source</a>
-          <font-awesome-icon :icon="['fas', 'arrow-up-right-from-square']" class="w-3"/></span>
+            <font-awesome-icon :icon="['fas', 'code']" />
+            <a :href="mod.links.sourceUrl">Source</a>
+            <font-awesome-icon :icon="['fas', 'arrow-up-right-from-square']" class="w-3" />
+          </span>
+          <span v-if="mod.links.websiteUrl" class="flex flex-row items-center gap-2">
+            <font-awesome-icon :icon="['fas', 'globe']" />
+            <a :href="mod.links.websiteUrl">Website</a>
+            <font-awesome-icon :icon="['fas', 'arrow-up-right-from-square']" class="w-3" />
+          </span>
         </div>
       </LoadingComponent>
       <LoadingComponent class="rounded-lg bg-black/30 shadow-md shadow-black/40 p-4" :promise="() => getModDescription(<string>route.params.id)" :execute-automation="true">
@@ -124,6 +129,7 @@ function eventListeners() {
         <span id="mod-description" v-html="description"></span>
       </LoadingComponent>
     </div>
+    <bottom-nav-bar @backToLastPage="() => $router.back()" max-size-class="max-w-min"></bottom-nav-bar>
   </InstanceContent>
 </template>
 <style>
@@ -132,13 +138,16 @@ function eventListeners() {
   overflow-wrap: break-word;
   word-break: break-word;
   backface-visibility: hidden;
+
   p {
     margin-bottom: 1rem;
     line-height: 1.45;
   }
+
   a {
     text-decoration: underline;
   }
+
   .spoiler {
     max-height: 20px;
     overflow: hidden;
@@ -146,6 +155,7 @@ function eventListeners() {
     transition: max-height .5s linear;
     pointer-events: none;
   }
+
   .spoiler:before {
     content: "Show spoiler";
     color: #f16436;
@@ -159,25 +169,31 @@ function eventListeners() {
     cursor: pointer;
     margin-bottom: 20px;
   }
+
   .spoiler.shown {
     max-height: fit-content;
   }
+
   + * {
     @apply flex flex-col space-y-4 max-w-screen-lg;
   }
+
   h2, h3, h4 {
     margin: 1rem 0;
   }
+
   img {
     height: auto;
     display: inline;
     vertical-align: top;
     max-width: 100%;
   }
+
   pre {
     white-space: pre-wrap;
     margin-bottom: 1rem;
   }
+
   code {
     background-color: #262626;
     display: inline-block;
@@ -187,14 +203,18 @@ function eventListeners() {
     padding: 2px 4px;
     border: 1px solid #4d4d4d;
   }
+
   ul {
     @apply list-none relative left-4 list-inside mb-2;
+
     li {
       @apply list-disc list-inside;
     }
   }
+
   ol {
     @apply list-decimal;
+
     li {
       @apply list-decimal list-inside;
     }

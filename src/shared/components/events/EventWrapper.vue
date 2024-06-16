@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {Ref, ref} from "vue";
-import {TaskEvent} from "mine4ease-ipc-api";
+import {TASK_EVENT_NAME, TaskEvent} from "mine4ease-ipc-api";
 import {TaskListeners} from "../../listeners/TaskListeners";
 import {updateState} from "../../utils/Utils";
 
@@ -18,7 +18,7 @@ async function createEvent(promise: Promise<string>, endCallback?: Function) {
   };
 
   if(currentEvent.value) {
-    props.listener.start((event, args) => updateState(<TaskEvent>currentEvent.value, event, args, endCallback));
+    props.listener.start(TASK_EVENT_NAME,(event, args) => updateState(<TaskEvent>currentEvent.value, event, args, endCallback));
   }
 }
 

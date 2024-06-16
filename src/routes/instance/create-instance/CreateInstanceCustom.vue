@@ -20,6 +20,7 @@ const instance: Ref<any> = ref({
       name: ""
     }
   },
+  apiType: ApiType.MINE4EASE,
   iconName: "",
   installSide: "client"
 });

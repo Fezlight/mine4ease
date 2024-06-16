@@ -10,6 +10,10 @@
     height: calc(100vh - 30px);
   }
 
+  .max-window-sub-content {
+    min-height: calc(100vh - 120px - 30px);
+  }
+
   /* Chrome, Edge, and Safari */
   *::-webkit-scrollbar {
     display: none;

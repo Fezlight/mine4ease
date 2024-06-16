@@ -11,13 +11,16 @@ export class ModService implements IModService {
   }
 
   updateMod(previousMod: Mod, instance: InstanceSettings): Promise<string> {
-    return window.ipcRenderer.invoke('modService.updateMod', JSON.stringify(previousMod), JSON.stringify(instance));;
+    return window.ipcRenderer.invoke('modService.updateMod', JSON.stringify(previousMod), JSON.stringify(instance));
   }
 
   async isUpdateNeeded(mod: Mod, instance: InstanceSettings): Promise<boolean> {
     return getByType(ApiType.CURSE).getFileById(undefined, mod.id, new Mod(), instance.versions.minecraft.name, mod.modLoader)
-      .then((mods: Mod[]) => {
-        return mods.findIndex(m => m.installedFileDate.getTime() > new Date(mod.installedFileDate).getTime()) != -1;
+      .then((mods: Mod[] | Mod) => {
+        if(Array.isArray(mods)) {
+          return mods.findIndex(m => m.installedFileDate.getTime() > new Date(mod.installedFileDate).getTime()) != -1;
+        }
+        return mods.installedFileDate.getTime() > new Date(mod.installedFileDate).getTime();
       });
   }
 }

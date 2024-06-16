@@ -13,6 +13,7 @@ export class ModPack extends File {
   installedFileDate: Date;
   description: string;
   gameVersion: string;
+  gameVersions: string[];
   iconUrl: string;
   modLoader: ModLoader;
   apiType: ApiType;

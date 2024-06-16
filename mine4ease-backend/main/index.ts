@@ -2,7 +2,15 @@ import {app, BrowserWindow, ipcMain, net, protocol, shell} from 'electron'
 import {dirname, join} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {existsSync, mkdirSync} from "fs";
-import {ASSETS_PATH, INSTANCE_PATH, TASK_EVENT_NAME, TaskEvent} from "mine4ease-ipc-api";
+import {
+  ASSETS_PATH,
+  GAME_EXITED_EVENT_NAME,
+  GAME_LAUNCHED_EVENT_NAME,
+  INSTANCE_PATH,
+  TASK_EVENT_NAME,
+  TASK_PROCESSING_EVENT_NAME,
+  TaskEvent
+} from "mine4ease-ipc-api";
 import {handlerMap} from "../src/config/HandlerConfig";
 import {$cacheProvider, $eventEmitter} from "../src/config/ObjectFactoryConfig";
 
@@ -136,6 +144,18 @@ app.whenReady().then(() => {
 
   $eventEmitter.on(TASK_EVENT_NAME, (taskEvent: TaskEvent) => {
     win?.webContents.send(TASK_EVENT_NAME, taskEvent);
+  });
+
+  $eventEmitter.on(TASK_PROCESSING_EVENT_NAME, (progress: number) => {
+    win?.webContents.send(TASK_PROCESSING_EVENT_NAME, progress);
+  });
+
+  $eventEmitter.on(GAME_LAUNCHED_EVENT_NAME, () => {
+    win?.webContents.send(GAME_LAUNCHED_EVENT_NAME);
+  });
+
+  $eventEmitter.on(GAME_EXITED_EVENT_NAME, () => {
+    win?.webContents.send(GAME_EXITED_EVENT_NAME);
   });
 
   protocol.handle('mine4ease-icon', (request) => {

@@ -27,7 +27,8 @@ export function updateState(object: TaskEvent, _event: any, value: TaskEvent, en
     if(value.state === 'FAILED') {
       setTimeout(() => object.state = "RETRY_NEEDED", 3000);
     } else if(value.state === 'FINISHED' && endCallback) {
-      endCallback()
+      console.log(value);
+      endCallback(value.object)
     }
   }
 }

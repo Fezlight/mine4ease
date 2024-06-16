@@ -46,7 +46,7 @@ export class DownloadLibrariesTask extends Task {
               isAddingToClassPath: boolean = false, eventEmitter: EventEmitter = $eventEmitter) {
     super(eventEmitter, logger, () => "Checking libraries ...");
     this._subEventEmitter = new EventEmitter();
-    this._taskRunner = new TaskRunner(logger, this._subEventEmitter);
+    this._taskRunner = new TaskRunner(logger, this._subEventEmitter, this._eventEmitter);
     this._libraries = libraries;
     this._minecraftVersion = minecraftVersion;
     this._installSide = installSide;
@@ -69,7 +69,7 @@ export class DownloadLibrariesTask extends Task {
 
       if (isNatives) {
         let downloadClassifierTask = new DownloadClassifierTask(
-          this._subEventEmitter, lib, this._minecraftVersion, osName, osArch, this._installSide, this._isAddingToClassPath
+          this._subEventEmitter, lib, this._minecraftVersion, osName, osArch, this._installSide
         );
         this._taskRunner.addTask(downloadClassifierTask);
         return;
@@ -77,7 +77,7 @@ export class DownloadLibrariesTask extends Task {
 
       if (isLegacyNatives) {
         let downloadClassifierTask = new DownloadClassifierOldWayTask(
-          this._subEventEmitter, lib, this._minecraftVersion, osName, osArch, this._installSide, this._isAddingToClassPath
+          this._subEventEmitter, lib, this._minecraftVersion, osName, osArch, this._installSide
         );
         this._taskRunner.addTask(downloadClassifierTask);
       }
@@ -179,10 +179,9 @@ export class DownloadClassifierTask extends Task {
   protected readonly osName: string;
   protected readonly osArch: string;
   protected readonly installSide: InstallSide;
-  protected readonly _isAddingToClassPath: boolean;
 
   constructor(eventEmitter: EventEmitter, lib: Libraries, minecraftVersion: string, osName: string, osArch: string,
-              installSide: InstallSide, _isAddingToClassPath: boolean = false) {
+              installSide: InstallSide) {
     super(eventEmitter, logger, () => `Checking classifier ${lib.name}`, true);
     this.lib = lib;
     this.minecraftVersion = minecraftVersion;
@@ -202,20 +201,17 @@ export class DownloadClassifierTask extends Task {
       return;
     }
 
-    await this.extractNatives(this.lib, library, this.minecraftVersion, this.installSide,
-      this._isAddingToClassPath, 10);
+    await this.extractNatives(this.lib, library, this.minecraftVersion, this.installSide,10);
   }
 
   async extractNatives(lib: Libraries, nativeLib: Library, minecraftVersion: string, installSide: InstallSide,
-                       isAddingToClassPath: boolean, stripLeadingDirectory: number = 0) {
+                       stripLeadingDirectory: number = 0) {
     let downloadReqClassifier = new DownloadRequest();
     downloadReqClassifier.rules = lib.rules;
     downloadReqClassifier.installSide = installSide;
     downloadReqClassifier.file = Object.assign(new Library(), nativeLib);
 
     if (downloadReqClassifier.isRuleValid()) {
-      addToClassPath(downloadReqClassifier.file, isAddingToClassPath);
-
       // Extract classifiers
       let extractRequest = new ExtractRequest();
       extractRequest.stripLeadingDirectory = stripLeadingDirectory;
@@ -226,15 +222,15 @@ export class DownloadClassifierTask extends Task {
       await $downloadService.download(downloadReqClassifier);
       await $utils.extractFile(extractRequest);
     } else {
-      logger.info(`Invalid rule for classifier ${lib.name}`);
+      logger.debug(`No matching rules for this classifier ${lib.name}`);
     }
   }
 }
 
 export class DownloadClassifierOldWayTask extends DownloadClassifierTask {
   constructor(eventEmitter: EventEmitter, lib: Libraries, minecraftVersion: string, osName: string, osArch: string,
-              installSide: InstallSide, _isAddingToClassPath: boolean = false) {
-    super(eventEmitter, lib, minecraftVersion, osName, osArch, installSide, _isAddingToClassPath);
+              installSide: InstallSide) {
+    super(eventEmitter, lib, minecraftVersion, osName, osArch, installSide);
   }
 
   async run(): Promise<void> {
@@ -255,6 +251,6 @@ export class DownloadClassifierOldWayTask extends DownloadClassifierTask {
 
     let nativeLib = this.lib.downloads?.classifiers[nativeName];
 
-    await this.extractNatives(this.lib, nativeLib, this.minecraftVersion, this.installSide, this._isAddingToClassPath);
+    await this.extractNatives(this.lib, nativeLib, this.minecraftVersion, this.installSide);
   }
 }

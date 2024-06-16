@@ -1,9 +1,8 @@
 import {INSTANCE_PATH, InstanceSettings, Mod, ModSettings, Task, TaskRunner} from "mine4ease-ipc-api";
-import {$eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig.ts";
+import {$eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig";
 import {join} from "path";
 import {EventEmitter} from "events";
-import {InstallModTask} from "./InstallModTask.ts";
-import {MODS_PATH} from "../../../mine4ease-ipc-api";
+import {InstallModTask} from "./InstallModTask";
 
 export class DownloadModsTask extends Task {
   private readonly _instance: InstanceSettings;
@@ -14,7 +13,7 @@ export class DownloadModsTask extends Task {
     super($eventEmitter, logger, () => "Checking mods ...");
     this._instance = instance;
     this._subEventEmitter = new EventEmitter();
-    this._taskRunner = new TaskRunner(logger, this._subEventEmitter);
+    this._taskRunner = new TaskRunner(logger, this._subEventEmitter, this._eventEmitter, {});
   }
 
   async run(): Promise<void> {
@@ -31,11 +30,8 @@ export class DownloadModsTask extends Task {
     logger.info(`Checking ${mods.size} mods...`);
 
     for (const [, mod] of mods) {
-      let hash= await $utils.readFileHash(join(INSTANCE_PATH, this._instance.id, MODS_PATH, mod.filename));
-
-      if (hash !== mod.sha1) {
-        this._taskRunner.addTask(new InstallModTask(mod, this._instance, this._subEventEmitter, mod.installedFileId));
-      }
+      this._taskRunner.addTask(new InstallModTask(mod, this._instance, this._subEventEmitter, mod.installedFileId,
+          !!this._instance.modPack, true, true));
     }
 
     await this._taskRunner.process(false);
