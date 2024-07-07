@@ -3,9 +3,10 @@ import {Category, Mod, ModLoader, ModLoaderCurse} from "../models/file/Mod";
 import {Shader} from "../models/file/Shader";
 import {ResourcePack} from "../models/file/ResourcePack";
 import {ModPack} from "../models/file/ModPack";
+import {BasicFile} from "../models/file/BasicFile";
 
 export enum ApiType {
-  CURSE = "CURSE", MODRINTH = "MODRINTH", MINE4EASE = "MINE4EASE"
+  CURSE = "CURSE", MODRINTH = "MODRINTH", MINE4EASE = "MINE4EASE", FEEDTHEBEAST = "FEEDTHEBEAST"
 }
 
 export interface ApiService {
@@ -30,11 +31,11 @@ export interface ApiService {
   /**
    * Search mod pack by filter keyword
    * @param filter text to search
-   * @param gameVersion minecraft version
    * @param modLoader modloader type (FORGE, FABRIC, etc...)
+   * @param gameVersion minecraft version
    * @param category categories used to filter result
    */
-  searchModPacks(filter: string, gameVersion?: string, modLoader?: ModLoader, category?: Category[]): Promise<ModPack[]>;
+  searchModPacks(filter: string, modLoader?: ModLoader, gameVersion?: string, category?: Category[]): Promise<ModPack[]>;
 
   /**
    * Search mod pack by filter keyword
@@ -103,6 +104,7 @@ export const CURSE_FORGE_MIRRORS_URL = [
 ];
 
 export function getCurseForgeFileUrl(fileId: number, name: string) {
+  debugger
   let id = fileId.toString();
 
   return CURSE_FORGE_TEMPLATE_FILE_DOWNLOAD_URL
@@ -133,7 +135,7 @@ export class CurseApiService implements ApiService {
       this.toMod, gameVersion, modLoader, category);
   }
 
-  async searchModPacks(filter: string, gameVersion?: string, modLoader?: ModLoader, category?: Category[]): Promise<ModPack[]> {
+  async searchModPacks(filter: string, modLoader?: ModLoader, gameVersion?: string, category?: Category[]): Promise<ModPack[]> {
     return this.searchItem(filter, CURSE_FORGE_MINECRAFT_MODPACK_CLASS_ID,
       this.toModPack, gameVersion, modLoader, category);
   }
@@ -163,10 +165,12 @@ export class CurseApiService implements ApiService {
         }
       });
     } else {
-      returnFunction = fetch(CURSE_FORGE_API_URL + `/v1/mods/${modId}/files?` + new URLSearchParams({
+      const params = new URLSearchParams(<Record<string, string>>{
         gameVersion: gameVersion,
         modLoaderType: modLoaderCurse
-      }), {
+      });
+
+      returnFunction = fetch(CURSE_FORGE_API_URL + `/v1/mods/${modId}/files?${params}`, {
         method: 'GET',
         headers: {
           'x-api-key': CURSE_FORGE_API_KEY
@@ -189,7 +193,7 @@ export class CurseApiService implements ApiService {
 
   async getItemById<T extends Mod | ModPack>(id: number, type: T, gameVersion: string | undefined, modLoader: ModLoader | undefined): Promise<T> {
     let func: Function = this.getMappingFunction(type);
-    return fetch(CURSE_FORGE_API_URL + '/v1/mods/' + id, {
+    return fetch(CURSE_FORGE_API_URL + `/v1/mods/${id}`, {
       method: 'GET',
       headers: {
         'x-api-key': CURSE_FORGE_API_KEY
@@ -215,10 +219,12 @@ export class CurseApiService implements ApiService {
   }
 
   async getAllCategories(classId: string): Promise<Category[]> {
-    return fetch(CURSE_FORGE_API_URL + '/v1/categories/?' + new URLSearchParams({
+    const params = new URLSearchParams(<Record<string, string>>{
       gameId: CURSE_FORGE_MINECRAFT_GAME_ID,
       classId: classId
-    }), {
+    });
+
+    return fetch(CURSE_FORGE_API_URL + `/v1/categories/?${params}`, {
       method: 'GET',
       headers: {
         'x-api-key': CURSE_FORGE_API_KEY
@@ -270,8 +276,7 @@ export class CurseApiService implements ApiService {
   private async searchItem(filter: string, classId: string, mapper: Function, gameVersion?: string,
                            modLoader?: ModLoader, category?: Category[]) {
     let modLoaderCurse = this.getModLoaderCurse(modLoader);
-
-    return fetch(CURSE_FORGE_API_URL + '/v1/mods/search?' + new URLSearchParams({
+    const params = new URLSearchParams(<Record<string, string>>{
       gameId: CURSE_FORGE_MINECRAFT_GAME_ID,
       classId: classId,
       searchFilter: filter,
@@ -280,7 +285,9 @@ export class CurseApiService implements ApiService {
       categoryIds: JSON.stringify(category?.map(cat => cat.id)),
       sortOrder: 'desc',
       sortField: '2'
-    }), {
+    });
+
+    return fetch(CURSE_FORGE_API_URL + `/v1/mods/search?${params}`, {
       method: 'GET',
       headers: {
         'x-api-key': CURSE_FORGE_API_KEY
@@ -315,7 +322,7 @@ export class CurseApiService implements ApiService {
     return mod;
   }
 
-  private toModPack(v: any, gameVersion: string | undefined, modLoader: ModLoader): ModPack {
+  private toModPack(v: any, gameVersion: string | undefined, modLoader: ModLoader | undefined): ModPack {
     let modPack = new ModPack();
     modPack.id = v.id;
     if (v.modId) {
@@ -324,7 +331,9 @@ export class CurseApiService implements ApiService {
     }
     modPack.displayName = v.name;
     modPack.gameVersion = gameVersion;
-    modPack.modLoader = modLoader;
+    if (modLoader) {
+      modPack.modLoader = modLoader;
+    }
     modPack.apiType = ApiType.CURSE;
     modPack.summary = v.summary;
     modPack.iconUrl = v.logo?.url;
@@ -342,23 +351,20 @@ export class CurseApiService implements ApiService {
   }
 
   private getMappingFunction<T extends Mod | ModPack>(type: T): Function {
-    let func: Function;
     if (type instanceof Mod) {
-      func = this.toMod;
+      return this.toMod;
     } else if (type instanceof ModPack) {
-      func = this.toModPack;
-    } else {
-      throw new Error("Not yet implemented");
+      return this.toModPack;
     }
-    return func;
+
+    throw new Error("Not yet implemented");
   }
 
-  private getModLoaderCurse(modLoader: ModLoader): string | undefined {
-    let modLoaderCurse: string;
+  private getModLoaderCurse(modLoader: ModLoader | undefined): string | undefined {
     if (modLoader) {
-      modLoaderCurse = String(ModLoaderCurse[modLoader.toString() as keyof ModLoaderCurse]);
+      return String(ModLoaderCurse[modLoader.toString() as keyof ModLoaderCurse]);
     }
-    return modLoaderCurse;
+    return undefined;
   }
 
   private async checkLoaderVersions(modLoader: ModLoader, promise: Promise<any>, gameVersion: string): Promise<Version[]> {
@@ -376,3 +382,201 @@ export class CurseApiService implements ApiService {
 }
 
 export const curseApiService = new CurseApiService();
+
+const FEED_THE_BEAST_API_URL = 'https://api.modpacks.ch';
+
+export class FeedTheBeastApiService implements ApiService {
+  async getAllCategories(classId: string): Promise<Category[]> {
+    return fetch(FEED_THE_BEAST_API_URL + '/public/tag/popular')
+    .then(response => {
+      return response.json();
+    })
+    .then((response: any) => {
+      return response.tags.map((tag: any) => {
+        return {
+          name: tag
+        };
+      });
+    });
+  }
+
+  async getFileById<T extends Mod | ModPack>(id: number | undefined, modId: number, type: T, gameVersion: string, modLoader?: ModLoader): Promise<T[] | T> {
+    if (type instanceof ModPack) {
+
+      if (id) {
+        return fetch(FEED_THE_BEAST_API_URL + `/public/modpack/${modId}/${id}`)
+        .then(response => {
+          return response.json();
+        })
+        .then((response: any) => {
+          let minecraftVersion: string = response?.targets.find(v => v.name === 'minecraft' && v.type === 'game')?.version;
+          let mLoader = response?.targets.find(v => v.type === 'modloader');
+          let loader = modLoader ?? this.getModLoader(mLoader?.name);
+          let mLoaderId = mLoader?.version;
+
+          response.version =  {
+            id: response.id,
+            name: response.name,
+            updated: response.updated
+          };
+          response.id = response.parent;
+          response.files = response.files.map(file => {
+            const path = require("node:path");
+            let filename = path.parse(file.name);
+
+            let f: any;
+            if (file.type === 'mod') {
+              f = new Mod();
+              if (file.curseforge) {
+                f.id = file.curseforge.project;
+                f.installedFileId = file.curseforge.file;
+                f.apiType = ApiType.CURSE;
+              } else {
+                f.id = file.id;
+              }
+              f.apiType ??= ApiType.FEEDTHEBEAST;
+              f.installedFileDate = new Date(file.updated * 1000);
+              f.version = file.version;
+            } else {
+              f = new BasicFile();
+              f._mainPath = file.path;
+            }
+
+            f.sha1 = file.sha1;
+            f.url = file.url;
+            f.filename = file.name;
+            f._name = filename.name;
+            f._extension = filename.ext;
+
+            return f;
+          });
+
+          return this.toModPack(response, minecraftVersion, loader, mLoaderId) as any;
+        });
+      } else {
+        return fetch(FEED_THE_BEAST_API_URL + `/public/modpack/${modId}`)
+        .then(response => {
+          return response.json();
+        })
+        .then((response: any) => {
+          let modpack = response;
+          if(!response?.versions) return [];
+
+          return modpack.versions.map((v: any) => {
+            let minecraftVersion: string = v.targets.find(v => v.name === 'minecraft' && v.type === 'game')?.version;
+            let mLoader = v.targets.find(v => v.type === 'modloader');
+            let loader: ModLoader = this.getModLoader(mLoader?.name);
+            let mLoaderId = mLoader?.version;
+
+            modpack.version =  {
+              id: v.id,
+              name: v.name,
+              updated: v.updated
+            };
+
+            return this.toModPack(modpack, minecraftVersion, loader, mLoaderId);
+          });
+        });
+      }
+    }
+
+    throw new Error("Not yet implemented");
+  }
+
+  async getItemById<T extends Mod | ModPack>(id: number, type: T, gameVersion: string | undefined, modLoader: ModLoader | undefined): Promise<any> {
+    if (type instanceof ModPack) {
+      return fetch(FEED_THE_BEAST_API_URL + `/public/modpack/${id}`)
+      .then(response => {
+        return response.json();
+      })
+      .then(response => {
+        return this.toModPack(response, gameVersion, modLoader);
+      });
+    }
+
+    throw new Error("Not yet implemented");
+  }
+
+  getModDescription(id: number): Promise<string> {
+    throw new Error("Not yet implemented");
+  }
+
+  async searchModPacks(filter: string, modLoader?: ModLoader, gameVersion?: string, category?: Category[]): Promise<ModPack[]> {
+    let cat: string = "9";
+    if (category && category[0] && category[0].id) {
+      cat = String(category[0].id);
+    }
+    let loader = modLoader?.toLowerCase() ?? "";
+    let version = gameVersion ?? "";
+
+    return fetch(FEED_THE_BEAST_API_URL + `/public/modpack/search/${cat}/${loader}/${version}/updated/?term=${filter}`)
+    .then(response => {
+      return response.json();
+    })
+    .then((response: any) => {
+      if(!response?.packs) return [];
+
+      return response.packs.map((v: any) => {
+        return this.toModPack(v, gameVersion, modLoader);
+      });
+    });
+  }
+
+  searchMods(filter: string, gameVersion: string, modLoader: ModLoader, category?: Category[]): Promise<Mod[]> {
+    throw new Error("Not yet implemented");
+  }
+
+  searchResourcesPacks(filter: string, gameVersion: string, modLoader?: ModLoader, category?: Category[]): Promise<ResourcePack[]> {
+    throw new Error("Not yet implemented");
+  }
+
+  searchShaders(filter: string, gameVersion: string, modLoader?: ModLoader, category?: Category[]): Promise<Shader[]> {
+    throw new Error("Not yet implemented");
+  }
+
+  searchVersions(gameVersion?: string, modLoader?: ModLoader): Promise<Version[]> {
+    throw new Error("Not yet implemented");
+  }
+
+  private toModPack(v: any, gameVersion: string | undefined, modLoader: ModLoader | undefined, mLoaderId?: string): ModPack {
+    let modPack = new ModPack();
+    modPack.id = v.id;
+    if (v.version) {
+      modPack.version = {
+        id: v.version.id,
+        name: v.version.name,
+        updated: new Date(v.version.updated),
+      }
+    }
+    modPack.displayName = v.name;
+    modPack.gameVersion = gameVersion;
+    if (modLoader) {
+      modPack.modLoader = modLoader;
+    }
+    modPack.modLoaderId = mLoaderId;
+    modPack.apiType = ApiType.FEEDTHEBEAST;
+    modPack.summary = v.synopsis;
+    modPack.iconUrl = v.art?.filter(a => a.type === 'square').map(a => a.url)[0];
+    modPack.authors = v.authors;
+    modPack.categories = v.tags;
+    modPack.description = v.description;
+    modPack.links = v.links;
+    modPack.files = v.files;
+    modPack.downloadCount = v.installs;
+    if (v.versions) {
+      modPack.gameVersions = [...new Set<string>(v.versions
+      .map((version: any) => version.name))];
+    }
+    return modPack;
+  }
+
+  private getModLoader(modLoader: string | undefined): ModLoader {
+    if (modLoader) {
+      return ModLoader[modLoader.toString().toUpperCase() as keyof ModLoader];
+    }
+
+    throw new Error("Not yet implemented");
+  }
+}
+
+export const feedTheBeastApiService = new FeedTheBeastApiService();

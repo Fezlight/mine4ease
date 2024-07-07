@@ -214,23 +214,28 @@ export class Utils implements IUtils {
     let fullPath = path.join(directory, extractRequest.file.filePath(), extractRequest.file.fileName());
     let destFullPath = path.join(directory, extractRequest.destPath);
     let excludes = extractRequest.excludes;
+    let includes = extractRequest.includes;
 
     return decompress(fullPath, destFullPath, {
       filter: file => {
         let valid = true;
-        if (extractRequest.includes) {
-          if (file.type === 'file') {
-            valid &&= extractRequest.includes.includes(file.path);
-          } else {
-            valid &&= extractRequest.includes.includes(path.basename(file.path));
+        if (includes) {
+          let tempValid = false;
+          for (let inc of includes) {
+            if (file.path.indexOf(inc) > -1) {
+              tempValid = true;
+              break;
+            }
           }
+          valid &&= tempValid;
         }
 
-        if (extractRequest.excludes) {
-          if (file.type === 'file') {
-            valid &&= !excludes.includes(file.path)
-          } else {
-            valid &&= !excludes.includes(path.basename(file.path));
+        if (excludes) {
+          for (let excl of excludes) {
+            if (file.path.indexOf(excl) > -1) {
+              valid &&= false;
+              break;
+            }
           }
         }
 

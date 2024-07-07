@@ -28,18 +28,15 @@ async function buildCommandLine(instance: InstanceSettings, versionsManifest: Ve
   let defaultJvmArg = [
     "-Djava.library.path=${natives_directory}",
     "-Djna.tmpdir=${natives_directory}",
-    "-Dminecraft.launcher.brand=${launcher_name}",
-    "-Dminecraft.launcher.version=${launcher_version}",
     "-cp",
     "${classpath}"
   ]
 
   let jvmArgs: string[] = [];
   let minecraftArgs: string[] = [];
-  // TODO Use theses args to customize every instances title and icon
   let extraArgs: string[] = [
-    "--title ${title}",
-    "--icon ${icon_path}"
+    "-Dminecraft.launcher.brand=${launcher_name}",
+    "-Dminecraft.launcher.version=${launcher_version}",
   ];
 
   let memory = instance.memory;
@@ -119,14 +116,11 @@ async function buildCommandLine(instance: InstanceSettings, versionsManifest: Ve
           newValue = join(process.env.APP_DIRECTORY, LIBRARIES_PATH);
           break;
         case "launcher_name":
-          newValue = "Mine4Ease";
+          newValue = instance.title;
           break;
         case "launcher_version":
-          newValue = String(versionsManifest.minimumLauncherVersion);
+          newValue = instance.versions.self;
           break;
-        case "title":
-          newValue = instance.title;
-          break; // TODO Make this work as container title
         case "icon_path":
           if(instance.iconName) {
             newValue = join(process.env.APP_DIRECTORY, INSTANCE_PATH, instance.id, ASSETS_PATH, instance.iconName);
@@ -212,20 +206,17 @@ export class LaunchGameTask extends Task {
 
     const processus = exec.spawn(join(javaPath, $utils.getJavaExecutablePath()), cmdLine, {
       cwd: join(process.env.APP_DIRECTORY, INSTANCE_PATH, this.instance.id),
-      detached: true
-    });
-
-    processus.stdout.on('data', (data: Buffer) => {
-      console.log(data.toString());
-    });
-
-    processus.stderr.on('data', (data: Buffer) => {
-      console.error(data.toString());
+      detached: true,
+      stdio: "ignore"
     });
 
     this._eventEmitter.emit(GAME_LAUNCHED_EVENT_NAME);
 
     processus.on('exit', () => {
+      this._eventEmitter.emit(GAME_EXITED_EVENT_NAME);
+    });
+
+    processus.on('error', () => {
       this._eventEmitter.emit(GAME_EXITED_EVENT_NAME);
     });
   }

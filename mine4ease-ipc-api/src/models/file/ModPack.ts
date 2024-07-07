@@ -12,16 +12,26 @@ export class ModPack extends File {
   installedFileId: number;
   installedFileDate: Date;
   description: string;
-  gameVersion: string;
+  files: File[];
+  version: { id: string, name: string, updated: Date };
+  gameVersion?: string;
   gameVersions: string[];
   iconUrl: string;
   modLoader: ModLoader;
+  modLoaderId?: string;
   apiType: ApiType;
   categories: Category[];
-  links?: Links;
+  links?: Links | Link[];
   downloadCount: number;
 
   mainPath(): string {
     return CACHE_PATH;
   }
+}
+
+export class Link {
+  id: string;
+  link: string;
+  name: string;
+  type: string;
 }

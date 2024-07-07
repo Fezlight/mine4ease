@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import ModPackTile from "../../shared/components/modpacks/ModPackTile.vue";
+import ModPackTile from "../../../shared/components/modpacks/ModPackTile.vue";
 import {ApiType, Category, getByType, IInstanceService, Instance, ModLoader, ModPack, Version} from "mine4ease-ipc-api";
-import {inject, onMounted, Ref, ref} from "vue";
-import LoadingComponent from "../../shared/components/LoadingComponent.vue";
-import EventWrapper from "../../shared/components/events/EventWrapper.vue";
-import {Transitions} from "../../shared/models/Transitions";
-import {TaskListeners} from "../../shared/listeners/TaskListeners";
-import {redirect} from "../../shared/utils/Utils";
-import InstanceContent from "../../shared/components/instance/InstanceContent.vue";
-import BackToLastPage from "../../shared/components/buttons/BackToLastPage.vue";
-import {LocationQueryValue, useRoute, useRouter} from "vue-router";
-import {SearchQuery} from "../../shared/models/SearchQuery.ts";
-import {CURSE_FORGE_MINECRAFT_MODPACK_CLASS_ID} from "../../../mine4ease-ipc-api";
+import {inject, onMounted, provide, Ref, ref} from "vue";
+import LoadingComponent from "../../../shared/components/LoadingComponent.vue";
+import EventWrapper from "../../../shared/components/events/EventWrapper.vue";
+import {Transitions} from "../../../shared/models/Transitions";
+import {TaskListeners} from "../../../shared/listeners/TaskListeners";
+import {redirect} from "../../../shared/utils/Utils";
+import InstanceContent from "../../../shared/components/instance/InstanceContent.vue";
+import BackToLastPage from "../../../shared/components/buttons/BackToLastPage.vue";
+import {useRoute, useRouter} from "vue-router";
+import {SearchQuery} from "../../../shared/models/SearchQuery.ts";
 
 const emit = defineEmits<{
   (e: 'redirect', to: Transitions): void,
@@ -20,18 +19,20 @@ const emit = defineEmits<{
 }>();
 
 const $instanceService: IInstanceService | undefined = inject('instanceService');
+const apiType = ApiType.FEEDTHEBEAST;
+provide('apiType', apiType);
 
 const router = useRouter();
 const route = useRoute();
 
+
 const filter = ref("");
 const minecraftVersion: Ref<Version[] | undefined> = ref();
 const modpacks: Ref<ModPack[]> = ref([]);
-const categories: Ref<Category[]> = ref([]);
 const selectedCategories: Ref<Category[]> = ref([]);
 const selectedVersion: Ref<string> = ref("");
 const modpackList: Ref<typeof LoadingComponent | undefined> = ref();
-const categoryFilter: Ref<typeof LoadingComponent| undefined> = ref();
+const categoryFilter: Ref<typeof LoadingComponent | undefined> = ref();
 
 async function initAllFilter() {
   let promises: any[] = [
@@ -41,7 +42,7 @@ async function initAllFilter() {
   promises.push(categoryFilter.value?.executePromise());
 
   await Promise.all(promises)
-      .then(() => initFilter());
+  .then(() => initFilter());
 }
 
 function initFilter() {
@@ -51,37 +52,20 @@ function initFilter() {
   if (route.query.version) {
     selectedVersion.value = <string>route.query.version;
   }
-  if (route.query.categories) {
-    let categoriesId: string | LocationQueryValue[] = route.query.categories;
-
-    categories.value.filter(cat => {
-      if (Array.isArray(categoriesId)) {
-        return categoriesId.findIndex(id => Number(id) === cat.id) !== -1
-      }
-      return Number(categoriesId) === cat.id;
-    }).forEach(category => {
-      addRemoveCat(category);
-    });
-  }
 
   modpackList.value?.executePromise();
 }
 
 async function searchModPack() {
-  let categoriesId: number[] | undefined;
-  if (route.query.categories) {
-    categoriesId = Array.isArray(route.query.categories) ? route.query.categories.map(cat => Number(cat)) : [Number(route.query.categories)];
-  }
   const query: SearchQuery = {
     filter: filter.value,
-    categories: selectedCategories.value.map(cat => cat.id) ?? categoriesId,
     version: selectedVersion.value
   };
   router.push({query: query});
 
   modpacks.value = [];
 
-  return getByType(ApiType.CURSE).searchModPacks(filter.value, selectedVersion.value, ModLoader.FORGE, selectedCategories.value)
+  return getByType(apiType).searchModPacks(filter.value, ModLoader.FORGE, selectedVersion.value, selectedCategories.value)
   .then(packs => modpacks.value = <ModPack[]>packs);
 }
 
@@ -89,40 +73,6 @@ async function installModPack(modpack: ModPack) {
   if (!$instanceService) return Promise.reject();
 
   return $instanceService.createInstanceByModPack(modpack);
-}
-
-async function searchWithCategories(category: Category) {
-  addRemoveCat(category);
-
-  modpackList.value?.executePromise()
-  .catch(() => addRemoveCat(category));
-}
-
-function addRemoveCat(category: Category) {
-  let index = selectedCategories.value.findIndex(cat => cat.id === category.id);
-
-  category.selected = !category.selected;
-  if (index === -1) {
-    selectedCategories.value.push(category);
-  } else {
-    selectedCategories.value.splice(index, 1);
-  }
-}
-
-function orderedCategories(categories: Category[]) {
-  return [...categories].filter(c => !c.selected).sort((c1, c2) => {
-    if (c1.name > c2.name) {
-      return 1;
-    } else if (c1.name < c2.name) {
-      return -1;
-    }
-    return 0;
-  });
-}
-
-async function getAllCategories() {
-  return getByType(ApiType.CURSE).getAllCategories(CURSE_FORGE_MINECRAFT_MODPACK_CLASS_ID)
-  .then(cat => categories.value = cat);
 }
 
 async function getAllMinecraftVersions() {
@@ -168,7 +118,7 @@ const listener = new TaskListeners();
           </div>
           <select v-model="selectedVersion" v-on:change="($refs.modpackList as typeof LoadingComponent).executePromise()">
             <option value="">No version selected</option>
-            <option v-for="v in minecraftVersion" :value="v.name">{{v.name}}</option>
+            <option v-for="v in minecraftVersion" :value="v.name">{{ v.name }}</option>
           </select>
         </section>
         <div class="flex flex-col gap-2 h-full overflow-y-auto">
@@ -184,19 +134,6 @@ const listener = new TaskListeners();
             <span v-if="modpacks.length === 0" class="flex items-center h-full justify-center text-2xl">No result found</span>
           </LoadingComponent>
         </div>
-      </section>
-      <section class="flex flex-col flex-grow rounded-lg bg-black/30 shadow-md shadow-black/40 overflow-y-auto min-w-[200px] max-w-[200px] mb-1">
-        <LoadingComponent class="flex flex-col gap-3 p-4 h-full" :promise="() => getAllCategories()" ref="categoryFilter">
-          <button type="button" v-for="category in selectedCategories" :key="category.id" @click="searchWithCategories(category)" class="flex flex-row text-left gap-2 rounded border-2 border-gray-800 px-2 py-1 bg-gray-800">
-            <img :src="category.iconUrl" :alt="category.name + ' icon'" class="w-7 h-7">
-            <span class="text-sm">{{ category.name }}</span>
-          </button>
-          <hr class="border-amber-400" v-if="selectedCategories.length">
-          <button type="button" v-for="category in orderedCategories(categories)" :key="category.id" @click="searchWithCategories(category)" class="flex flex-row text-left gap-2 px-2 py-1">
-            <img :src="category.iconUrl" :alt="category.name + ' icon'" class="w-7 h-7">
-            <span class="text-sm">{{ category.name }}</span>
-          </button>
-        </LoadingComponent>
       </section>
     </section>
   </InstanceContent>

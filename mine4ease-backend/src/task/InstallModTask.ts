@@ -16,6 +16,7 @@ import {$downloadService, $eventEmitter, $utils, logger} from "../config/ObjectF
 import {join} from "path";
 import {EventEmitter} from "events";
 import {$modService} from "../services/ModService";
+import {DownloadFileTask} from "./FileTask.ts";
 
 export class InstallModTask extends Task {
   private readonly _instance: InstanceSettings;
@@ -25,15 +26,18 @@ export class InstallModTask extends Task {
   private readonly _ignoreDependencies: boolean;
   private readonly _download: boolean;
   private _version: number | undefined;
+  private _alreadyDownloadedMods: number[];
 
   constructor(mod: Mod, instance: InstanceSettings, eventEmitter: EventEmitter = $eventEmitter, 
-              version?: number, ignoreDependencies: boolean = false, download: boolean = true, eventCancelled = false) {
+              version?: number, ignoreDependencies: boolean = false, download: boolean = true,
+              eventCancelled = false, alreadyDownloadedMods: number[] = []) {
     super(eventEmitter, logger, () => `Installing mod ${mod.id}...`, eventCancelled);
     this._mod = mod;
     this._instance = instance;
     this._version = version;
     this._ignoreDependencies = ignoreDependencies;
     this._download = download;
+    this._alreadyDownloadedMods = alreadyDownloadedMods;
     this._subEventEmitter = new EventEmitter();
     this._taskRunner = new TaskRunner(logger, this._subEventEmitter, this._eventEmitter);
   }
@@ -94,12 +98,32 @@ export class InstallModTask extends Task {
       }
 
       if (!this._ignoreDependencies) {
-        mod.dependencies.filter(mod => mod.relationType == 3).forEach(mod => {
-          this._taskRunner.addTask(new InstallModTask(mod, this._instance, this._subEventEmitter,
-            undefined, this._ignoreDependencies, this._download, this._eventCanceled));
+        let downloadedMods = mod.dependencies.map(m => m.id);
+        downloadedMods.push(this._mod.id);
+
+        mod.dependencies
+        .filter(m => !this._alreadyDownloadedMods.includes(m.id))
+        .filter(m => m.relationType == 3)
+        .forEach(m => {
+          this._taskRunner.addTask(new InstallModTask(m, this._instance, this._subEventEmitter,
+            undefined, this._ignoreDependencies, this._download, this._eventCanceled, downloadedMods));
         });
       }
-    } else {
+    }
+    else if (this._mod.apiType === ApiType.FEEDTHEBEAST) {
+
+      if (this._download) {
+        let file = Object.assign(new Mod(), this._mod);
+
+        let downloadReq = new DownloadRequest();
+        downloadReq.file = file;
+
+        this._taskRunner.addTask(new DownloadFileTask(downloadReq));
+      }
+
+      mod = this._mod;
+    }
+    else {
       throw new Error("Not yet implemented");
     }
 

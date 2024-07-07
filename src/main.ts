@@ -43,11 +43,13 @@ import {ModService} from "./shared/services/ModService";
 import ModDetails from "./routes/mods/mod-details/ModDetails.vue";
 import InstanceMods from "./routes/instance/instance/mods/InstanceMods.vue";
 import CreateInstanceCustom from './routes/instance/create-instance/CreateInstanceCustom.vue';
-import ModPacks from "./routes/modpacks/ModPacks.vue";
-import ModPackDetails from "./routes/modpacks/modpacks-details/ModPackDetails.vue";
 import {faMicrosoft} from "@fortawesome/free-brands-svg-icons";
 import InstanceSettings from "./routes/instance/instance/settings/InstanceSettings.vue";
 import InstanceTiles from "./routes/instance/instance/tiles/InstanceTiles.vue";
+import ModPacksCurse from "./routes/modpacks/curse/ModPacksCurse.vue";
+import ModPacksFTB from "./routes/modpacks/feed-the-beast/ModPacksFTB.vue";
+import ModPackDetailsCurse from './routes/modpacks/curse/ModPackDetailsCurse.vue';
+import ModPackDetailsFTB from "./routes/modpacks/feed-the-beast/ModPackDetailsFTB.vue";
 
 library.add(
   faStar, faGear, faRightFromBracket, faAdd, faCamera, faMicrosoft,
@@ -70,8 +72,10 @@ const routes = [
       { path: 'not-found', component: InstanceNotFound },
       { path: '/mods', component: Mods },
       { path: '/mods/:id', component: ModDetails },
-      { path: '/modpacks', component: ModPacks },
-      { path: '/modpacks/:id', component: ModPackDetails },
+      { path: '/modpacks/curse', component: ModPacksCurse },
+      { path: '/modpacks/curse/:id', component: ModPackDetailsCurse },
+      { path: '/modpacks/feedthebeast', component: ModPacksFTB },
+      { path: '/modpacks/feedthebeast/:id', component: ModPackDetailsFTB },
     ]
   },
   {

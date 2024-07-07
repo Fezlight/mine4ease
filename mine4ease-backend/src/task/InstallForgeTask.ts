@@ -200,7 +200,7 @@ export class InstallForgeProcessorTask extends Task {
   private readonly _minecraftVersion: string;
 
   constructor(jar: string, classpath: string[], args: string[], installSide: InstallSide, minecraftVersion: string, mappings: Map<string, string>, eventEmitter: EventEmitter = $eventEmitter) {
-    super(eventEmitter, logger, () => `Installing forge processor ${jar} ...`);
+    super(eventEmitter, logger, () => `Installing forge processor ${jar} ...`, true);
     this._jar = jar;
     this._classpath = classpath;
     this._args = args;

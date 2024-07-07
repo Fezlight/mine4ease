@@ -5,6 +5,7 @@ import {InstallSide} from "../Rule";
 import {ApiType} from "../../services/ApiService";
 import {CurseModPack} from "../modpack/CurseModPack";
 import {ModrinthModPack} from "../modpack/ModrinthModPack";
+import {FeedTheBeastModPack} from "../modpack/FeedTheBeastModPack";
 
 export class InstanceSettings extends Instance {
   installSide: InstallSide;
@@ -13,7 +14,7 @@ export class InstanceSettings extends Instance {
   additionalJvmArgs: string;
   memory: string;
   apiType: ApiType;
-  modPack: CurseModPack | ModrinthModPack;
+  modPack: CurseModPack | ModrinthModPack | FeedTheBeastModPack;
   versions: {
     forge?: Version,
     minecraft: Version;

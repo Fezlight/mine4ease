@@ -21,14 +21,14 @@ export const logger = createLogger({
     format.json()
   ),
   transports: [
-    new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + 'error.log', level: 'error'}),
-    new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + 'mine4ease.log'})
+    new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + 'error.%DATE%.log', level: 'error'}),
+    new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + 'mine4ease.%DATE%.log'})
   ],
   exceptionHandlers: [
-    new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + 'error.log', level: 'error'})
+    new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + 'error.%DATE%.log', level: 'error'})
   ],
   rejectionHandlers: [
-    new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + 'error.log', level: 'error'})
+    new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + 'error.%DATE%.log', level: 'error'})
   ],
   handleExceptions: true,
   handleRejections: true

@@ -24,23 +24,27 @@ import {join} from "path";
 import {v4 as uuidv4} from "uuid";
 import {$instanceService} from "../services/InstanceService";
 import {InstallModTask} from "./InstallModTask";
-import {DeleteFileTask, ExtractFileTask} from "./FileTask";
+import {DeleteFileTask, DownloadFileTask, ExtractFileTask} from "./FileTask";
 import {$modService} from "../services/ModService";
 import {CURSE_FORGE_MIRRORS_URL} from "../../../mine4ease-ipc-api";
+import {FeedTheBeastModPack} from "../../../mine4ease-ipc-api/src/models/modpack/FeedTheBeastModPack.ts";
+import path from "node:path";
 
 export class InstallModPackTask extends Task {
   private readonly _apiType: ApiType;
   private readonly _subEventEmitter: EventEmitter;
   private readonly _taskRunner: TaskRunner;
   private readonly _modpackId: number;
-  private readonly _gameVersion: string;
+  private readonly _versionId: number | undefined;
+  private readonly _gameVersion: string | undefined;
   private _instance: InstanceSettings;
 
-  constructor(modpackId: number, apiType: ApiType, gameVersion: string) {
+  constructor(modpackId: number, apiType: ApiType, gameVersion?: string, versionId?: number) {
     super($eventEmitter, logger, () => `Installing modpack '${modpackId}'...`);
     this._apiType = apiType;
     this._modpackId = modpackId;
     this._gameVersion = gameVersion;
+    this._versionId = versionId;
     this._subEventEmitter = new EventEmitter();
     this._taskRunner = new TaskRunner(logger, this._subEventEmitter, this._eventEmitter);
     this._subEventEmitter.on(TASK_EVENT_NAME, (event: TaskEvent) => {
@@ -51,9 +55,13 @@ export class InstallModPackTask extends Task {
   }
 
   async run(): Promise<InstanceSettings> {
-    if (this._apiType === ApiType.CURSE) {
+    if (this._apiType === ApiType.CURSE && this._gameVersion) {
       this._taskRunner.addTask(new InstallModPackCurseTask(this._modpackId, this._gameVersion, this._subEventEmitter));
-    } else {
+    }
+    else if (this._apiType === ApiType.FEEDTHEBEAST) {
+      this._taskRunner.addTask(new InstallModPackFeedTheBeastTask(this._modpackId, this._versionId, this._subEventEmitter));
+    }
+    else {
       throw new Error("Not Implemented");
     }
 
@@ -129,11 +137,11 @@ export class InstallModPackCurseTask extends Task {
 
     if (!modLoader || !modloaderId) throw new Error("Unable to find modloader from manifest");
 
-    let minecraftVersion = await this.getMinecraftVersion(manifest.minecraft.version);
+    let minecraftVersion = await getMinecraftVersion(manifest.minecraft.version);
 
     if (!minecraftVersion) throw new Error("Unable to find minecraft version from manifest");
 
-    let modLoaderVersion = await this.getModLoaderVersion(modLoader, minecraftVersion.name, modloaderId);
+    let modLoaderVersion = await getModLoaderVersion(modLoader, minecraftVersion.name, modloaderId);
 
     let curseModPack = new CurseModPack();
     curseModPack.id = modpack.id;
@@ -195,44 +203,143 @@ export class InstallModPackCurseTask extends Task {
     }
     return modloader;
   }
+}
 
-  private async getMinecraftVersion(minecraftVersion: string): Promise<Version | undefined> {
-    return this.getVersion(getByType(this._apiType).searchVersions(), minecraftVersion);
+async function getMinecraftVersion(minecraftVersion: string): Promise<Version | undefined> {
+  return getVersion(getByType(ApiType.CURSE).searchVersions(), minecraftVersion);
+}
+
+async function getModLoaderVersion(modloader: ModLoader, minecraftVersion: string, modloaderId: string): Promise<any> {
+  let version = await getVersion(getByType(ApiType.CURSE).searchVersions(minecraftVersion, modloader), modloaderId);
+
+  if (!version) throw new Error("Unable to find version from manifest");
+
+  if (modloader === ModLoader.FORGE) {
+    return {
+      forge: version
+    };
+  } else if (modloader === ModLoader.FABRIC) {
+    return {
+      fabric: version
+    };
+  } else if (modloader === ModLoader.QUILT) {
+    return {
+      quilt: version
+    }
   }
 
-  private async getModLoaderVersion(modloader: ModLoader, minecraftVersion: string, modloaderId: string): Promise<any> {
-    let version = await this.getVersion(getByType(this._apiType).searchVersions(minecraftVersion, modloader), modloaderId);
+  throw new Error("Not yet implemented");
+}
 
-    if (!version) throw new Error("Unable to find version from manifest");
+async function getVersion(promise: Promise<Version[]>, versionName: string): Promise<Version | undefined> {
+  let versionList = await promise;
 
-    if (modloader === ModLoader.FORGE) {
-      return {
-        forge: version
-      };
-    } else if (modloader === ModLoader.FABRIC) {
-      return {
-        fabric: version
-      };
-    } else if (modloader === ModLoader.QUILT) {
-      return {
-        quilt: version
+  let result: Version | undefined;
+  for (let version of versionList) {
+    if (version.name.includes(versionName)) {
+      result = version;
+      break;
+    }
+  }
+
+  return result;
+}
+
+export class InstallModPackFeedTheBeastTask extends Task {
+  private readonly _subEventEmitter: EventEmitter;
+  private readonly _taskRunner: TaskRunner;
+  private readonly _modpackId: number;
+  private _versionId: number | undefined;
+  private readonly _apiType = ApiType.FEEDTHEBEAST;
+  private _instance: InstanceSettings = new InstanceSettings();
+
+  constructor(modpackId: number, versionId: number | undefined, eventEmitter = $eventEmitter) {
+    super(eventEmitter, logger, () => `Installing FeedTheBeast modpack '${modpackId}'...`);
+    this._modpackId = modpackId;
+    this._versionId = versionId;
+    this._subEventEmitter = new EventEmitter();
+    this._taskRunner = new TaskRunner(logger, this._subEventEmitter, this._eventEmitter);
+  }
+
+  async run(): Promise<any> {
+    let modpack = await getByType(this._apiType)
+    .getFileById(undefined, this._modpackId, new ModPack(), "", undefined);
+
+    let selectedModPack: ModPack;
+    if (Array.isArray(modpack)) {
+      selectedModPack = modpack.sort(this.sortModPack)[0];
+      this._versionId = Number(selectedModPack.version.id);
+    } else {
+      throw new Error("Unable to retrieve modpack");
+    }
+
+    let modLoader = selectedModPack.modLoader;
+    let modloaderId = selectedModPack.modLoaderId;
+
+    if (!modLoader || !modloaderId) throw new Error("Unable to find modloader from modpack");
+
+    let minecraftVersion = await getMinecraftVersion(selectedModPack.gameVersion!);
+
+    if (!minecraftVersion) throw new Error("Unable to find minecraft version from modpack");
+
+    let modLoaderVersion = await getModLoaderVersion(modLoader, minecraftVersion.name, modloaderId);
+
+    let feedTheBeastModPack = new FeedTheBeastModPack();
+    feedTheBeastModPack.title = selectedModPack.displayName;
+    feedTheBeastModPack.id = selectedModPack.id;
+
+    this._instance.id = uuidv4();
+    this._instance.title = selectedModPack.displayName;
+    this._instance.installSide = "client";
+    this._instance.modLoader = selectedModPack.modLoader;
+    this._instance.modPack = feedTheBeastModPack;
+    this._instance.iconName = selectedModPack.iconUrl;
+    this._instance.apiType = this._apiType;
+    this._instance.versions = modLoaderVersion;
+    this._instance.versions.minecraft = minecraftVersion;
+    this._instance.versions.self = selectedModPack.version.name;
+    this._instance = await $instanceService.createInstance(this._instance);
+
+    let modpackFiles = await getByType(this._apiType)
+    .getFileById(this._versionId, this._modpackId, new ModPack(), "", undefined);
+
+    if (Array.isArray(modpackFiles)) {
+      throw new Error("Unable to find modpack files");
+    }
+
+    for (const file of modpackFiles.files) {
+      if (file instanceof Mod) {
+        this._taskRunner.addTask(new InstallModTask(file, this._instance, this._subEventEmitter,
+          file.installedFileId, true, false));
+      } else {
+        file.relativePath = path.join(INSTANCE_PATH, this._instance.id);
+
+        let downloadReq = new DownloadRequest();
+        downloadReq.file = file;
+
+        this._taskRunner.addTask(new DownloadFileTask(downloadReq));
       }
     }
 
-    throw new Error("Not yet implemented");
-  }
-
-  private async getVersion(promise: Promise<Version[]>, versionName: string): Promise<Version | undefined> {
-    let versionList = await promise;
-
-    let result: Version | undefined;
-    for (let version of versionList) {
-      if (version.name === versionName) {
-        result = version;
-        break;
+    let mods: ModSettings = new ModSettings();
+    this._subEventEmitter.on(TASK_EVENT_NAME, (event: TaskEvent) => {
+      if (event.state === 'FINISHED' && event.object && event.object instanceof Mod) {
+        mods.mods.set(String(event.object.id), event.object);
       }
-    }
+    });
 
-    return result;
+    await this._taskRunner.process(false);
+
+    await $modService.saveAllMods(mods, this._instance.id);
+
+    return this._instance;
   }
+
+  sortModPack(a: ModPack, b: ModPack) {
+    let v1 = Number(a.version.id);
+    let v2 = Number(b.version.id);
+
+    return v2 - v1;
+  }
+
 }

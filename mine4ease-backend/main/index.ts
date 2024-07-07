@@ -151,10 +151,12 @@ app.whenReady().then(() => {
   });
 
   $eventEmitter.on(GAME_LAUNCHED_EVENT_NAME, () => {
+    win?.minimize();
     win?.webContents.send(GAME_LAUNCHED_EVENT_NAME);
   });
 
   $eventEmitter.on(GAME_EXITED_EVENT_NAME, () => {
+    win?.show();
     win?.webContents.send(GAME_EXITED_EVENT_NAME);
   });
 

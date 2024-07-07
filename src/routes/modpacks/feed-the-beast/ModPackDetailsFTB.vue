@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import {inject, Ref, ref} from "vue";
-import {ApiType, getByType, InstanceSettings, ModLoader, ModPack} from "mine4ease-ipc-api";
+import {ApiType, getByType, InstanceSettings, Link, ModLoader, ModPack} from "mine4ease-ipc-api";
 import {useRoute} from "vue-router";
 import LoadingComponent from "../../../shared/components/LoadingComponent.vue";
 import InstanceContent from "../../../shared/components/instance/InstanceContent.vue";
-import {transformDownloadCount} from "../../../shared/utils/Utils";
 import BottomNavBar from "../../../shared/components/bottom-nav-bar/BottomNavBar.vue";
+import MarkdownRenderer from "../../../shared/components/MarkdownRenderer.vue";
+import {transformDownloadCount} from "../../../shared/utils/Utils";
 
 const route = useRoute();
 const instance: Ref<InstanceSettings | undefined> | undefined = inject('currentInstance');
+const apiType: ApiType = ApiType.FEEDTHEBEAST;
 const modpack: Ref<ModPack | undefined> = ref();
 const description: Ref<string | undefined> = ref();
-const apiType = ApiType.CURSE;
+
+const modpackDescription: Ref<typeof LoadingComponent | undefined> = ref();
 
 async function getModDetails(id: string): Promise<ModPack> {
   if (!instance?.value) {
@@ -22,14 +25,14 @@ async function getModDetails(id: string): Promise<ModPack> {
 
   return getByType(apiType).getItemById(Number(id), new ModPack(), gameVersion, modLoader)
   .then(m => {
-    modpack.value! = <ModPack>m
+    modpack.value! = m;
+    description.value = m.description;
+
+    modpackDescription.value?.executePromise();
+    return m;
   });
 }
 
-async function getModDescription(id: string): Promise<string | undefined> {
-  return getByType(apiType).getModDescription(Number(id))
-  .then(desc => description.value = desc);
-}
 </script>
 <template>
   <InstanceContent>
@@ -69,38 +72,27 @@ async function getModDescription(id: string): Promise<string | undefined> {
             <font-awesome-icon :icon="['fas', 'download']" />
             <span>{{ transformDownloadCount(modpack?.downloadCount) }}</span>
           </span>
-          <div class="border-t-2 border-amber-400"></div>
-          <a :href="modpack?.links?.websiteUrl" target="_blank">See on CurseForge&nbsp<font-awesome-icon :icon="['fas', 'arrow-up-right-from-square']" /></a>
         </div>
-        <div class="flex flex-col rounded-lg bg-black/30 shadow-md shadow-black/40 p-4 gap-4 mb-4"
-             v-if="modpack?.links?.sourceUrl || modpack?.links?.wikiUrl || modpack?.links?.websiteUrl">
+        <div class="flex flex-col rounded-lg bg-black/30 shadow-md shadow-black/40 p-4 gap-4 mb-4" v-if="(<Link[]>modpack?.links)?.length">
           <h3>External links</h3>
-          <span v-if="modpack.links.wikiUrl" class="flex flex-row items-center gap-2">
-            <font-awesome-icon :icon="['fas', 'book']" />
-            <a :href="modpack.links.wikiUrl">Wiki</a>
-            <font-awesome-icon :icon="['fas', 'arrow-up-right-from-square']" class="w-3"/>
-          </span>
-          <span v-if="modpack.links.sourceUrl" class="flex flex-row items-center gap-2">
-            <font-awesome-icon :icon="['fas', 'code']" />
-            <a :href="modpack.links.sourceUrl">Source</a>
-            <font-awesome-icon :icon="['fas', 'arrow-up-right-from-square']" class="w-3"/>
-          </span>
-          <span v-if="modpack.links.websiteUrl" class="flex flex-row items-center gap-2">
-            <font-awesome-icon :icon="['fas', 'globe']" />
-            <a :href="modpack.links.websiteUrl">Website</a>
-            <font-awesome-icon :icon="['fas', 'arrow-up-right-from-square']" class="w-3"/>
+          <span v-for="link in <Link[]>modpack?.links" class="flex flex-row items-center gap-2">
+            <font-awesome-icon :icon="['fas', 'book']" v-if="link.type === 'wiki'"/>
+            <font-awesome-icon :icon="['fas', 'code']" v-if="link.type === 'issues'"/>
+            <font-awesome-icon :icon="['fas', 'globe']" v-if="link.type === 'website'"/>
+            <a :href="link.link">{{ link.name }}</a>
+            <font-awesome-icon :icon="['fas', 'arrow-up-right-from-square']" class="w-3" />
           </span>
         </div>
         <div class="flex flex-col rounded-lg bg-black/30 shadow-md shadow-black/40 p-4 gap-4">
           <h3>Latest versions</h3>
           <ol class="list-disc list-inside">
             <li v-for="version in modpack?.gameVersions">
-              {{version}}
+              {{ version }}
             </li>
           </ol>
         </div>
       </LoadingComponent>
-      <LoadingComponent class="flex-grow rounded-lg bg-black/30 shadow-md shadow-black/40 p-4" :promise="() => getModDescription(<string>route.params.id)" :execute-automation="true">
+      <LoadingComponent class="flex-grow rounded-lg bg-black/30 shadow-md shadow-black/40 p-4" :promise="() => modpack?.description" ref="modpackDescription">
         <template v-slot:loading>
           <div role="status" class="animate-pulse">
             <div class="h-8 rounded-full bg-gray-600 mb-4"></div>
@@ -120,55 +112,9 @@ async function getModDescription(id: string): Promise<string | undefined> {
             <div class="h-2 rounded-full bg-gray-600"></div>
           </div>
         </template>
-        <span id="mod-description" v-html="description"></span>
+        <markdown-renderer id="mod-description" :source="description"></markdown-renderer>
       </LoadingComponent>
     </div>
     <bottom-nav-bar @backToLastPage="() => $router.back()" max-size-class="max-w-min"></bottom-nav-bar>
   </InstanceContent>
 </template>
-<style>
-#mod-description {
-  position: relative;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  backface-visibility: hidden;
-  p {
-    margin-bottom: 1rem;
-    line-height: 1.45;
-  }
-  a {
-    text-decoration: underline;
-  }
-  + * {
-    @apply space-y-4;
-  }
-  h2, h3, h4 {
-    margin: 1rem 0;
-  }
-  img {
-    display: unset;
-  }
-  code {
-    background-color: #262626;
-    display: inline-block;
-    vertical-align: middle;
-    white-space: pre-wrap;
-    overflow: auto;
-    padding: 2px 4px;
-    border: 1px solid #4d4d4d;
-  }
-  ul {
-    @apply list-none relative left-4 list-inside mb-2;
-    li {
-      @apply list-disc list-inside;
-    }
-  }
-  ol {
-    @apply list-decimal;
-    li {
-      @apply list-decimal list-inside;
-    }
-  }
-
-}
-</style>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {inject, ref, Ref, watchEffect} from "vue";
+import {inject, ref, Ref} from "vue";
 import {Instance, InstanceSettings, Mod, ModSettings} from "mine4ease-ipc-api";
-import {useRoute, useRouter} from "vue-router";
+import {useRouter} from "vue-router";
 import ModTile from "../../../../shared/components/mods/ModTile.vue";
 import {TaskListeners} from "../../../../shared/listeners/TaskListeners";
 import {ModService} from "../../../../shared/services/ModService.ts";
@@ -11,8 +11,8 @@ import {redirect} from "../../../../shared/utils/Utils.ts";
 import {WithUpdate} from "../../../../shared/models/Update.ts";
 import BottomNavBar from "../../../../shared/components/bottom-nav-bar/BottomNavBar.vue";
 import InstanceSubContent from "../../../../shared/components/instance/InstanceSubContent.vue";
+import LoadingComponent from "../../../../shared/components/LoadingComponent.vue";
 
-const route = useRoute();
 const router = useRouter();
 const instance: Ref<InstanceSettings> | undefined = inject('currentInstance');
 const $modService: ModService | undefined = inject('modService');
@@ -86,17 +86,11 @@ function orderedByUpdateNeeded() {
   })
 }
 
-watchEffect(() => {
-  if (route.params.id) {
-    getMods();
-  }
-})
-
 const listener = new TaskListeners();
 </script>
 <template>
   <InstanceSubContent :fluid="true">
-    <section class="flex flex-col p-6 h-full">
+    <LoadingComponent class="flex flex-col p-6 h-full" :promise="() => getMods()" ref="modList" :execute-automation="true" :hide-by-default="true">
       <ModTile v-for="mod in orderedByUpdateNeeded()" :mod="mod" @redirect="(t: Transitions) => redirect(t.route, emit)"
                class="mb-4" :key="mod.id">
         <EventWrapper :listener="listener" v-slot:default="s" v-if="mod.isUpdateNeeded">
@@ -115,7 +109,8 @@ const listener = new TaskListeners();
           </button>
         </EventWrapper>
       </ModTile>
-    </section>
+      <span v-if="mods?.size === 0" class="flex max-window-height items-center justify-center text-2xl">No result found</span>
+    </LoadingComponent>
   </InstanceSubContent>
   <bottom-nav-bar @backToLastPage="() => backtoLastPage()">
     <button type="button" class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-700 group" @click="$router.push('/mods')">

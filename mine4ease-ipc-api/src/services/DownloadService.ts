@@ -3,7 +3,7 @@ import {Utils} from "../utils/Utils";
 import {File} from "../models/file/File";
 import {Logger} from "winston";
 
-export const fetchWithRetry = async (url: string, logger: Logger, options = {}, mirrors = [], retry = 3) => {
+export const fetchWithRetry = async (url: string, logger: Logger, options = {}, mirrors: string[] = [], retry = 3) => {
   return fetch(url, options)
   .then(r => {
     if (r.ok) {
@@ -11,7 +11,6 @@ export const fetchWithRetry = async (url: string, logger: Logger, options = {}, 
     }
 
     logger.error(`Fetching url ${url} : Attempting failed with ${r.status} - ${r.statusText}`);
-    console.log(mirrors);
     if(r.status === 404 && mirrors.length > 0) {
       let mirror = mirrors[0];
       let newUrl = new URL(url);

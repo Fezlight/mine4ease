@@ -1,4 +1,4 @@
-import {ApiService, ApiType, curseApiService} from "./src/services/ApiService";
+import {ApiService, ApiType, curseApiService, feedTheBeastApiService} from "./src/services/ApiService";
 
 export * from './src/services/InstanceService'
 export * from './src/services/GlobalSettingService'
@@ -38,6 +38,8 @@ export * from './src/task/Task'
 export function getByType(type: ApiType): ApiService {
   if(type === ApiType.CURSE) {
     return curseApiService;
+  } else if(type === ApiType.FEEDTHEBEAST) {
+    return feedTheBeastApiService;
   }
   throw new Error("Not yet implemented");
 }
