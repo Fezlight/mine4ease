@@ -62,13 +62,14 @@ export class InstallForgeTask extends Task {
         await this.runProcess(forgeVersionPath, installerFile, installProfile);
       }
 
-      this._taskRunner.addTask(new DeleteFileTask(join(installerFile.fullPath(), installerFile.fileName())));
+      this._taskRunner.addTask(new DeleteFileTask(join(installerFile.fullPath(), installerFile.fileName()),
+        true));
     } else {
       const versionJson = await $utils.readFile(join(forgeVersionPath, this._versionJsonName))
         .then(JSON.parse);
 
       this._taskRunner.addTask(new DownloadLibrariesTask(versionJson.libraries, this._minecraftVersion,
-        this._installSide, true, this._subEventEmitter));
+        this._installSide, true, this._subEventEmitter, true));
     }
 
     await this._taskRunner.process();

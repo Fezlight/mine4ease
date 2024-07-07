@@ -110,7 +110,7 @@ export class UpdateModPackCurseTask extends Task {
     extractReq.destNameFilter = "overrides/"
     extractReq.destPath = join(INSTANCE_PATH, this._instance.id);
 
-    this._taskRunner.addTask(new ExtractFileTask(extractReq));
+    this._taskRunner.addTask(new ExtractFileTask(extractReq, true));
 
     await this._taskRunner.process();
 

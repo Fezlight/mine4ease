@@ -39,7 +39,9 @@ export class InstallModTask extends Task {
     this._download = download;
     this._alreadyDownloadedMods = alreadyDownloadedMods;
     this._subEventEmitter = new EventEmitter();
-    this._taskRunner = new TaskRunner(logger, this._subEventEmitter, this._eventEmitter);
+    this._taskRunner = new TaskRunner(logger, this._subEventEmitter, this._eventEmitter, {
+      eventCancelled: this._eventEmitter !== $eventEmitter
+    });
   }
 
   async run(): Promise<Mod> {
@@ -106,7 +108,7 @@ export class InstallModTask extends Task {
         .filter(m => m.relationType == 3)
         .forEach(m => {
           this._taskRunner.addTask(new InstallModTask(m, this._instance, this._subEventEmitter,
-            undefined, this._ignoreDependencies, this._download, this._eventCanceled, downloadedMods));
+            undefined, this._ignoreDependencies, this._download, true, downloadedMods));
         });
       }
     }
@@ -118,7 +120,7 @@ export class InstallModTask extends Task {
         let downloadReq = new DownloadRequest();
         downloadReq.file = file;
 
-        this._taskRunner.addTask(new DownloadFileTask(downloadReq));
+        this._taskRunner.addTask(new DownloadFileTask(downloadReq, true));
       }
 
       mod = this._mod;

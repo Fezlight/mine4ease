@@ -184,15 +184,15 @@ export abstract class Task {
   protected readonly _id: string;
   protected readonly _log: Logger;
   protected readonly _eventEmitter: EventEmitter;
-  protected readonly _eventCanceled: boolean;
+  protected readonly _eventCancelled: boolean;
 
-  protected constructor(eventEmitter: EventEmitter, log: Logger, getName: () => string, eventCanceled: boolean = false) {
+  protected constructor(eventEmitter: EventEmitter, log: Logger, getName: () => string, eventCancelled: boolean = false) {
     this._id = uuidv4();
     this._name = getName();
     this._eventEmitter = eventEmitter;
     this._log = log;
     this._log.debug(this._name);
-    this._eventCanceled = eventCanceled;
+    this._eventCancelled = eventCancelled;
     this.onCreated();
   }
 
@@ -232,7 +232,7 @@ export abstract class Task {
   }
 
   sendEvent() {
-    if (this._eventCanceled) return;
+    if (this._eventCancelled) return;
 
     const event: TaskEvent = {
       id: this.id,

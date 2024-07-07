@@ -43,7 +43,8 @@ export class DownloadLibrariesTask extends Task {
   private readonly _isAddingToClassPath: boolean;
 
   constructor(libraries: Libraries[], minecraftVersion: string, installSide: InstallSide,
-              isAddingToClassPath: boolean = false, eventEmitter: EventEmitter = $eventEmitter) {
+              isAddingToClassPath: boolean = false, eventEmitter: EventEmitter = $eventEmitter,
+              eventCancelled: boolean = false) {
     super(eventEmitter, logger, () => "Checking libraries ...");
     this._subEventEmitter = new EventEmitter();
     this._taskRunner = new TaskRunner(logger, this._subEventEmitter, this._eventEmitter);

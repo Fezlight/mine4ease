@@ -13,7 +13,7 @@ export class DownloadModsTask extends Task {
     super($eventEmitter, logger, () => "Checking mods ...");
     this._instance = instance;
     this._subEventEmitter = new EventEmitter();
-    this._taskRunner = new TaskRunner(logger, this._subEventEmitter, this._eventEmitter, {});
+    this._taskRunner = new TaskRunner(logger, this._subEventEmitter, this._eventEmitter);
   }
 
   async run(): Promise<void> {

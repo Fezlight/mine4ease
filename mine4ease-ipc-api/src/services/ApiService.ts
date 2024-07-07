@@ -104,7 +104,6 @@ export const CURSE_FORGE_MIRRORS_URL = [
 ];
 
 export function getCurseForgeFileUrl(fileId: number, name: string) {
-  debugger
   let id = fileId.toString();
 
   return CURSE_FORGE_TEMPLATE_FILE_DOWNLOAD_URL
@@ -115,12 +114,13 @@ export function getCurseForgeFileUrl(fileId: number, name: string) {
 
 export class CurseApiService implements ApiService {
   private static toFile(object: Mod | ModPack, v: any) {
-    object._url = v.downloadUrl ?? v.latestFiles?.[0].downloadUrl;
+    object._url = v.downloadUrl ?? v.latestFiles?.[0]?.downloadUrl;
     object.filename = v.fileName;
-    object.size = v.fileLength ?? v.latestFiles?.[0].fileLength;
-    object.sha1 = v.hashes?.[0]?.value ?? v.latestFiles?.[0].hashes[0]?.value;
-    if (object instanceof Mod) {
-      object.dependencies = (v.dependencies ?? v.latestFiles?.[0].dependencies).map((dep: any) => {
+    object.size = v.fileLength ?? v.latestFiles?.[0]?.fileLength;
+    object.sha1 = v.hashes?.[0]?.value ?? v.latestFiles?.[0]?.hashes[0]?.value;
+
+    if (object instanceof Mod && v.dependencies) {
+      object.dependencies = v.dependencies.map((dep: any) => {
         return {
           id: dep.modId,
           relationType: dep.relationType,
