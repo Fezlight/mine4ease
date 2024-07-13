@@ -1,4 +1,4 @@
-import {app, BrowserWindow, ipcMain, net, protocol, shell} from 'electron'
+import {app, BrowserWindow, dialog, ipcMain, net, protocol, shell} from 'electron'
 import {dirname, join} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {existsSync, mkdirSync} from "fs";
@@ -13,6 +13,7 @@ import {
 } from "mine4ease-ipc-api";
 import {handlerMap} from "../src/config/HandlerConfig";
 import {$cacheProvider, $eventEmitter} from "../src/config/ObjectFactoryConfig";
+import electronUpdater, {type AppUpdater} from 'electron-updater';
 
 globalThis.__filename = fileURLToPath(import.meta.url)
 globalThis.__dirname = dirname(__filename)
@@ -41,6 +42,11 @@ const preload = join(__dirname, '../preload/index.js')
 const indexHtml = join(process.env.DIST, 'index.html')
 
 app.setAppLogsPath(process.env.LOG_DIRECTORY);
+
+export function getAutoUpdater(): AppUpdater {
+  const { autoUpdater } = electronUpdater;
+  return autoUpdater;
+}
 
 function createWindow() {
   win = new BrowserWindow({
@@ -77,7 +83,20 @@ function createWindow() {
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
     win.loadFile(indexHtml);
+    getAutoUpdater().checkForUpdatesAndNotify();
   }
+
+  getAutoUpdater().on('update-available', info => {
+    dialog.showMessageBox({
+      type: 'info',
+      message: "An update is available, would you like to restart now ?",
+      buttons: ['yes', 'no']
+    }).then(async value => {
+      if (value.response === 0) {
+        getAutoUpdater().quitAndInstall(true, true);
+      }
+    })
+  });
 
   // Test actively push message to the Electron-Renderer
   win.webContents.on('did-finish-load', () => {

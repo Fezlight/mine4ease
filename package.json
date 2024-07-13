@@ -1,12 +1,14 @@
 {
   "name": "mine4ease",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.3.3",
+  "description": "A multi-instance minecraft launcher with an easy way to manage assets for your game",
   "author": "FezLight",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "publish:prod": "yarn build --publish always"
   },
   "dependencies": {
     "@azure/msal-node": "^2.5.1",
@@ -17,6 +19,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.4.2",
     "@fortawesome/vue-fontawesome": "^3.0.3",
     "decompress": "^4.2.1",
+    "electron-updater": "^6.2.1",
     "jszip": "^3.10.1",
     "linkify-it": "^5.0.0",
     "markdown-it": "^14.1.0",
@@ -35,6 +38,8 @@
   },
   "devDependencies": {
     "@babel/types": "^7.24.0",
+    "@electron-forge/maker-zip": "^7.4.0",
+    "@electron-forge/publisher-s3": "^7.4.0",
     "@types/child-process-promise": "^2.2.6",
     "@types/decompress": "^4.2.7",
     "@types/uuid": "^9.0.4",

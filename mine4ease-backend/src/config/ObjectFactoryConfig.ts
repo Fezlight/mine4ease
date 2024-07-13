@@ -8,7 +8,6 @@ import {app} from "electron";
 import {defaultCaches} from "./CacheConfig";
 import {EventEmitter} from 'events';
 
-
 const {combine, timestamp} = format;
 
 process.env.APP_DIRECTORY = path.join(app.getPath('appData'), '.mine4ease');
