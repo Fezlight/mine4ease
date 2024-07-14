@@ -14,6 +14,7 @@ import {
 import {handlerMap} from "../src/config/HandlerConfig";
 import {$cacheProvider, $eventEmitter} from "../src/config/ObjectFactoryConfig";
 import electronUpdater, {type AppUpdater} from 'electron-updater';
+import 'v8-compile-cache';
 
 globalThis.__filename = fileURLToPath(import.meta.url)
 globalThis.__dirname = dirname(__filename)
@@ -82,8 +83,9 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    win.loadFile(indexHtml);
-    getAutoUpdater().checkForUpdatesAndNotify();
+    win.loadFile(indexHtml)
+      .then(() => getAutoUpdater())
+      .then(autoUpdater => autoUpdater.checkForUpdatesAndNotify());
   }
 
   getAutoUpdater().on('update-available', info => {
