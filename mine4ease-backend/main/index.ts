@@ -12,7 +12,7 @@ import {
   TaskEvent
 } from "mine4ease-ipc-api";
 import {handlerMap} from "../src/config/HandlerConfig";
-import {$cacheProvider, $eventEmitter} from "../src/config/ObjectFactoryConfig";
+import {$cacheProvider, $eventEmitter, logger} from "../src/config/ObjectFactoryConfig";
 import electronUpdater, {type AppUpdater} from 'electron-updater';
 import 'v8-compile-cache';
 
@@ -46,6 +46,8 @@ app.setAppLogsPath(process.env.LOG_DIRECTORY);
 
 export function getAutoUpdater(): AppUpdater {
   const { autoUpdater } = electronUpdater;
+  autoUpdater.logger = logger;
+  autoUpdater.autoDownload = true;
   return autoUpdater;
 }
 
@@ -95,7 +97,7 @@ function createWindow() {
       buttons: ['yes', 'no']
     }).then(async value => {
       if (value.response === 0) {
-        getAutoUpdater().quitAndInstall(true, true);
+        getAutoUpdater().quitAndInstall(false, true);
       }
     })
   });

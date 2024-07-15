@@ -1,7 +1,7 @@
 {
   "name": "mine4ease",
   "private": true,
-  "version": "0.3.5",
+  "version": "0.3.8",
   "description": "A multi-instance minecraft launcher with an easy way to manage assets for your game",
   "author": "FezLight",
   "scripts": {
@@ -43,6 +43,7 @@
     "@electron-forge/publisher-s3": "^7.4.0",
     "@types/child-process-promise": "^2.2.6",
     "@types/decompress": "^4.2.7",
+    "@types/semver": "^7.5.8",
     "@types/uuid": "^9.0.4",
     "@vitejs/plugin-vue": "^5.0.1",
     "autoprefixer": "^10.4.16",

@@ -116,6 +116,7 @@ export class InstallModTask extends Task {
 
       if (this._download) {
         let file = Object.assign(new Mod(), this._mod);
+        file.relativePath = join(INSTANCE_PATH, this._instance.id);
 
         let downloadReq = new DownloadRequest();
         downloadReq.file = file;

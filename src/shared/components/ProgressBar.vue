@@ -16,7 +16,7 @@ function updateEvent(_event: any, value: TaskEvent) {
     currentProgress.value = 0;
   } else if (value.state === "FINISHED") {
     currentProgress.value = 100;
-    clearEvent = setTimeout(() => currentEvent.value = undefined, 5000);
+    clearEvent = setTimeout(() => currentEvent.value = undefined, 20000);
   }
 }
 
