@@ -24,12 +24,13 @@ const headers = {
 };
 
 export class AuthProvider {
-  clientApplication;
+  clientApplication: PublicClientApplication;
   cryptoProvider;
   authCodeUrlParams: any;
   authCodeRequest: any;
   pkceCodes: any;
   accessToken: string | undefined;
+  refreshToken: string | undefined;
   customFileProtocolName;
 
   constructor(cacheProvider: CacheProvider) {
@@ -67,7 +68,11 @@ export class AuthProvider {
   }
 
   setRequestObjects() {
-    const requestScopes = ["XboxLive.signin"];
+    const requestScopes = [
+      "XboxLive.signin",
+      "openid",
+      "offline_access"
+    ];
 
     this.authCodeUrlParams = {
       scopes: requestScopes,
@@ -88,7 +93,68 @@ export class AuthProvider {
   }
 
   async loginWithMicrosoft() {
-    return this.getTokenInteractive(this.authCodeUrlParams);
+    return this.getTokenInteractive(this.authCodeUrlParams)
+      .then((response: any) => {
+        this.refreshToken = response.refreshToken;
+        this.accessToken = response.accessToken;
+
+        return response;
+      });
+  }
+
+  async getMicrosoftToken(auth: {code: any, codeVerifier: any}) {
+    const request = {
+      method: "POST",
+      headers: {
+        ...headers,
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      },
+      body: new URLSearchParams({
+        scope: this.authCodeRequest.scopes,
+        client_id: msalConfig.auth.clientId,
+        grant_type: "authorization_code",
+        code: auth.code,
+        code_verifier: auth.codeVerifier,
+        redirect_uri: this.authCodeRequest.redirectUri
+      })
+    };
+
+    return fetch("https://login.microsoftonline.com/consumers/oauth2/v2.0/token", request)
+    .then((response: Response) => response.json())
+    .then(reponse => {
+      return {
+        accessToken: reponse.access_token,
+        refreshToken: reponse.refresh_token,
+      }
+    })
+  }
+
+  async loginWithMicrosoftRefreshToken(refreshToken: string) {
+    const request = {
+      method: "POST",
+      headers: {
+        ...headers,
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      },
+      body: new URLSearchParams({
+        scope: this.authCodeRequest.scopes,
+        client_id: msalConfig.auth.clientId,
+        grant_type: "refresh_token",
+        refresh_token: refreshToken
+      })
+    };
+
+    return fetch("https://login.live.com/oauth20_token.srf", request)
+    .then((response: Response) => response.json())
+    .then(response => {
+      this.accessToken = response.access_token;
+      this.refreshToken = response.refresh_token;
+
+      return {
+        accessToken: this.accessToken,
+        refreshToken: this.refreshToken,
+      }
+    })
   }
 
   async loginXboxLive(microsoftToken: string): Promise<TokenResponse> {
@@ -166,6 +232,7 @@ export class AuthProvider {
       return {
         uuid: response.id,
         accessToken: accessToken ?? this.accessToken,
+        refreshToken: this.refreshToken,
         username: response.name
       }
     });
@@ -176,21 +243,6 @@ export class AuthProvider {
   }
 
   async getTokenInteractive(tokenRequest: any) {
-    /**
-     * Proof Key for Code Exchange (PKCE) Setup
-     *
-     * MSAL enables PKCE in the Authorization Code Grant Flow by including the codeChallenge and codeChallengeMethod parameters
-     * in the request passed into getAuthCodeUrl() API, as well as the codeVerifier parameter in the
-     * second leg (acquireTokenByCode() API).
-     *
-     * MSAL Node provides PKCE Generation tools through the CryptoProvider class, which exposes
-     * the generatePkceCodes() asynchronous API. As illustrated in the example below, the verifier
-     * and challenge values should be generated previous to the authorization flow initiation.
-     *
-     * For details on PKCE code generation logic, consult the
-     * PKCE specification https://tools.ietf.org/html/rfc7636#section-4
-     */
-
     const { verifier, challenge } = await this.cryptoProvider.generatePkceCodes();
     this.pkceCodes.verifier = verifier;
     this.pkceCodes.challenge = challenge;
@@ -212,10 +264,9 @@ export class AuthProvider {
       );
       const authCode = await this.listenForAuthCode(authCodeUrl, popupWindow);
       // Use Authorization Code and PKCE Code verifier to make token request
-      const authResult = await this.clientApplication.acquireTokenByCode({
-        ...this.authCodeRequest,
+      const authResult = await this.getMicrosoftToken({
         code: authCode,
-        codeVerifier: verifier,
+        codeVerifier: verifier
       });
 
       popupWindow.close();

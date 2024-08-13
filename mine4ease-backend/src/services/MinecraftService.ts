@@ -4,24 +4,14 @@ import {
   DownloadService,
   IMinecraftService,
   InstanceSettings,
-  TaskRunner,
   Utils,
   Version,
   Versions,
-  VERSIONS_PATH,
 } from "mine4ease-ipc-api";
 import {Logger} from "winston";
 import path from "node:path";
-import {DownloadFileTask} from "../task/FileTask";
-import {DownloadAssetsTask} from "../task/DownloadAssetsTask";
-import {DownloadLibrariesTask} from "../task/DownloadLibsTask";
-import {DownloadJavaTask} from "../task/DownloadJavaTask";
-import {InstallForgeTask} from "../task/InstallForgeTask";
 import {$downloadService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig.ts";
-import {DownloadModsTask} from "../task/DownloadModsTask.ts";
-import {DownloadLoggerTask} from "../task/DownloadLoggerTask.ts";
-import {EventEmitter} from "events";
-import {LaunchGameTask} from "../task/LaunchGameTask.ts";
+import {LaunchInstanceTask} from "../task/LaunchInstanceTask.ts";
 
 export class MinecraftService implements IMinecraftService {
   private readonly downloadService: DownloadService;
@@ -47,80 +37,10 @@ export class MinecraftService implements IMinecraftService {
     .then(JSON.parse);
   }
 
-  async beforeLaunch(instance: InstanceSettings): Promise<Versions> {
-    let minecraftVersion = instance.versions.minecraft.name;
-    let taskRunner = new TaskRunner(this.logger, new EventEmitter(), $eventEmitter);
-
-    // Reinit classpath array to avoid overflow
-    process.env.CLASSPATH_ARRAY = "";
-
-    // Read & download manifest version file
-    const manifestFile: Version = Object.assign(new Version(), instance.versions.minecraft);
-    let version: Versions = await this.downloadManifest(manifestFile);
-
-    taskRunner.addTask(new DownloadJavaTask(version.javaVersion?.component));
-
-    if (instance.installSide === 'client') {
-      let client = Object.assign(new Version(), version.downloads.client);
-      client.name = version.id;
-
-      let downloadReq = new DownloadRequest();
-      downloadReq.file = client;
-
-      taskRunner.addTask(new DownloadFileTask(downloadReq));
-    }
-
-    taskRunner.addTask(new DownloadAssetsTask(version));
-
-    if(instance.modLoader) {
-      if (instance.modLoader === 'Forge' && instance.versions.forge) {
-        taskRunner.addTask(new InstallForgeTask(minecraftVersion, instance.versions.forge, instance.installSide));
-      }
-
-      taskRunner.addTask(new DownloadModsTask(instance));
-    }
-
-    taskRunner.addTask(new DownloadLibrariesTask(version.libraries, minecraftVersion, instance.installSide, true));
-
-    taskRunner.addTask(new DownloadLoggerTask(version));
-
-    await taskRunner.process();
-
-    let versions = [version];
-    // TODO Rework Accumulate args / main class of different manifest
-    if (instance.modLoader === 'Forge' && instance.versions.forge) {
-      let versionName = `${instance.versions.minecraft.name}-${instance.versions.forge.name}`
-      const versionJson = await $utils.readFile(path.join(VERSIONS_PATH, versionName, versionName + '.json'))
-      .then(JSON.parse);
-
-      versions.push(versionJson);
-    }
-
-    let newVersionManifest = version;
-    versions.forEach(v => {
-      if (version === v) return;
-
-      newVersionManifest.mainClass = v.mainClass;
-      if (v.minecraftArguments) {
-        if (!newVersionManifest.minecraftArguments) {
-          newVersionManifest.minecraftArguments = '';
-        }
-        // TODO Check duplicate arguments when merging
-        // TODO newVersionManifest.minecraftArguments += version.minecraftArguments ?? '';
-        newVersionManifest.minecraftArguments = v.minecraftArguments ?? '';
-      } else {
-        if(v.arguments.jvm) newVersionManifest.arguments.jvm.push(...v.arguments.jvm);
-        if(v.arguments.game) newVersionManifest.arguments.game.push(...v.arguments.game);
-      }
-    });
-
-    return Promise.resolve(newVersionManifest);
-  }
-
-  async launchGame(instance: InstanceSettings): Promise<void> {
-    const versionManifest = await this.beforeLaunch(instance);
-
-    $eventEmitter.emit(ADD_TASK_EVENT_NAME, new LaunchGameTask(instance, versionManifest));
+  async launchGame(instance: InstanceSettings): Promise<string> {
+    let task = new LaunchInstanceTask(instance);
+    $eventEmitter.emit(ADD_TASK_EVENT_NAME, task);
+    return task.id;
   }
 }
 

@@ -97,7 +97,7 @@ function createWindow() {
       buttons: ['yes', 'no']
     }).then(async value => {
       if (value.response === 0) {
-        getAutoUpdater().quitAndInstall(false, true);
+        getAutoUpdater().quitAndInstall(true, true);
       }
     })
   });

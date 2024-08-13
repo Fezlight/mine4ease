@@ -15,5 +15,5 @@ export interface IMinecraftService {
 
   beforeLaunch?(instance: InstanceSettings): Promise<Versions>;
 
-  launchGame(instance: InstanceSettings): Promise<void>;
+  launchGame(instance: InstanceSettings): Promise<string>;
 }

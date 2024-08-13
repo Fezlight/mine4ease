@@ -26,6 +26,17 @@ export class AuthService implements IAuthService {
     return account;
   }
 
+  async authenticateWithRefreshToken(refreshToken: string): Promise<Account> {
+    this.logger.info("Authenticating with microsoft refresh token ...");
+    const account = await this.authProvider.loginWithMicrosoftRefreshToken(refreshToken)
+    .then(data => this.authProvider.loginXboxLive(data.accessToken!))
+    .then(tokenResponse => this.authProvider.loginMinecraft(tokenResponse.DisplayClaims.xui[0]?.uhs, tokenResponse.Token));
+
+    await this.initAuthCache(account);
+
+    return account;
+  }
+
   async getProfile(): Promise<Account | undefined> {
     this.logger.info("Retrieving minecraft profile ...");
 
@@ -37,11 +48,26 @@ export class AuthService implements IAuthService {
     return this.authProvider.getProfile(account?.accessToken)
     .then(acc => {
       this.logger.info("Minecraft token validated successfully");
-      this.initAuthCache(acc);
-      return acc;
-    }).catch(e => {
-      this.logger.error("Minecraft token invalid, re-authentication needed");
-      throw e;
+      account = {
+        ...account,
+        username: acc.username,
+        uuid: acc.uuid
+      };
+      return account;
+    })
+    .catch(async e => {
+      if (!account?.refreshToken) {
+        throw new Error("No refresh token found");
+      }
+
+      return await this.authenticateWithRefreshToken(account.refreshToken)
+      .then(data => this.authProvider.getProfile(data?.accessToken))
+    })
+    .catch(e => {
+      this.logger.error("Minecraft token invalid, re-authentication needed", e);
+      let error = new Error("Minecraft token invalid, re-authentication needed");
+      error.name = "MINECRAFT_AUTHENTICATION_FAILED";
+      throw error;
     });
   }
 

@@ -14,7 +14,7 @@ process.env.APP_DIRECTORY = path.join(app.getPath('appData'), '.mine4ease');
 process.env.LOG_DIRECTORY = process.env.APP_DIRECTORY + '/logs'
 
 export const logger = createLogger({
-  level: 'debug',
+  level: 'info',
   format: combine(
     timestamp(),
     format.json()

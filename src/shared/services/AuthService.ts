@@ -12,4 +12,8 @@ export class AuthService implements IAuthService {
   async getProfile(): Promise<Account | undefined> {
     return window.ipcRenderer.invoke('authService.getProfile');
   }
+
+  authenticateWithRefreshToken(refreshToken: string): Promise<Account> {
+    throw new Error("Not Implemented")
+  }
 }

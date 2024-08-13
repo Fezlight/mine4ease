@@ -6,8 +6,10 @@ import {updateState} from "../../utils/Utils";
 
 const currentEvent: Ref<TaskEvent | undefined> = ref();
 const props = defineProps<{
-  listener: TaskListeners
+  listener: TaskListeners,
+  disableStateChange?: boolean
 }>();
+const disableStateChange: Ref<boolean> = ref(props.disableStateChange ?? false);
 
 async function createEvent(promise: Promise<string>, endCallback?: Function) {
   let eventId: string = await promise;
@@ -25,11 +27,17 @@ async function createEvent(promise: Promise<string>, endCallback?: Function) {
 </script>
 <template>
   <span>
-    <span v-if="!currentEvent || currentEvent?.state === 'RETRY_NEEDED'">
+    <span v-if="!currentEvent || currentEvent?.state === 'RETRY_NEEDED' || disableStateChange">
       <slot :createEvent="createEvent"></slot>
     </span>
-    <font-awesome-icon class="flex w-7 h-7" :icon="['fas', 'gear']" spin v-if="currentEvent?.state === 'IN_PROGRESS'" />
-    <font-awesome-icon class="flex w-7 h-7 text-green-600" :icon="['fas', 'circle-check']" v-if="currentEvent?.state === 'FINISHED'" />
-    <font-awesome-icon class="flex w-7 h-7 text-red-600" :icon="['fas', 'circle-xmark']" v-if="currentEvent?.state === 'FAILED'" />
+    <slot name="IN_PROGRESS" v-if="currentEvent?.state === 'IN_PROGRESS' && !disableStateChange">
+      <font-awesome-icon class="flex w-7 h-7" :icon="['fas', 'gear']" spin />
+    </slot>
+    <slot name="FINISHED" v-if="currentEvent?.state === 'FINISHED' && !disableStateChange">
+      <font-awesome-icon class="flex w-7 h-7 text-green-600" :icon="['fas', 'circle-check']" />
+    </slot>
+    <slot name="FAILED" v-if="currentEvent?.state === 'FAILED' && !disableStateChange">
+      <font-awesome-icon class="flex w-7 h-7 text-red-600" :icon="['fas', 'circle-xmark']" />
+    </slot>
   </span>
 </template>
