@@ -90,7 +90,7 @@ function createWindow() {
       .then(autoUpdater => autoUpdater.checkForUpdatesAndNotify());
   }
 
-  getAutoUpdater().on('update-available', info => {
+  getAutoUpdater().on('update-downloaded', info => {
     dialog.showMessageBox({
       type: 'info',
       message: "An update is available, would you like to restart now ?",

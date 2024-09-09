@@ -1,14 +1,55 @@
 {
   "name": "mine4ease",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.4.3",
   "description": "A multi-instance minecraft launcher with an easy way to manage assets for your game",
   "author": "FezLight",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
     "preview": "vite preview",
-    "publish:prod": "yarn build --publish always"
+    "make": "yarn run build && electron-forge make",
+    "publish": "yarn run build && electron-forge publish"
+  },
+  "license": "Apache-2.0",
+  "config": {
+    "forge": {
+      "packagerConfig": {},
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "mine4ease"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ]
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-rpm",
+          "config": {}
+        }
+      ],
+      "publishers": [
+        {
+          "name": "@electron-forge/publisher-github",
+          "config": {
+            "repository": {
+              "owner": "FezLight",
+              "name": "mine4ease",
+              "draft": true
+            }
+          }
+        }
+      ]
+    }
   },
   "dependencies": {
     "@azure/msal-node": "^2.5.1",
@@ -39,8 +80,12 @@
   },
   "devDependencies": {
     "@babel/types": "^7.24.0",
+    "@electron-forge/cli": "^7.4.0",
+    "@electron-forge/maker-deb": "^7.4.0",
+    "@electron-forge/maker-rpm": "^7.4.0",
+    "@electron-forge/maker-squirrel": "^7.4.0",
     "@electron-forge/maker-zip": "^7.4.0",
-    "@electron-forge/publisher-s3": "^7.4.0",
+    "@electron-forge/publisher-github": "^7.4.0",
     "@types/child-process-promise": "^2.2.6",
     "@types/decompress": "^4.2.7",
     "@types/semver": "^7.5.8",

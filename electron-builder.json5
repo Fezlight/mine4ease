@@ -41,11 +41,5 @@
       "AppImage"
     ],
     "artifactName": "${productName}-Linux-${version}.${ext}"
-  },
-  "publish": {
-    bucket: "mine4ease",
-    acl: "public-read",
-    endpoint: "https://gitlab-cache-api.fezlight.fr",
-    provider: "s3"
   }
 }
