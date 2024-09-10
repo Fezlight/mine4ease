@@ -48,12 +48,6 @@
       owner: "FezLight",
       provider: "github",
       releaseType: "release"
-    },
-    {
-      bucket: "mine4ease",
-      acl: "public-read",
-      endpoint: "https://gitlab-cache-api.fezlight.fr",
-      provider: "s3"
     }
   ]
 }
