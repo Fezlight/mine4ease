@@ -47,12 +47,14 @@
       bucket: "mine4ease",
       acl: "public-read",
       endpoint: "https://gitlab-cache-api.fezlight.fr",
-      provider: "s3"
+      provider: "s3",
+      releaseType: "release"
     },
     {
       "repo": "mine4ease",
       "owner": "FezLight",
-      "provider": "github"
+      "provider": "github",
+      releaseType: "release"
     }
   ]
 }
