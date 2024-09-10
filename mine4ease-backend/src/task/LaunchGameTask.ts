@@ -181,16 +181,16 @@ async function buildCommandLine(instance: InstanceSettings, versionsManifest: Ve
 
 export class LaunchGameTask extends Task {
   private readonly instance: InstanceSettings;
-  private readonly versionManifest: Versions;
+  private readonly getVersionManifest: () => Promise<Versions>;
 
-  constructor(instance: InstanceSettings, versionManifest: Versions) {
+  constructor(instance: InstanceSettings, getVersionManifest: () => Promise<Versions>) {
     super($eventEmitter, logger, () => "Launching Game ...");
-    this.versionManifest = versionManifest;
+    this.getVersionManifest = getVersionManifest;
     this.instance = instance;
   }
 
   async run(): Promise<void> {
-    const cmdLine = await buildCommandLine(this.instance, this.versionManifest);
+    const cmdLine = await buildCommandLine(this.instance, await this.getVersionManifest());
 
     const exec = require('child_process');
     logger.debug(cmdLine);

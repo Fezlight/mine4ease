@@ -8,49 +8,9 @@
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
     "preview": "vite preview",
-    "make": "yarn run build && electron-forge make",
-    "publish": "yarn run build && electron-forge publish"
+    "publish:prod": "yarn build --publish always"
   },
   "license": "Apache-2.0",
-  "config": {
-    "forge": {
-      "packagerConfig": {},
-      "makers": [
-        {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "mine4ease"
-          }
-        },
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "darwin"
-          ]
-        },
-        {
-          "name": "@electron-forge/maker-deb",
-          "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
-        }
-      ],
-      "publishers": [
-        {
-          "name": "@electron-forge/publisher-github",
-          "config": {
-            "repository": {
-              "owner": "FezLight",
-              "name": "mine4ease",
-              "draft": true
-            }
-          }
-        }
-      ]
-    }
-  },
   "dependencies": {
     "@azure/msal-node": "^2.5.1",
     "@fortawesome/fontawesome-free": "^6.4.2",
@@ -85,6 +45,7 @@
     "@electron-forge/maker-rpm": "^7.4.0",
     "@electron-forge/maker-squirrel": "^7.4.0",
     "@electron-forge/maker-zip": "^7.4.0",
+    "@electron-forge/publisher-s3": "^7.4.0",
     "@electron-forge/publisher-github": "^7.4.0",
     "@types/child-process-promise": "^2.2.6",
     "@types/decompress": "^4.2.7",

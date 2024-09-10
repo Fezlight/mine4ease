@@ -30,7 +30,7 @@ export class LaunchInstanceTask extends Task {
     // Reinit classpath array to avoid overflow
     process.env.CLASSPATH_ARRAY = "";
 
-    let {version, versionManifest} = await this.downloadAndReadManifest();
+    let version = await this.downloadAndReadManifest();
 
     this._taskRunner.addTask(new DownloadJavaTask(version.javaVersion?.component));
 
@@ -58,17 +58,19 @@ export class LaunchInstanceTask extends Task {
 
     this._taskRunner.addTask(new DownloadLoggerTask(version));
 
-    this._taskRunner.addTask(new LaunchGameTask(this._instance, versionManifest));
+    this._taskRunner.addTask(new LaunchGameTask(this._instance, () => this.buildFinalManifest(version)));
 
     await this._taskRunner.process();
   }
 
   private async downloadAndReadManifest() {
-    // Read & download manifest version file
     const manifestFile: Version = Object.assign(new Version(), this._instance.versions.minecraft);
-    let version: Versions = await $minecraftService.downloadManifest(manifestFile);
+    return  await $minecraftService.downloadManifest(manifestFile);
+  }
 
+  private async buildFinalManifest(version: Versions) {
     let versions = [version];
+
     // TODO Rework Accumulate args / main class of different manifest
     if (this._instance.modLoader === 'Forge' && this._instance.versions.forge) {
       let versionName = `${this._instance.versions.minecraft.name}-${this._instance.versions.forge.name}`
@@ -95,6 +97,7 @@ export class LaunchInstanceTask extends Task {
         if (v.arguments.game) newVersionManifest.arguments.game.push(...v.arguments.game);
       }
     });
-    return {version, versionManifest: newVersionManifest};
+
+    return newVersionManifest;
   }
 }
