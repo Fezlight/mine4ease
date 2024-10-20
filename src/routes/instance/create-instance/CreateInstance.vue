@@ -56,7 +56,7 @@ async function searchModpack() {
           <div class="space-y-2">
             <label for="import_id">Import existing Mine4Ease instance</label>
             <input type="text" id="import_id" placeholder="2c78d17c-d496-41f0-b3b0-bef2c5c234a2"
-                   v-on:change="($refs.instanceSearch as typeof LoadingComponent).executePromise()" class="w-full" v-model="modpackId">
+                   v-on:change="($refs.instanceSearch as unknown as typeof LoadingComponent).executePromise()" class="w-full" v-model="modpackId">
           </div>
           <LoadingComponent :promise="() => searchModpack()" :execute-automation="false" ref="instanceSearch" class="flex flex-col" :hide-by-default="true">
             <InstanceCard :instance="modpackS"></InstanceCard>

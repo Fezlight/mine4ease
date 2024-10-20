@@ -136,10 +136,10 @@ const listener = new TaskListeners();
               </svg>
             </div>
             <input type="search" id="default-search" v-model="filter"
-                   v-on:keyup.enter="($refs.modList as typeof LoadingComponent).executePromise()"
+                   v-on:keyup.enter="($refs.modList as unknown as typeof LoadingComponent).executePromise()"
                    class="block w-full p-2 ps-10 pe-16 text-sm text-white border border-gray-500 rounded-lg bg-gray-800 focus:ring-2 focus:ring-gray-500 focus:border-gray-500" placeholder="Search ..." required>
             <button class="text-white absolute inset-y-1 end-1 bg-gray-700 hover:bg-gray-600 focus:ring-1 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm p-1"
-                    v-on:click="($refs.modList as typeof LoadingComponent).executePromise()">Search
+                    v-on:click="($refs.modList as unknown as typeof LoadingComponent).executePromise()">Search
             </button>
           </div>
         </section>

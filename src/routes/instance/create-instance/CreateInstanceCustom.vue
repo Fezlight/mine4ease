@@ -105,7 +105,7 @@ async function loadImage(e: any) {
           <div class="space-y-2 required">
             <label for="minecraftVersion">Minecraft version</label>
             <select id="minecraftVersion" v-model="instance.versions.minecraft"
-                    v-on:change="($refs.modLoaderVersionList as typeof ModLoaderVersionsList).retrieveVersions()" class="w-full" required>
+                    v-on:change="($refs.modLoaderVersionList as unknown as typeof ModLoaderVersionsList).retrieveVersions()" class="w-full" required>
               <option v-for="version of minecraftVersions" :value="version">{{ version.name }}</option>
             </select>
           </div>
@@ -115,7 +115,7 @@ async function loadImage(e: any) {
               <li>
                 <input type="radio" id="forge" name="modloaders" value="Forge"
                        class="hidden peer" v-model="selectedModLoader"
-                       v-on:change="($refs.modLoaderVersionList as typeof ModLoaderVersionsList).retrieveVersions(ModLoader.FORGE)">
+                       v-on:change="($refs.modLoaderVersionList as unknown as typeof ModLoaderVersionsList).retrieveVersions(ModLoader.FORGE)">
                 <label for="forge" class="inline-flex items-center w-full p-3 gap-2 border rounded-lg cursor-pointer hover:text-gray-300 border-gray-700 peer-checked:bg-gray-700 text-white bg-gray-800 hover:bg-gray-700">
                   <span class="w-5">
                     <img src="../../../assets/forge_logo.ico" alt="Forge logo">
@@ -126,7 +126,7 @@ async function loadImage(e: any) {
               <li>
                 <input type="radio" id="fabric" name="modloaders" value="Fabric"
                        class="hidden peer" v-model="selectedModLoader" disabled
-                       v-on:change="($refs.modLoaderVersionList as typeof ModLoaderVersionsList).retrieveVersions(ModLoader.FABRIC)">
+                       v-on:change="($refs.modLoaderVersionList as unknown as typeof ModLoaderVersionsList).retrieveVersions(ModLoader.FABRIC)">
                 <label for="fabric" class="flex items-center w-full p-3 gap-2 border rounded-lg cursor-pointer hover:text-gray-300 border-gray-700 peer-checked:bg-gray-700 text-white bg-gray-800 hover:bg-gray-700 peer-disabled:bg-gray-700/30 peer-disabled:text-gray-600">
                   <span class="w-5">
                     <img src="../../../assets/fabric_logo.png" alt="Fabric logo">
@@ -137,7 +137,7 @@ async function loadImage(e: any) {
               <li>
                 <input type="radio" id="quilt" name="modloaders" value="Quilt"
                        class="hidden peer" v-model="selectedModLoader" disabled
-                       v-on:change="($refs.modLoaderVersionList as typeof ModLoaderVersionsList).retrieveVersions(ModLoader.QUILT)">
+                       v-on:change="($refs.modLoaderVersionList as unknown as typeof ModLoaderVersionsList).retrieveVersions(ModLoader.QUILT)">
                 <label for="quilt" class="flex items-center w-full p-3 gap-2 border rounded-lg cursor-pointer group-hover:text-gray-300 border-gray-700 peer-checked:bg-gray-700 text-white bg-gray-800 hover:bg-gray-700 peer-disabled:bg-gray-700/30 peer-disabled:text-gray-600">
                   <span class="w-5">
                     <img src="../../../assets/quilt_logo.svg" alt="Quilt logo">

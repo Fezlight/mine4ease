@@ -10,7 +10,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (redirect: string, transition: Transitions): void
+  (transition: Transitions): void
 }>();
 
 function uniqueCat(): IterableIterator<Category> {
