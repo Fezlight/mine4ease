@@ -1,7 +1,7 @@
 {
   "name": "mine4ease",
   "private": true,
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "A multi-instance minecraft launcher with an easy way to manage assets for your game",
   "author": "FezLight",
   "scripts": {
