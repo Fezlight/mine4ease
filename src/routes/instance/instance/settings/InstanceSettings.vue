@@ -19,7 +19,9 @@ let memory = {
   '7G': '7 Go',
   '8G': '8 Go',
   '9G': '9 Go',
-  '10G': '10 Go'
+  '10G': '10 Go',
+  '11G': '11 Go',
+  '12G': '12 Go'
 };
 
 function save() {

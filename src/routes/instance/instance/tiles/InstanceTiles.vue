@@ -17,7 +17,8 @@ async function getMods() {
 function isModded() {
   return !!instance?.value?.versions?.fabric
       || !!instance?.value?.versions?.forge
-      || !!instance?.value?.versions?.quilt;
+      || !!instance?.value?.versions?.quilt
+      || !!instance?.value?.versions?.neoForge;
 }
 
 watchEffect(() => {

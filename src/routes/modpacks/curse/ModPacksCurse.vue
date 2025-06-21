@@ -7,7 +7,6 @@ import {
   getByType,
   IInstanceService,
   Instance,
-  ModLoader,
   ModPack,
   Version
 } from "mine4ease-ipc-api";
@@ -92,7 +91,7 @@ async function searchModPack() {
 
   modpacks.value = [];
 
-  return getByType(apiType).searchModPacks(filter.value, ModLoader.FORGE, selectedVersion.value, selectedCategories.value)
+  return getByType(apiType).searchModPacks(filter.value, undefined, selectedVersion.value, selectedCategories.value)
   .then(packs => modpacks.value = <ModPack[]>packs);
 }
 

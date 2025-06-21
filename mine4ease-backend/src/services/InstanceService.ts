@@ -57,7 +57,8 @@ export class InstanceService implements IInstanceService {
   }
 
   async createInstanceByModPack(modpack: ModPack): Promise<string> {
-    let task = new InstallModPackTask(modpack.id, modpack.apiType, modpack?.gameVersion);
+    let gameVersion = modpack?.gameVersion === "" ? modpack.gameVersions?.[0] : modpack.gameVersion;
+    let task = new InstallModPackTask(modpack.id, modpack.apiType, gameVersion);
     $eventEmitter.emit(ADD_TASK_EVENT_NAME, task);
     return task.id;
   }

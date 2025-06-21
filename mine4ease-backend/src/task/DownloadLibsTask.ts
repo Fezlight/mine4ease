@@ -45,7 +45,7 @@ export class DownloadLibrariesTask extends Task {
   constructor(libraries: Libraries[], minecraftVersion: string, installSide: InstallSide,
               isAddingToClassPath: boolean = false, eventEmitter: EventEmitter = $eventEmitter,
               eventCancelled: boolean = false) {
-    super(eventEmitter, logger, () => "Checking libraries ...");
+    super(eventEmitter, logger, () => "Checking libraries ...", eventCancelled);
     this._subEventEmitter = new EventEmitter();
     this._taskRunner = new TaskRunner(logger, this._subEventEmitter, this._eventEmitter);
     this._libraries = libraries;
@@ -220,6 +220,7 @@ export class DownloadClassifierTask extends Task {
       extractRequest.destPath = join(VERSIONS_PATH, minecraftVersion, "natives");
       extractRequest.excludes = lib.extract?.excludes ?? [];
 
+      addToClassPath(downloadReqClassifier.file, true);
       await $downloadService.download(downloadReqClassifier);
       await $utils.extractFile(extractRequest);
     } else {
