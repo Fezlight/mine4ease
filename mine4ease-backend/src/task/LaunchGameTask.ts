@@ -40,9 +40,9 @@ async function buildCommandLine(instance: InstanceSettings, versionsManifest: Ve
   ];
 
   let memory = instance.memory;
-  if(memory) {
+  if (memory) {
     jvmArgs.push(...[
-      `-Xms${memory}`,
+      `-Xms256m`,
       `-Xmx${memory}`
     ]);
   }
@@ -97,7 +97,7 @@ async function buildCommandLine(instance: InstanceSettings, versionsManifest: Ve
       continue;
     }
 
-    let argIdentifier;
+    let argIdentifier: RegExpExecArray | null;
     do {
       argIdentifier = RegExp(regexIdentifier).exec(argLine[i]);
 
@@ -122,7 +122,7 @@ async function buildCommandLine(instance: InstanceSettings, versionsManifest: Ve
           newValue = instance.versions.self;
           break;
         case "icon_path":
-          if(instance.iconName) {
+          if (instance.iconName) {
             newValue = join(process.env.APP_DIRECTORY, INSTANCE_PATH, instance.id, ASSETS_PATH, instance.iconName);
           }
           break; // TODO Make this work as container icon
@@ -193,7 +193,7 @@ export class LaunchGameTask extends Task {
     const cmdLine = await buildCommandLine(this.instance, await this.getVersionManifest());
 
     const exec = require('child_process');
-    logger.debug(cmdLine);
+    logger.debug(cmdLine.join(' '));
 
     logger.info(`Launching instance ${this.instance.id} ...`);
 

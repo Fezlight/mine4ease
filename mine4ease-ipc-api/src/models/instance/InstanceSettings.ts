@@ -17,6 +17,7 @@ export class InstanceSettings extends Instance {
   modPack: CurseModPack | ModrinthModPack | FeedTheBeastModPack;
   versions: {
     forge?: Version,
+    neoForge?: Version;
     minecraft: Version;
     fabric?: Version,
     quilt?: Version,

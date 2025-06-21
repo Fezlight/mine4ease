@@ -198,7 +198,10 @@ export class InstallModPackCurseTask extends Task {
 
   private findModloaderByString(modloaderId: string): ModLoader | undefined {
     let modloader: ModLoader | undefined;
-    if (modloaderId.includes('forge-')) {
+    if (modloaderId.startsWith('neoforge-')) {
+      modloader = ModLoader.NEOFORGE;
+    }
+    else if (modloaderId.startsWith('forge-')) {
       modloader = ModLoader.FORGE;
     }
     return modloader;
@@ -225,6 +228,10 @@ async function getModLoaderVersion(modloader: ModLoader, minecraftVersion: strin
   } else if (modloader === ModLoader.QUILT) {
     return {
       quilt: version
+    }
+  } else if (modloader === ModLoader.NEOFORGE) {
+    return {
+      neoForge: version
     }
   }
 

@@ -43,13 +43,12 @@ export class Links {
 }
 
 export enum ModLoader {
-  FORGE = "Forge", FABRIC = "Fabric", QUILT = "Quilt",
+  NEOFORGE = "NeoForge", FORGE = "Forge", FABRIC = "Fabric", QUILT = "Quilt",
 }
 
 export enum ModLoaderCurse {
   Forge = 1,
   Fabric = 4,
-  Quilt = 5
+  Quilt = 5,
+  NeoForge = 6
 }
-
-

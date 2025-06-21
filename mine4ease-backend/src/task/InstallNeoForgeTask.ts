@@ -5,36 +5,35 @@ import {
   ExtractRequest,
   File,
   InstallSide,
-  LIBRARIES_PATH,
   Library,
   Task,
   TaskRunner,
   Version,
   VERSIONS_PATH
 } from "mine4ease-ipc-api";
-import {$downloadService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig";
-import {join} from "path";
-import {spawn} from "child_process";
-import {DownloadLibrariesTask, SEPARATOR} from "./DownloadLibsTask";
 import {EventEmitter} from "events";
-import {DeleteFileTask, ExtractFileTask} from "./FileTask";
+import {$downloadService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig.ts";
+import {join} from "path";
+import {DeleteFileTask, ExtractFileTask} from "./FileTask.ts";
+import {DownloadLibrariesTask, SEPARATOR} from "./DownloadLibsTask.ts";
+import {spawn} from "child_process";
 
-export class InstallForgeTask extends Task {
-  private readonly _taskRunner: TaskRunner;
-  private readonly _minecraftVersion: string;
-  private readonly _forgeVersion: string;
-  private readonly _installSide: InstallSide;
-  private readonly _subEventEmitter: EventEmitter;
-  private readonly _versionJsonName: string;
+export class InstallNeoForgeTask extends Task {
+  protected readonly _taskRunner: TaskRunner;
+  protected readonly _minecraftVersion: string;
+  protected readonly _neoForgeVersion: string;
+  protected readonly _installSide: InstallSide;
+  protected readonly _subEventEmitter: EventEmitter;
+  protected readonly _versionJsonName: string;
 
-  constructor(minecraftVersion: string, forge: Version, installSide: InstallSide) {
-    super($eventEmitter, logger, () => `Installing ${forge.name}...`);
+  constructor(minecraftVersion: string, neoForge: Version, installSide: InstallSide) {
+    super($eventEmitter, logger, () => `Installing ${neoForge.name}...`);
     this._minecraftVersion = minecraftVersion;
     this._subEventEmitter = new EventEmitter();
     this._taskRunner = new TaskRunner(logger, this._subEventEmitter, this._eventEmitter);
-    this._forgeVersion = forge.name.replace('forge-', '');
+    this._neoForgeVersion = neoForge.name.replace('neoforge-', '');
     this._installSide = installSide;
-    this._versionJsonName = `${this._minecraftVersion}-forge-${this._forgeVersion}.json`;
+    this._versionJsonName = `${this._minecraftVersion}-neoforge-${this._neoForgeVersion}.json`;
   }
 
   async run(): Promise<void> {
@@ -56,17 +55,13 @@ export class InstallForgeTask extends Task {
       const installProfile = await $utils.readFile(join(extractRequest.destPath, "install_profile.json"))
       .then(JSON.parse);
 
-      if (installProfile.versionInfo) {
-        await this.runLegacyProcess(forgeVersionPath, installerFile, installProfile);
-      } else {
-        await this.runProcess(forgeVersionPath, installerFile, installProfile);
-      }
+      await this.runProcess(forgeVersionPath, installerFile, installProfile);
 
       this._taskRunner.addTask(new DeleteFileTask(join(installerFile.fullPath(), installerFile.fileName()),
         true));
     } else {
       const versionJson = await $utils.readFile(join(forgeVersionPath, this._versionJsonName))
-        .then(JSON.parse);
+      .then(JSON.parse);
 
       this._taskRunner.addTask(new DownloadLibrariesTask(versionJson.libraries, this._minecraftVersion,
         this._installSide, true, this._subEventEmitter, true));
@@ -78,33 +73,6 @@ export class InstallForgeTask extends Task {
     fs.writeFile(join(process.env.APP_DIRECTORY, forgeVersionPath, '.installed'), '', (err: NodeJS.ErrnoException) => {
       if(err) throw Error('Error when writing validation file \'.installed\'');
     });
-  }
-
-  async runLegacyProcess(forgeVersionPath: string, installerFile: File, installProfile: any) {
-    let file = {
-      data: JSON.stringify(installProfile.versionInfo, null, 2),
-      path: forgeVersionPath,
-      filename: this._versionJsonName
-    };
-
-    // Extract forge version.json
-    await $utils.saveFile(file);
-
-    let minecraftForgeJar = Library.resolve(installProfile.install.path);
-    let extractRequest = new ExtractRequest();
-    extractRequest.file = installerFile;
-    extractRequest.destPath = minecraftForgeJar.fullPath();
-    extractRequest.destName = minecraftForgeJar.fileName();
-    extractRequest.includes = [
-      installProfile.install.filePath
-    ];
-
-    // Extract forge version.json
-    await $utils.extractFile(extractRequest);
-
-    let libs = installProfile.versionInfo.libraries.filter((lib: any) => !lib.name.includes(installProfile.install.path));
-
-    this._taskRunner.addTask(new DownloadLibrariesTask(libs, this._minecraftVersion, this._installSide, true, this._subEventEmitter));
   }
 
   async runProcess(forgeVersionPath: string, installerFile: File, installProfile: any) {
@@ -120,19 +88,7 @@ export class InstallForgeTask extends Task {
     await $utils.extractFile(extractRequest);
 
     const versionJson = await $utils.readFile(join(forgeVersionPath, this._versionJsonName))
-      .then(JSON.parse);
-
-    extractRequest = new ExtractRequest();
-    extractRequest.file = installerFile;
-    extractRequest.destPath = LIBRARIES_PATH;
-    extractRequest.destNameFilter = "maven/";
-    extractRequest.includes = [
-      `maven/net/minecraftforge/forge/${this._minecraftVersion}-${this._forgeVersion}/forge-${this._minecraftVersion}-${this._forgeVersion}.jar`,
-      `maven/net/minecraftforge/forge/${this._minecraftVersion}-${this._forgeVersion}/forge-${this._minecraftVersion}-${this._forgeVersion}-universal.jar`
-    ];
-
-    // Extract maven folder into libraries
-    await $utils.extractFile(extractRequest);
+    .then(JSON.parse);
 
     this._taskRunner.addTask(new DownloadLibrariesTask(versionJson.libraries, this._minecraftVersion,
       this._installSide, true, this._subEventEmitter));
@@ -165,7 +121,7 @@ export class InstallForgeTask extends Task {
         needDeleteLZMA = true;
       }
 
-      this._taskRunner.addTask(new InstallForgeProcessorTask(processor.jar, processor.classpath, processor.args,
+      this._taskRunner.addTask(new InstallNeoForgeProcessorTask(processor.jar, processor.classpath, processor.args,
         this._installSide, this._minecraftVersion, map, this._subEventEmitter));
     });
 
@@ -176,12 +132,7 @@ export class InstallForgeTask extends Task {
 
   async downloadInstaller(): Promise<File> {
     let installerFile = new CachedFile();
-    installerFile.url = `https://maven.minecraftforge.net/net/minecraftforge/forge/${this._minecraftVersion}-${this._forgeVersion}/forge-${this._minecraftVersion}-${this._forgeVersion}-installer.jar`;
-
-    const semver = require('semver');
-    if(semver.lte(semver.coerce(this._minecraftVersion), '1.6.0')) {
-      installerFile.url = `https://maven.minecraftforge.net/net/minecraftforge/forge/${this._minecraftVersion}-${this._forgeVersion}/forge-${this._minecraftVersion}-${this._forgeVersion}-universal.zip`;
-    }
+    installerFile.url = `https://maven.neoforged.net/releases/net/neoforged/neoforge/${this._neoForgeVersion}/neoforge-${this._neoForgeVersion}-installer.jar`;
 
     let downloadRequest = new DownloadRequest();
     downloadRequest.file = installerFile;
@@ -192,7 +143,7 @@ export class InstallForgeTask extends Task {
   }
 }
 
-export class InstallForgeProcessorTask extends Task {
+export class InstallNeoForgeProcessorTask extends Task {
   private readonly _jar: string;
   private readonly _classpath: string[];
   private readonly _args: string[];
@@ -201,7 +152,7 @@ export class InstallForgeProcessorTask extends Task {
   private readonly _minecraftVersion: string;
 
   constructor(jar: string, classpath: string[], args: string[], installSide: InstallSide, minecraftVersion: string, mappings: Map<string, string>, eventEmitter: EventEmitter = $eventEmitter) {
-    super(eventEmitter, logger, () => `Installing Forge processor ${jar} ...`, true);
+    super(eventEmitter, logger, () => `Installing NeoForge processor ${jar} ...`, true);
     this._jar = jar;
     this._classpath = classpath;
     this._args = args;

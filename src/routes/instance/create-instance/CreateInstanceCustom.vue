@@ -52,7 +52,11 @@ function selectVersion(version: Version) {
   instance.value.versions = {
     minecraft: instance.value.versions.minecraft
   };
+
   switch (selectedModLoader.value) {
+    case ModLoader.NEOFORGE:
+      instance.value.versions.neoForge = version;
+      break;
     case ModLoader.FORGE:
       instance.value.versions.forge = version;
       break;
@@ -121,6 +125,17 @@ async function loadImage(e: any) {
                     <img src="../../../assets/forge_logo.ico" alt="Forge logo">
                   </span>
                   <span class="w-full text-lg font-semibold">Forge</span>
+                </label>
+              </li>
+              <li>
+                <input type="radio" id="neoforge" name="modloaders" value="NeoForge"
+                       class="hidden peer" v-model="selectedModLoader"
+                       v-on:change="($refs.modLoaderVersionList as unknown as typeof ModLoaderVersionsList).retrieveVersions(ModLoader.NEOFORGE)">
+                <label for="neoforge" class="inline-flex items-center w-full p-3 gap-2 border rounded-lg cursor-pointer hover:text-gray-300 border-gray-700 peer-checked:bg-gray-700 text-white bg-gray-800 hover:bg-gray-700">
+                  <span class="w-5">
+                    <img src="../../../assets/neoforge_logo.png" alt="NeoForge logo">
+                  </span>
+                  <span class="w-full text-lg font-semibold">NeoForge</span>
                 </label>
               </li>
               <li>

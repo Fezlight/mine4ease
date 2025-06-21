@@ -11,6 +11,7 @@ import {DownloadLoggerTask} from "./DownloadLoggerTask.ts";
 import path from "node:path";
 import {$minecraftService} from "../services/MinecraftService.ts";
 import {LaunchGameTask} from "./LaunchGameTask.ts";
+import {InstallNeoForgeTask} from "./InstallNeoForgeTask.ts";
 
 export class LaunchInstanceTask extends Task {
   private readonly _instance: InstanceSettings;
@@ -46,15 +47,16 @@ export class LaunchInstanceTask extends Task {
 
     this._taskRunner.addTask(new DownloadAssetsTask(version));
 
+    this._taskRunner.addTask(new DownloadLibrariesTask(version.libraries, minecraftVersion, this._instance.installSide, true));
+
     if (this._instance.modLoader) {
       if (this._instance.modLoader === 'Forge' && this._instance.versions.forge) {
         this._taskRunner.addTask(new InstallForgeTask(minecraftVersion, this._instance.versions.forge, this._instance.installSide));
+      } else if(this._instance.modLoader === 'NeoForge' && this._instance.versions.neoForge) {
+        this._taskRunner.addTask(new InstallNeoForgeTask(minecraftVersion, this._instance.versions.neoForge, this._instance.installSide));
       }
-
       this._taskRunner.addTask(new DownloadModsTask(this._instance));
     }
-
-    this._taskRunner.addTask(new DownloadLibrariesTask(version.libraries, minecraftVersion, this._instance.installSide, true));
 
     this._taskRunner.addTask(new DownloadLoggerTask(version));
 
@@ -74,6 +76,12 @@ export class LaunchInstanceTask extends Task {
     // TODO Rework Accumulate args / main class of different manifest
     if (this._instance.modLoader === 'Forge' && this._instance.versions.forge) {
       let versionName = `${this._instance.versions.minecraft.name}-${this._instance.versions.forge.name}`
+      const versionJson = await $utils.readFile(path.join(VERSIONS_PATH, versionName, versionName + '.json'))
+      .then(JSON.parse);
+
+      versions.push(versionJson);
+    } else if (this._instance.modLoader === 'NeoForge' && this._instance.versions.neoForge) {
+      let versionName = `${this._instance.versions.minecraft.name}-${this._instance.versions.neoForge.name}`
       const versionJson = await $utils.readFile(path.join(VERSIONS_PATH, versionName, versionName + '.json'))
       .then(JSON.parse);
 

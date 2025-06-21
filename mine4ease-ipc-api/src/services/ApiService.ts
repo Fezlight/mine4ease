@@ -100,6 +100,7 @@ export const CURSE_FORGE_TEMPLATE_FILE_DOWNLOAD_URL = "https://media.forgecdn.ne
 
 export const CURSE_FORGE_MIRRORS_URL = [
   'edge.forgecdn.net',
+  'mediafilez.forgecdn.net',
   'mediafiles.forgecdn.net'
 ];
 
@@ -237,6 +238,7 @@ export class CurseApiService implements ApiService {
   }
 
   async searchVersions(gameVersion?: string, modLoader?: ModLoader): Promise<Version[]> {
+    let modLoaderCurse = this.getModLoaderCurse(modLoader);
     if (!gameVersion) {
       return fetch('https://piston-meta.mojang.com/mc/game/version_manifest_v2.json')
       .then(response => {
@@ -249,12 +251,16 @@ export class CurseApiService implements ApiService {
           }
         });
       });
-    } else if (modLoader === ModLoader.FORGE) {
-      return fetch(CURSE_FORGE_API_URL + '/v1/minecraft/modloader?version=' + gameVersion)
+    } else if (modLoader === ModLoader.FORGE || modLoader === ModLoader.NEOFORGE) {
+      return fetch(CURSE_FORGE_API_URL + '/v1/minecraft/modloader?includeAll=true&version=' + gameVersion)
       .then(response => {
         return response.json();
       }).then((response: any) => {
-        return response.data.sort((a: any, b: any) => {
+        return response.data
+        .filter((version: any) => {
+          return version.type === Number(modLoaderCurse);
+        } )
+        .sort((a: any, b: any) => {
           return Number(new Date(b.dateModified)) - Number(new Date(a.dateModified))
         });
       });
