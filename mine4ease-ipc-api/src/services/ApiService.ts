@@ -35,7 +35,7 @@ export interface ApiService {
    * @param gameVersion minecraft version
    * @param category categories used to filter result
    */
-  searchModPacks(filter: string, modLoader?: ModLoader, gameVersion?: string, category?: Category[]): Promise<ModPack[]>;
+  searchModPacks(filter: string, modLoader?: ModLoader[], gameVersion?: string, category?: Category[]): Promise<ModPack[]>;
 
   /**
    * Search mod pack by filter keyword
@@ -133,10 +133,10 @@ export class CurseApiService implements ApiService {
 
   async searchMods(filter: string, gameVersion: string, modLoader?: ModLoader, category?: Category[]): Promise<Mod[]> {
     return this.searchItem(filter, CURSE_FORGE_MINECRAFT_MOD_CLASS_ID,
-      this.toMod, gameVersion, modLoader, category);
+      this.toMod, gameVersion, [modLoader], category);
   }
 
-  async searchModPacks(filter: string, modLoader?: ModLoader, gameVersion?: string, category?: Category[]): Promise<ModPack[]> {
+  async searchModPacks(filter: string, modLoader?: ModLoader[], gameVersion?: string, category?: Category[]): Promise<ModPack[]> {
     return this.searchItem(filter, CURSE_FORGE_MINECRAFT_MODPACK_CLASS_ID,
       this.toModPack, gameVersion, modLoader, category);
   }
@@ -144,13 +144,13 @@ export class CurseApiService implements ApiService {
   async searchResourcesPacks(filter: string, gameVersion: string, modLoader?: ModLoader, category?: Category[]): Promise<ResourcePack[]> {
     return this.searchItem(filter, CURSE_FORGE_MINECRAFT_RESOURCEPACKS_CLASS_ID,
       () => {
-      }, gameVersion, modLoader, category);
+      }, gameVersion, [modLoader], category);
   }
 
   async searchShaders(filter: string, gameVersion: string, modLoader?: ModLoader, category?: Category[]): Promise<Shader[]> {
     return this.searchItem(filter, CURSE_FORGE_MINECRAFT_SHADERPACKS_CLASS_ID,
       () => {
-      }, gameVersion, modLoader, category);
+      }, gameVersion, [modLoader], category);
   }
 
   async getFileById<T extends Mod | ModPack>(id: number | undefined, modId: number, type: T, gameVersion: string, modLoader?: ModLoader): Promise<T[] | T> {
@@ -280,14 +280,14 @@ export class CurseApiService implements ApiService {
   }
 
   private async searchItem(filter: string, classId: string, mapper: Function, gameVersion?: string,
-                           modLoader?: ModLoader, category?: Category[]) {
-    let modLoaderCurse = this.getModLoaderCurse(modLoader);
-    const params = new URLSearchParams(<Record<string, string>>{
+                           modLoader?: ModLoader[], category?: Category[]) {
+    let modLoaderCurse = modLoader?.map(this.getModLoaderCurse) ?? undefined;
+    const params = new URLSearchParams(<Record<string, any>>{
       gameId: CURSE_FORGE_MINECRAFT_GAME_ID,
       classId: classId,
       searchFilter: filter,
       gameVersion: gameVersion,
-      modLoaderType: modLoaderCurse,
+      modLoaderTypes: modLoaderCurse,
       categoryIds: JSON.stringify(category?.map(cat => cat.id)),
       sortOrder: 'desc',
       sortField: '2'
@@ -507,12 +507,12 @@ export class FeedTheBeastApiService implements ApiService {
     throw new Error("Not yet implemented");
   }
 
-  async searchModPacks(filter: string, modLoader?: ModLoader, gameVersion?: string, category?: Category[]): Promise<ModPack[]> {
+  async searchModPacks(filter: string, modLoader?: ModLoader[], gameVersion?: string, category?: Category[]): Promise<ModPack[]> {
     let cat: string = "9";
     if (category && category[0] && category[0].id) {
       cat = String(category[0].id);
     }
-    let loader = modLoader?.toLowerCase() ?? "";
+    let loader = modLoader?.[0].toLowerCase() ?? "";
     let version = gameVersion ?? "";
 
     return fetch(FEED_THE_BEAST_API_URL + `/public/modpack/search/${cat}/${loader}/${version}/updated/?term=${filter}`)
@@ -523,7 +523,7 @@ export class FeedTheBeastApiService implements ApiService {
       if(!response?.packs) return [];
 
       return response.packs.map((v: any) => {
-        return this.toModPack(v, gameVersion, modLoader);
+        return this.toModPack(v, gameVersion, modLoader?.[0]);
       });
     });
   }
