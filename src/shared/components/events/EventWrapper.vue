@@ -1,37 +1,43 @@
 <script setup lang="ts">
 import {Ref, ref} from "vue";
-import {TASK_EVENT_NAME, TaskEvent} from "mine4ease-ipc-api";
+import {TASK_EVENT_NAME, TASK_PROCESSING_EVENT_NAME, TaskEvent} from "mine4ease-ipc-api";
 import {TaskListeners} from "../../listeners/TaskListeners";
-import {updateState} from "../../utils/Utils";
+import {updateProgress, updateState} from "../../utils/Utils";
 
 const currentEvent: Ref<TaskEvent | undefined> = ref();
 const props = defineProps<{
   listener: TaskListeners,
-  disableStateChange?: boolean
+  disableStateChange?: boolean,
+  showProgress?: boolean
 }>();
 const disableStateChange: Ref<boolean> = ref(props.disableStateChange ?? false);
+const showProgress: Ref<boolean> = ref(props.showProgress ?? false);
 
-async function createEvent(promise: Promise<string>, endCallback?: Function) {
-  let eventId: string = await promise;
+async function createEvent(promise: () => Promise<string>, endCallback?: Function) {
+  let eventId: string = await promise();
   currentEvent.value = {
     id: eventId,
     name: "",
-    state: "IN_PROGRESS"
+    state: "IN_PROGRESS",
+    progress: 0
   };
 
-  if(currentEvent.value) {
-    props.listener.start(TASK_EVENT_NAME,(event, args) => updateState(<TaskEvent>currentEvent.value, event, args, endCallback));
+  if (currentEvent.value) {
+    props.listener.start(TASK_EVENT_NAME,(event, args) => updateState(<TaskEvent>currentEvent.value, args, endCallback));
+    props.listener.start(TASK_PROCESSING_EVENT_NAME,(event, args) => updateProgress(<TaskEvent>currentEvent.value, args));
   }
 }
 
 </script>
 <template>
-  <span>
+  <span class="flex flex-col items-center justify-center gap-2">
     <span v-if="!currentEvent || currentEvent?.state === 'RETRY_NEEDED' || disableStateChange">
       <slot :createEvent="createEvent"></slot>
     </span>
-    <slot name="IN_PROGRESS" v-if="currentEvent?.state === 'IN_PROGRESS' && !disableStateChange">
-      <font-awesome-icon class="flex w-7 h-7" :icon="['fas', 'gear']" spin />
+    <slot name="IN_PROGRESS" v-if="currentEvent?.state === 'IN_PROGRESS' && !disableStateChange"
+          class="flex flex-col items-center justify-center">
+      <font-awesome-icon class="self-center w-7 h-7" :icon="['fas', 'gear']" spin />
+      <span v-if="showProgress" class="text-gray-400 text-sm">Processing ... {{currentEvent.progress}} %</span>
     </slot>
     <slot name="FINISHED" v-if="currentEvent?.state === 'FINISHED' && !disableStateChange">
       <font-awesome-icon class="flex w-7 h-7 text-green-600" :icon="['fas', 'circle-check']" />

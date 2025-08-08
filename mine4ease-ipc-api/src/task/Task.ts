@@ -56,7 +56,8 @@ export class Queue<T> {
 export interface TaskOptions {
   autoWipeQueueOnFail?: boolean,
   propagateError?: boolean,
-  eventCancelled?: boolean
+  eventCancelled?: boolean,
+  mainTaskId?: string
 }
 
 export const TASK_EVENT_NAME = "task-event";
@@ -73,6 +74,7 @@ export interface TaskEvent {
   name: string;
   state: TaskState;
   object?: any;
+  progress?: number;
 }
 
 export type TaskState = "FINISHED" | "CREATED" | "PAUSED" | "IN_PROGRESS" | "FAILED" | "RETRY_NEEDED";
@@ -85,6 +87,7 @@ export class TaskRunner {
   private readonly _propagateError: boolean;
   private readonly _eventEmitter: EventEmitter;
   private readonly _eventCancelled: boolean;
+  private readonly _mainTaskId: string;
 
   constructor(log: Logger, eventEmitter: EventEmitter, mainEventEmitter?: EventEmitter, taskOptions?: TaskOptions) {
     this._log = log;
@@ -92,6 +95,7 @@ export class TaskRunner {
     this._autoWipeQueueOnFail = taskOptions?.autoWipeQueueOnFail ?? true;
     this._propagateError = taskOptions?.propagateError ?? true;
     this._eventCancelled = taskOptions?.eventCancelled ?? false;
+    this._mainTaskId = taskOptions?.mainTaskId;
     if (!this._eventCancelled && mainEventEmitter) {
       eventEmitter.on(TASK_EVENT_NAME, event => {
         mainEventEmitter.emit(TASK_EVENT_NAME, event);
@@ -116,7 +120,10 @@ export class TaskRunner {
     }
 
     this.isProcessing = false;
-    this._eventEmitter.emit(TASK_PROCESSING_EVENT_NAME, 100);
+    this._eventEmitter.emit(TASK_PROCESSING_EVENT_NAME, {
+      id: this._mainTaskId,
+      progress: 100
+    });
   }
 
   addTask(task: Task, processing: boolean = false) {
@@ -161,7 +168,10 @@ export class TaskRunner {
 
       await Promise.all(promises);
       achieved += task.length;
-      this._eventEmitter.emit(TASK_PROCESSING_EVENT_NAME, Math.round((achieved / initialSize) * 100))
+      this._eventEmitter.emit(TASK_PROCESSING_EVENT_NAME, {
+        id: this._mainTaskId,
+        progress: Math.round((achieved / initialSize) * 100)
+      })
     }
   }
 
@@ -174,7 +184,10 @@ export class TaskRunner {
 
       await task.runTask()
       .catch(error => this.onFailed(error))
-      .finally(() => this._eventEmitter.emit(TASK_PROCESSING_EVENT_NAME, Math.round((++achieved / initialSize) * 100)));
+      .finally(() => this._eventEmitter.emit(TASK_PROCESSING_EVENT_NAME, {
+        id: this._mainTaskId,
+        progress: Math.round((++achieved / initialSize) * 100)
+      }));
     }
   }
 }

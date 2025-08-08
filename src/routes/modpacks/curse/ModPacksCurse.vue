@@ -165,8 +165,8 @@ const listener = new TaskListeners();
           <label for="default-search" class="mb-2 text-sm font-medium text-gray-900 sr-only">Search</label>
           <div class="relative">
             <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-              <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+              <svg class="w-4 h-4 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <path stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
               </svg>
             </div>
             <input type="search" id="default-search" v-model="filter"
@@ -185,8 +185,8 @@ const listener = new TaskListeners();
         <div class="flex flex-col gap-2 h-full overflow-y-auto">
           <LoadingComponent class="flex flex-col overflow-y-auto flex-grow" :promise="() => searchModPack()" ref="modpackList">
             <ModPackTile v-for="modpack in modpacks" :modpack="modpack" @redirect="(t: Transitions) => redirect(t.route, emit)" class="mb-4" :key="modpack.id">
-              <EventWrapper :listener="listener" v-slot:default="s">
-                <button type="button" class="px-5 py-2.5 primary inline-block space-x-2" v-on:click="s.createEvent(installModPack(modpack), i => emit('createInstance', i, false))">
+              <EventWrapper :listener="listener" v-slot:default="s" :show-progress="true">
+                <button type="button" class="px-5 py-2.5 primary inline-block space-x-2" v-on:click="s.createEvent(() => installModPack(modpack), i => emit('createInstance', i, false))">
                   <font-awesome-icon :icon="['fas', 'add']" />
                   <span>Install</span>
                 </button>
@@ -198,12 +198,15 @@ const listener = new TaskListeners();
       </section>
       <section class="flex flex-col flex-grow rounded-lg bg-black/30 shadow-md shadow-black/40 overflow-y-auto min-w-[200px] max-w-[200px] mb-1">
         <LoadingComponent class="flex flex-col gap-3 p-4 h-full" :promise="() => getAllCategories()" ref="categoryFilter">
-          <button type="button" v-for="category in selectedCategories" :key="category.id" @click="searchWithCategories(category)" class="flex flex-row text-left gap-2 rounded border-2 border-gray-800 px-2 py-1 bg-gray-800">
-            <img :src="category.iconUrl" :alt="category.name + ' icon'" class="w-7 h-7">
-            <span class="text-sm">{{ category.name }}</span>
+          <button type="button" v-for="category in selectedCategories" :key="category.id" @click="searchWithCategories(category)" class="flex flex-row justify-between gap-2 rounded group category-filter px-2 py-1">
+            <span class="flex flex-row text-left text-wrap gap-2 items-center">
+              <img :src="category.iconUrl" :alt="category.name + ' icon'" class="w-7 h-7">
+              <span class="text-sm">{{ category.name }}</span>
+            </span>
+            <font-awesome-icon :icon="['fa', 'circle-xmark']" class="text-lg group-hover:text-red-600"/>
           </button>
           <hr class="border-amber-400" v-if="selectedCategories.length">
-          <button type="button" v-for="category in orderedCategories(categories)" :key="category.id" @click="searchWithCategories(category)" class="flex flex-row text-left gap-2 px-2 py-1">
+          <button type="button" v-for="category in orderedCategories(categories)" :key="category.id" @click="searchWithCategories(category)" class="flex flex-row text-left gap-2 px-2 py-1 category-filter">
             <img :src="category.iconUrl" :alt="category.name + ' icon'" class="w-7 h-7">
             <span class="text-sm">{{ category.name }}</span>
           </button>
@@ -212,3 +215,8 @@ const listener = new TaskListeners();
     </section>
   </InstanceContent>
 </template>
+<style scoped>
+.category-filter {
+  @apply border-2 border-transparent hover:border-gray-800 bg-transparent hover:bg-gray-800;
+}
+</style>
