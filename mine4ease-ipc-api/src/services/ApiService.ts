@@ -133,7 +133,7 @@ export class CurseApiService implements ApiService {
 
   async searchMods(filter: string, gameVersion: string, modLoader?: ModLoader, category?: Category[]): Promise<Mod[]> {
     return this.searchItem(filter, CURSE_FORGE_MINECRAFT_MOD_CLASS_ID,
-      this.toMod, gameVersion, [modLoader], category);
+      this.toMod, gameVersion, modLoader ? [modLoader] : [], category);
   }
 
   async searchModPacks(filter: string, modLoader?: ModLoader[], gameVersion?: string, category?: Category[]): Promise<ModPack[]> {
@@ -144,13 +144,13 @@ export class CurseApiService implements ApiService {
   async searchResourcesPacks(filter: string, gameVersion: string, modLoader?: ModLoader, category?: Category[]): Promise<ResourcePack[]> {
     return this.searchItem(filter, CURSE_FORGE_MINECRAFT_RESOURCEPACKS_CLASS_ID,
       () => {
-      }, gameVersion, [modLoader], category);
+      }, gameVersion, modLoader ? [modLoader] : [], category);
   }
 
   async searchShaders(filter: string, gameVersion: string, modLoader?: ModLoader, category?: Category[]): Promise<Shader[]> {
     return this.searchItem(filter, CURSE_FORGE_MINECRAFT_SHADERPACKS_CLASS_ID,
       () => {
-      }, gameVersion, [modLoader], category);
+      }, gameVersion, modLoader ? [modLoader] : [], category);
   }
 
   async getFileById<T extends Mod | ModPack>(id: number | undefined, modId: number, type: T, gameVersion: string, modLoader?: ModLoader): Promise<T[] | T> {

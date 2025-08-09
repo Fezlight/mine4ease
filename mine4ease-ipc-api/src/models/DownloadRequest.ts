@@ -19,7 +19,7 @@ export class DownloadRequest extends RuleControl{
     this._mirrors = [...value];
   }
 
-  get mirrors(): string[] {
+  get mirrors(): string[] | undefined {
     return this._mirrors;
   }
 }

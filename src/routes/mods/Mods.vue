@@ -146,7 +146,7 @@ const listener = new TaskListeners();
         <LoadingComponent class="flex flex-col overflow-y-auto flex-grow" :promise="() => searchMod()" ref="modList">
           <ModTile v-for="mod in mods" :mod="mod" @redirect="(t: Transitions) => redirect(t.route, emit)" class="mb-4" :key="mod.id">
             <EventWrapper :listener="listener" v-slot:default="s">
-              <button type="button" class="px-5 py-2.5 primary inline-block space-x-2" v-on:click="s.createEvent(addMod(mod))">
+              <button type="button" class="px-5 py-2.5 primary inline-block space-x-2" v-on:click="s.createEvent(() => addMod(mod))">
                 <font-awesome-icon :icon="['fas', 'add']" />
                 <span>Install</span>
               </button>

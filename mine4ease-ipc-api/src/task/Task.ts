@@ -87,7 +87,7 @@ export class TaskRunner {
   private readonly _propagateError: boolean;
   private readonly _eventEmitter: EventEmitter;
   private readonly _eventCancelled: boolean;
-  private readonly _mainTaskId: string;
+  private readonly _mainTaskId: string | undefined;
 
   constructor(log: Logger, eventEmitter: EventEmitter, mainEventEmitter?: EventEmitter, taskOptions?: TaskOptions) {
     this._log = log;
