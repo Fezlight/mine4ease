@@ -53,7 +53,7 @@ export function getAutoUpdater(): AppUpdater {
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    icon: join(process.env.VITE_PUBLIC, 'icon.png'),
     titleBarStyle: 'hidden',
     titleBarOverlay: {
       color: '#00000000',

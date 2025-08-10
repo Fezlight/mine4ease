@@ -1,5 +1,13 @@
 name: Build
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - feat/*
+      - fix/*
+      - dependabot/*
 
 jobs:
   build_on_linux:
@@ -12,7 +20,7 @@ jobs:
       - name: install yarn
         run: npm i -g yarn
       - name: install dependencies
-        run: yarn install
+        run: yarn install --immutable --immutable-cache --check-cache
       - name: build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -28,7 +36,7 @@ jobs:
       - name: install yarn
         run: npm i -g yarn
       - name: install dependencies
-        run: yarn install
+        run: yarn install --immutable --immutable-cache --check-cache
       - name: build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -44,7 +52,7 @@ jobs:
       - name: install yarn
         run: npm i -g yarn
       - name: install dependencies
-        run: yarn install
+        run: yarn install --immutable --immutable-cache --check-cache
       - name: build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

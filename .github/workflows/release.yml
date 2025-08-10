@@ -17,7 +17,7 @@ jobs:
       - name: install yarn
         run: npm i -g yarn
       - name: install dependencies
-        run: yarn install
+        run: yarn install --immutable --immutable-cache --check-cache
       - name: publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -33,7 +33,7 @@ jobs:
       - name: install yarn
         run: npm i -g yarn
       - name: install dependencies
-        run: yarn install
+        run: yarn install --immutable --immutable-cache --check-cache
       - name: publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -49,7 +49,7 @@ jobs:
       - name: install yarn
         run: npm i -g yarn
       - name: install dependencies
-        run: yarn install
+        run: yarn install --immutable --immutable-cache --check-cache
       - name: publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
