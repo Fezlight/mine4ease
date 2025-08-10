@@ -92,6 +92,8 @@ export class InstallModTask extends Task {
       mod.relativePath = join(INSTANCE_PATH, this._instance.id);
 
       if (this._download) {
+        logger.debug(`Downloading mod ${mod.name} ...`);
+
         let downloadRequest = new DownloadRequest();
         downloadRequest.file = mod;
         downloadRequest.mirrors = CURSE_FORGE_MIRRORS_URL;
@@ -115,6 +117,8 @@ export class InstallModTask extends Task {
     else if (this._mod.apiType === ApiType.FEEDTHEBEAST) {
 
       if (this._download) {
+        logger.debug(`Downloading mod ${this._mod.name} ...`);
+
         let file = Object.assign(new Mod(), this._mod);
         file.relativePath = join(INSTANCE_PATH, this._instance.id);
 

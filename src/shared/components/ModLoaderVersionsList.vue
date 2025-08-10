@@ -30,6 +30,7 @@ function retrieveVersions(modLoader: ModLoader | undefined = props.modLoader) {
         break;
       case ModLoader.FORGE:
         selectVersion(mlVersions.filter(mlVersion => mlVersion.recommended)[0]);
+        if(!selectedVersion.value) selectVersion(mlVersions[0]);
         break;
       case ModLoader.FABRIC:
       case ModLoader.QUILT:
@@ -55,7 +56,7 @@ function selectVersion(version: Version) {
   <div class="space-y-2" v-if="modLoader">
     <label for="version">{{ title }} version</label>
     <select id="version" class="w-full" v-model="selectedVersion" v-on:change="selectVersion(selectedVersion!)">
-      <option v-show="modloaderVersions?.length == 0" disabled :value="undefined">No {{ title }} version available</option>
+      <option v-if="modloaderVersions?.length === 0" disabled :value="undefined">No {{ title }} version available</option>
       <option v-for="version of modloaderVersions" :value="version" :selected="version.recommended">
         {{ version.name }} {{ version.recommended ? "<RECOMMENDED>" : ''}}
       </option>

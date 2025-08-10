@@ -65,7 +65,7 @@ async function searchModPack() {
 
   modpacks.value = [];
 
-  return getByType(apiType).searchModPacks(filter.value, ModLoader.FORGE, selectedVersion.value, selectedCategories.value)
+  return getByType(apiType).searchModPacks(filter.value, [ModLoader.FORGE, ModLoader.NEOFORGE], selectedVersion.value, selectedCategories.value)
   .then(packs => modpacks.value = <ModPack[]>packs);
 }
 
@@ -125,7 +125,7 @@ const listener = new TaskListeners();
           <LoadingComponent class="flex flex-col overflow-y-auto flex-grow" :promise="() => searchModPack()" ref="modpackList">
             <ModPackTile v-for="modpack in modpacks" :modpack="modpack" @redirect="(t: Transitions) => redirect(t.route, emit)" class="mb-4" :key="modpack.id">
               <EventWrapper :listener="listener" v-slot:default="s">
-                <button type="button" class="px-5 py-2.5 primary inline-block space-x-2" v-on:click="s.createEvent(installModPack(modpack), i => emit('createInstance', i, false))">
+                <button type="button" class="px-5 py-2.5 primary inline-block space-x-2" v-on:click="s.createEvent(() => installModPack(modpack), i => emit('createInstance', i, false))">
                   <font-awesome-icon :icon="['fas', 'add']" />
                   <span>Install</span>
                 </button>

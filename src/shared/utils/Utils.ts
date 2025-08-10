@@ -21,7 +21,7 @@ export function transformDownloadCount(downloadCount: number | undefined) {
   }
 }
 
-export function updateState(object: TaskEvent, _event: any, value: TaskEvent, endCallback?: Function) {
+export function updateState(object: TaskEvent, value: TaskEvent, endCallback?: Function) {
   if(object.id == value.id) {
     object.state = value.state;
     if(value.state === 'FAILED') {
@@ -29,5 +29,11 @@ export function updateState(object: TaskEvent, _event: any, value: TaskEvent, en
     } else if(value.state === 'FINISHED' && endCallback) {
       endCallback(value.object)
     }
+  }
+}
+
+export function updateProgress(object: TaskEvent, value: TaskEvent) {
+  if (object.id == value.id) {
+    object.progress = value.progress;
   }
 }

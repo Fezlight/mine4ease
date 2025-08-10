@@ -285,7 +285,7 @@ export class AuthProvider {
     const codePromise = authCodeListener.start();
     authWindow.loadURL(navigateUrl);
     const code = await codePromise;
-    authCodeListener.close();
+    authCodeListener.stop();
     return code;
   }
 }

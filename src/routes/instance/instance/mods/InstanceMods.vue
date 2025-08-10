@@ -96,14 +96,14 @@ const listener = new TaskListeners();
         <EventWrapper :listener="listener" v-slot:default="s" v-if="mod.isUpdateNeeded">
           <button type="button" class="px-5 py-2.5 secondary inline-block space-x-2"
                   ref="updateButton"
-                  v-on:click="s.createEvent(updateMod(mod), () => mod.isUpdateNeeded = false)">
+                  v-on:click="s.createEvent(() => updateMod(mod), () => mod.isUpdateNeeded = false)">
             <font-awesome-icon :icon="['fas', 'circle-up']" />
             <span>Update</span>
           </button>
         </EventWrapper>
         <EventWrapper :listener="listener" v-slot:default="s">
           <button type="button" class="px-5 py-2.5 danger inline-block space-x-2"
-                  v-on:click="s.createEvent(deleteMod(mod), (m: Mod) => mods?.delete(String(m.id)))">
+                  v-on:click="s.createEvent(() => deleteMod(mod), (m: Mod) => mods?.delete(String(m.id)))">
             <font-awesome-icon :icon="['fas', 'trash-can']" />
             <span>Delete</span>
           </button>

@@ -20,9 +20,9 @@ import {SETTINGS_KEY} from "../config/CacheConfig";
 import {$cacheProvider, $downloadService, $eventEmitter, $utils, logger} from "../config/ObjectFactoryConfig.ts";
 import {$globalSettingsService} from "./GlobalSettingsService.ts";
 import {$minecraftService} from "./MinecraftService.ts";
-import {InstallModPackTask} from "../task/InstallModPackTask.ts";
 import {join} from "path";
 import {UpdateInstanceTask} from "../task/UpdateInstanceTask.ts";
+import {installModPack} from "../task/InstallModPackTask.ts";
 
 export const INSTANCE_FILE = "instance.json";
 
@@ -58,7 +58,7 @@ export class InstanceService implements IInstanceService {
 
   async createInstanceByModPack(modpack: ModPack): Promise<string> {
     let gameVersion = modpack?.gameVersion === "" ? modpack.gameVersions?.[0] : modpack.gameVersion;
-    let task = new InstallModPackTask(modpack.id, modpack.apiType, gameVersion);
+    let task = installModPack(modpack.id, modpack.apiType, gameVersion);
     $eventEmitter.emit(ADD_TASK_EVENT_NAME, task);
     return task.id;
   }

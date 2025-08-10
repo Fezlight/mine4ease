@@ -138,7 +138,7 @@ const listener = new TaskListeners();
           </button>
           <EventWrapper :listener="listener" v-slot:default="s" v-if="isUpdateNeeded">
             <button type="button" class="secondary px-5 py-2.5 space-x-2"
-                    v-on:click="s.createEvent(update(), () => isUpdateNeeded = false)">
+                    v-on:click="s.createEvent(() => update(), () => isUpdateNeeded = false)">
               <span>Update available</span>
               <font-awesome-icon :icon="['fas', 'circle-arrow-up']" beat />
             </button>
@@ -146,7 +146,7 @@ const listener = new TaskListeners();
           <EventWrapper :listener="listener" :disable-state-change="true" v-else>
             <template #default="s">
               <button type="button" class="primary px-5 py-2.5"
-                      v-on:click="s.createEvent(launchGame(), () => loadingGame = false)" :disabled="loadingGame">
+                      v-on:click="s.createEvent(() => launchGame(), () => loadingGame = false)" :disabled="loadingGame">
                 Play
                 <font-awesome-icon v-if="loadingGame" class="text-white ml-2 w-3.5 h-3.5" :icon="['fas', 'spinner']" spin />
                 <font-awesome-icon v-else class="text-white ml-2 w-3.5 h-3.5" :icon="['fas', 'play']" bounce />

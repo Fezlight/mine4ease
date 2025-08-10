@@ -3,7 +3,7 @@ import {RuleControl} from "./Rule";
 
 export class DownloadRequest extends RuleControl{
   file: File;
-  mirrors?: string[];
+  _mirrors?: string[];
 
   needDownload(): boolean {
     // No rule = true or value of all rules with AND
@@ -13,5 +13,13 @@ export class DownloadRequest extends RuleControl{
     cond &&= this.file?.isHashInvalid();
 
     return cond;
+  }
+
+  set mirrors(value: string[]) {
+    this._mirrors = [...value];
+  }
+
+  get mirrors(): string[] | undefined {
+    return this._mirrors;
   }
 }

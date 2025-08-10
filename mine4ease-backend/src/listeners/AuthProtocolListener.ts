@@ -1,6 +1,7 @@
 import {protocol} from "electron";
+import {EventListeners} from "./EventListeners.ts";
 
-export class AuthProtocolListener {
+export class AuthProtocolListener implements EventListeners {
   hostName: string;
 
   constructor(hostName: string) {
@@ -28,7 +29,7 @@ export class AuthProtocolListener {
     });
   }
 
-  close() {
+  stop() {
     protocol.unhandle(this.host);
   }
 }
