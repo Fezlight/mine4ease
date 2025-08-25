@@ -11,7 +11,7 @@
   }
 
   .max-window-sub-content {
-    min-height: calc(100vh - 120px - 30px);
+    min-height: calc(100vh - 130px - 30px);
   }
 
   /* Chrome, Edge, and Safari */
@@ -65,6 +65,10 @@ button[type=submit] {
 
 .secondary {
   @apply bg-amber-600/60 hover:bg-amber-600/50 focus:ring-amber-600/20;
+}
+
+.normal {
+  @apply bg-gray-600/60 hover:bg-gray-600/50 focus:ring-gray-600/20;
 }
 
 button {

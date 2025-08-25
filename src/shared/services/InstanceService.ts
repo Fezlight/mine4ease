@@ -43,14 +43,30 @@ export class InstanceService implements IInstanceService {
       let modpack: CurseModPack = <CurseModPack>instance.modPack;
 
       return getByType(ApiType.CURSE).getFileById(undefined, instance.modPack.id, new ModPack(), instance.versions.minecraft.name, instance.modLoader)
-      .then((modPack: ModPack[] | ModPack) => {
-        if (Array.isArray(modPack)) {
-          return modPack.findIndex(m => m.installedFileDate.getTime() > new Date(modpack.installedFileDate).getTime()) != -1;
+      .then((responseModPack: ModPack[] | ModPack) => {
+        if (modpack.installedFileDate) {
+          return this.checkUpdateByDate(responseModPack, modpack);
+        } else if (modpack.installedFileId) {
+          return this.checkUpdateByFileId(responseModPack, modpack);
         }
-        return modPack.installedFileDate.getTime() > new Date(modpack.installedFileDate).getTime();
+        return false;
       });
     }
 
     return false;
+  }
+
+  checkUpdateByDate(responseModPack: ModPack[] | ModPack, modpack: CurseModPack): boolean {
+    if (Array.isArray(responseModPack)) {
+      return responseModPack.findIndex(m => m.installedFileDate.getTime() > new Date(modpack.installedFileDate).getTime()) != -1;
+    }
+    return responseModPack.installedFileDate.getTime() > new Date(modpack.installedFileDate).getTime();
+  }
+
+  checkUpdateByFileId(responseModPack: ModPack[] | ModPack, modpack: CurseModPack): boolean {
+    if (Array.isArray(responseModPack)) {
+      return responseModPack.findIndex(m => m.installedFileId > modpack.installedFileId) != -1;
+    }
+    return responseModPack.installedFileId > modpack.installedFileId;
   }
 }

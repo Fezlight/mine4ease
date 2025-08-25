@@ -118,6 +118,7 @@ export class InstallModPackCurseTask extends Task {
         curseModPack.id = modpack.id;
         curseModPack.title = modpack.displayName;
         curseModPack.installedFileId = file.installedFileId;
+        curseModPack.installedFileDate = file.installedFileDate;
 
         this._instance.id = uuidv4();
         this._instance.title = modpack.displayName;
