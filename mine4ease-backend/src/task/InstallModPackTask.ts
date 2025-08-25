@@ -101,7 +101,7 @@ export class InstallModPackCurseTask extends Task {
         let modLoader: ModLoader | undefined;
         let modloaderId: string | undefined;
         for (let m of manifest.minecraft.modLoaders) {
-            modLoader = this.findModloaderByString(m.id);
+            modLoader = findModloaderByString(m.id);
             modloaderId = m.id;
             if (modLoader) break;
         }
@@ -165,23 +165,25 @@ export class InstallModPackCurseTask extends Task {
 
         return this._instance;
     }
-
-    private findModloaderByString(modloaderId: string): ModLoader | undefined {
-        let modloader: ModLoader | undefined;
-        if (modloaderId.startsWith('neoforge-')) {
-            modloader = ModLoader.NEOFORGE;
-        } else if (modloaderId.startsWith('forge-')) {
-            modloader = ModLoader.FORGE;
-        }
-        return modloader;
-    }
 }
+
+
 
 async function getMinecraftVersion(minecraftVersion: string): Promise<Version | undefined> {
     return getVersion(getByType(ApiType.CURSE).searchVersions(), minecraftVersion);
 }
 
-async function getModLoaderVersion(modloader: ModLoader, minecraftVersion: string, modloaderId: string): Promise<any> {
+export function findModloaderByString(modloaderId: string): ModLoader | undefined {
+    let modloader: ModLoader | undefined;
+    if (modloaderId.startsWith('neoforge-')) {
+        modloader = ModLoader.NEOFORGE;
+    } else if (modloaderId.startsWith('forge-')) {
+        modloader = ModLoader.FORGE;
+    }
+    return modloader;
+}
+
+export async function getModLoaderVersion(modloader: ModLoader, minecraftVersion: string, modloaderId: string): Promise<any> {
     let version = await getVersion(getByType(ApiType.CURSE).searchVersions(minecraftVersion, modloader), modloaderId);
 
     if (!version) throw new Error("Unable to find version from manifest");
@@ -207,7 +209,7 @@ async function getModLoaderVersion(modloader: ModLoader, minecraftVersion: strin
     throw new Error("Not yet implemented");
 }
 
-async function getVersion(promise: Promise<Version[]>, versionName: string): Promise<Version | undefined> {
+export async function getVersion(promise: Promise<Version[]>, versionName: string): Promise<Version | undefined> {
     let versionList = await promise;
 
     let result: Version | undefined;

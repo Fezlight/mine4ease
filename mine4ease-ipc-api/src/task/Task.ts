@@ -62,6 +62,7 @@ export interface TaskOptions {
 
 export const TASK_EVENT_NAME = "task-event";
 export const TASK_PROCESSING_EVENT_NAME = "task-processing-event";
+export const MAIN_TASK_FINISHED_EVENT_NAME = "main-task-finished-event";
 export const ADD_TASK_EVENT_NAME = "add-task-event";
 export const ADD_MOD_EVENT_NAME = "add-mod-event";
 export const DELETE_MOD_EVENT_NAME = "delete-mod-event";

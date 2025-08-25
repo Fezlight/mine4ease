@@ -63,7 +63,7 @@ async function update(): Promise<string> {
   if (!instance?.value?.id) {
     return "";
   }
-  return $instanceService!.updateInstance(instance?.value?.id)
+  return $instanceService!.updateInstance(instance?.value?.id);
 }
 
 function openInstanceFolder() {

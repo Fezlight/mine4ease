@@ -5,13 +5,20 @@ import {
   DELETE_MOD_EVENT_NAME,
   INSTANCE_PATH,
   InstanceSettings,
+  MAIN_TASK_FINISHED_EVENT_NAME,
   Mod,
+  ModLoader,
   Task,
   TaskRunner
 } from "mine4ease-ipc-api";
 import {$eventEmitter, logger} from "../config/ObjectFactoryConfig.ts";
 import {EventEmitter} from "events";
-import {downloadModPack, extractAndReadManifest} from "./InstallModPackTask.ts";
+import {
+  downloadModPack,
+  extractAndReadManifest,
+  findModloaderByString,
+  getModLoaderVersion
+} from "./InstallModPackTask.ts";
 import {$modService} from "../services/ModService.ts";
 import {UninstallModTask} from "./UninstallModTask.ts";
 import {InstallModTask} from "./InstallModTask.ts";
@@ -39,6 +46,8 @@ export class UpdateInstanceTask extends Task {
     }
 
     await this._taskRunner.process();
+
+    this._eventEmitter.emit(MAIN_TASK_FINISHED_EVENT_NAME);
 
     return this._instance;
   }
@@ -69,7 +78,19 @@ export class UpdateModPackCurseTask extends Task {
 
     let { extractReq, manifest } = await extractAndReadManifest(file);
 
+    let modLoader: ModLoader | undefined;
+    let modloaderId: string | undefined;
+    for (let m of manifest.minecraft.modLoaders) {
+      modLoader = findModloaderByString(m.id);
+      modloaderId = m.id;
+      if (modLoader) break;
+    }
+
+    if (!modLoader || !modloaderId) throw new Error("Unable to find modloader from manifest");
+
     let mods = await $modService.getInstanceMods(this._instance.id);
+
+    let modLoaderVersion = await getModLoaderVersion(modLoader, this._instance.versions.minecraft.name, modloaderId);
 
     let modToInstall: any[] = [];
     let allMods: any[] = [];
@@ -117,6 +138,10 @@ export class UpdateModPackCurseTask extends Task {
     await $modService.saveAllMods(mods, this._instance.id);
 
     this._instance.versions.self = manifest.version;
+    this._instance.versions = {
+      ...this._instance.versions,
+      ...modLoaderVersion
+    };
     (<CurseModPack>this._instance.modPack).installedFileId = file.installedFileId;
     (<CurseModPack>this._instance.modPack).installedFileDate = file.installedFileDate;
     await $instanceService.saveInstanceSettings(this._instance);
