@@ -35,7 +35,7 @@ async function getModDescription(id: string): Promise<string | undefined> {
 
 function eventListeners() {
   let spoiler = document.getElementsByClassName("spoiler");
-  for (var i = 0; i < spoiler.length; i++) {
+  for (let i = 0; i < spoiler.length; i++) {
     spoiler[i].addEventListener("click", () => {
       spoiler[i].classList.toggle("shown");
     }, false);

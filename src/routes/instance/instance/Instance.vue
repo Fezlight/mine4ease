@@ -8,11 +8,13 @@ import ProgressBar from "../../../shared/components/ProgressBar.vue";
 import {InstanceService} from "../../../shared/services/InstanceService";
 import EventWrapper from "../../../shared/components/events/EventWrapper.vue";
 import {TaskListeners} from "../../../shared/listeners/TaskListeners.ts";
+import ModalBase from "../../../shared/components/modal/modal-base/ModalBase.vue";
 
 const instance: Ref<InstanceSettings | undefined> | undefined = inject('currentInstance');
 
 const route = useRoute();
 const router = useRouter();
+const modalUpdateAvailable: Ref<typeof ModalBase | null> = ref(null);
 const $instanceService: InstanceService | undefined = inject('instanceService');
 const $minecraftService: IMinecraftService | undefined = inject('minecraftService');
 const $authService: IAuthService | undefined = inject('authService');
@@ -40,13 +42,13 @@ async function launchGame(): Promise<string> {
 
   loadingGame.value = true;
   return $authService!.getProfile()
-    .then(() => $minecraftService.launchGame(<InstanceSettings>instance.value))
-    .catch((e: Error) => {
-      if (e.message.includes('MINECRAFT_AUTHENTICATION_FAILED')) {
-        router.push({path: '/login'});
-      }
-      throw e;
-    });
+  .then(() => $minecraftService.launchGame(<InstanceSettings>instance.value))
+  .catch((e: Error) => {
+    if (e.message.includes('MINECRAFT_AUTHENTICATION_FAILED')) {
+      router.push({path: '/login'});
+    }
+    throw e;
+  });
 }
 
 function goToSettings() {
@@ -89,11 +91,11 @@ const listener = new TaskListeners();
 </script>
 <template>
   <InstanceContent v-if="instance" class="relative" :fluid="true">
-    <section class="border-b-2 border-gray-700/30 flex flex-col justify-between sticky top-0 bg-gray-800 p-6 min-h-[120px]">
-      <h2>
+    <section class="border-b-2 border-gray-700/30 flex flex-col justify-between sticky top-0 bg-gray-800 p-6 h-[130px]">
+      <h2 class="inline-block space-x-1">
         <span>{{ instance.title }}</span>
-        <span class="text-xs" v-if="instance?.versions?.self">
-          v{{ instance?.versions?.self }}
+        <span class="text-xs text-yellow-600" v-if="instance?.versions?.self">
+          {{ instance?.versions?.self.startsWith("v") ? instance?.versions?.self : 'v' + instance?.versions?.self }}
         </span>
       </h2>
       <div class="flex flex-row items-end">
@@ -137,8 +139,15 @@ const listener = new TaskListeners();
             <span>Delete instance</span>
           </button>
           <EventWrapper :listener="listener" v-slot:default="s" v-if="isUpdateNeeded">
+            <modal-base ref="modalUpdateAvailable"
+                        :id="'modal-1'"
+                        :promise="() => s.createEvent(() => update(), () => isUpdateNeeded = false)"
+                        :cancel-callback="() => isUpdateNeeded = false"
+                        cancel-message="No, just launch"
+                        alert-message="An update is available, would you like to download it ?">
+            </modal-base>
             <button type="button" class="secondary px-5 py-2.5 space-x-2"
-                    v-on:click="s.createEvent(() => update(), () => isUpdateNeeded = false)">
+                    v-on:click="modalUpdateAvailable?.openCloseModal()">
               <span>Update available</span>
               <font-awesome-icon :icon="['fas', 'circle-arrow-up']" beat />
             </button>

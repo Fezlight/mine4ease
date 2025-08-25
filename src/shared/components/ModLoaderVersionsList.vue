@@ -27,6 +27,7 @@ function retrieveVersions(modLoader: ModLoader | undefined = props.modLoader) {
     switch (modLoader) {
       case ModLoader.NEOFORGE:
         selectVersion(mlVersions.filter(mlVersion => mlVersion.recommended)[0]);
+        if(!selectedVersion.value) selectVersion(mlVersions[0]);
         break;
       case ModLoader.FORGE:
         selectVersion(mlVersions.filter(mlVersion => mlVersion.recommended)[0]);
@@ -55,7 +56,7 @@ function selectVersion(version: Version) {
 <template>
   <div class="space-y-2" v-if="modLoader">
     <label for="version">{{ title }} version</label>
-    <select id="version" class="w-full" v-model="selectedVersion" v-on:change="selectVersion(selectedVersion!)">
+    <select id="version" class="w-full required" v-model="selectedVersion" v-on:change="selectVersion(selectedVersion!)" required>
       <option v-if="modloaderVersions?.length === 0" disabled :value="undefined">No {{ title }} version available</option>
       <option v-for="version of modloaderVersions" :value="version" :selected="version.recommended">
         {{ version.name }} {{ version.recommended ? "<RECOMMENDED>" : ''}}

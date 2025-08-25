@@ -12,6 +12,7 @@ export const fetchWithRetry = async (url: string, logger: Logger, options = {}, 
 
     logger.error(`Fetching url ${url} : Attempting failed with ${r.status} - ${r.statusText}`);
     if((r.status === 404 || r.status === 403) && mirrors.length > 0) {
+      mirrors = [...mirrors];
       let mirror = mirrors[0];
       let newUrl = new URL(url);
       newUrl.hostname = mirror;

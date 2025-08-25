@@ -22,7 +22,9 @@ export class LaunchInstanceTask extends Task {
     super($eventEmitter, logger, () => "Launching Instance ...");
     this._instance = instance;
     this._subEventEmitter = new EventEmitter();
-    this._taskRunner = new TaskRunner(logger, this._subEventEmitter, $eventEmitter);
+    this._taskRunner = new TaskRunner(logger, this._subEventEmitter, $eventEmitter, {
+      mainTaskId: this.id
+    });
   }
 
   async run(): Promise<any> {

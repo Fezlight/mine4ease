@@ -169,8 +169,8 @@ app.whenReady().then(() => {
     win?.webContents.send(TASK_EVENT_NAME, taskEvent);
   });
 
-  $eventEmitter.on(TASK_PROCESSING_EVENT_NAME, (progress: number) => {
-    win?.webContents.send(TASK_PROCESSING_EVENT_NAME, progress);
+  $eventEmitter.on(TASK_PROCESSING_EVENT_NAME, (taskEvent: TaskEvent) => {
+    win?.webContents.send(TASK_PROCESSING_EVENT_NAME, taskEvent);
   });
 
   $eventEmitter.on(GAME_LAUNCHED_EVENT_NAME, () => {
