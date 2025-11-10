@@ -114,7 +114,7 @@ export function getCurseForgeFileUrl(fileId: number, name: string) {
 }
 
 export class CurseApiService implements ApiService {
-  private static toFile(object: Mod | ModPack, v: any) {
+  private static toFile(object: Mod | ModPack | Shader, v: any) {
     object._url = v.downloadUrl ?? v.latestFiles?.[0]?.downloadUrl;
     object.filename = v.fileName;
     object.size = v.fileLength ?? v.latestFiles?.[0]?.fileLength;
@@ -149,8 +149,7 @@ export class CurseApiService implements ApiService {
 
   async searchShaders(filter: string, gameVersion: string, modLoader?: ModLoader, category?: Category[]): Promise<Shader[]> {
     return this.searchItem(filter, CURSE_FORGE_MINECRAFT_SHADERPACKS_CLASS_ID,
-      () => {
-      }, gameVersion, modLoader ? [modLoader] : [], category);
+      this.toShader, gameVersion, modLoader ? [modLoader] : [], category);
   }
 
   async getFileById<T extends Mod | ModPack>(id: number | undefined, modId: number, type: T, gameVersion: string, modLoader?: ModLoader): Promise<T[] | T> {
@@ -327,6 +326,23 @@ export class CurseApiService implements ApiService {
     CurseApiService.toFile(mod, v);
     return mod;
   }
+
+    private toShader(v: any, gameVersion: string | undefined, modLoader?: ModLoader): Shader {
+        let shader = new Shader();
+        shader.id = v.modId ?? v.id;
+        if (v.modId) {
+            shader.installedFileId = v.id;
+            shader.installedFileDate = new Date(v.fileDate);
+        }
+        shader.displayName = v.name;
+        shader.gameVersion = gameVersion;
+        shader.apiType = ApiType.CURSE;
+        shader.summary = v.summary;
+        shader.iconUrl = v.logo?.url;
+        shader.authors = v.authors;
+        CurseApiService.toFile(shader, v);
+        return shader;
+    }
 
   private toModPack(v: any, gameVersion: string | undefined, modLoader: ModLoader | undefined): ModPack {
     let modPack = new ModPack();

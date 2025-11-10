@@ -200,6 +200,9 @@ app.whenReady().then(() => {
     if (type === 'mods') {
       const url = join(appDirectory, INSTANCE_PATH, instanceId, "mods.json");
       return net.fetch('file://' + url);
+    } else if (type === 'shaders') {
+        const url = join(appDirectory, INSTANCE_PATH, instanceId, "shaders.json");
+        return net.fetch('file://' + url);
     }
     return Promise.resolve(new Response());
   })

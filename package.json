@@ -12,7 +12,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@azure/msal-node": "^2.15.0",
+    "@azure/msal-node": "^3.8.1",
     "@fortawesome/fontawesome-free": "^6.6.0",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/free-brands-svg-icons": "^6.6.0",
@@ -44,6 +44,8 @@
     "@types/decompress": "^4.2.7",
     "@types/semver": "^7.5.8",
     "@types/uuid": "^9.0.8",
+    "@types/markdown-it-container": "^2.0.10",
+    "@types/markdown-it": "^14.1.2",
     "@vitejs/plugin-vue": "^5.1.4",
     "@eslint/config-array": "^0.18.0",
     "@eslint/object-schema": "^2.1.4",

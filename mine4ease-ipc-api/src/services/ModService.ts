@@ -13,7 +13,7 @@ export interface IModService {
   /**
    * Delete a mod from an instance
    *
-   * @param mod mod to add
+   * @param mod mod to delete
    * @param instance instance object
    */
   deleteMod(mod: Mod, instance: InstanceSettings): Promise<string>;

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import Tile from "../../../../shared/components/Tile.vue";
 import {inject, ref, Ref, watchEffect} from "vue";
-import {InstanceSettings, Mod} from "mine4ease-ipc-api";
+import {InstanceSettings, Mod, Shader} from "mine4ease-ipc-api";
 
 const mods: Ref<Map<string, Mod> | undefined> = ref();
+const shaders: Ref<Map<string, Shader> | undefined> = ref();
 const instance: Ref<InstanceSettings | undefined> | undefined = inject('currentInstance');
 
 async function getMods() {
@@ -12,6 +13,14 @@ async function getMods() {
   .catch(() => undefined);
 
   mods.value = modsReq?.mods;
+}
+
+async function getShaders() {
+  let shadersReq = await fetch(`mine4ease-instance://${instance?.value?.id}/shaders`)
+      .then(res => res.json())
+      .catch(() => undefined);
+
+  shaders.value = shadersReq?.shaders;
 }
 
 function isModded() {
@@ -24,6 +33,7 @@ function isModded() {
 watchEffect(() => {
   if (isModded()) {
     getMods();
+    getShaders();
   }
 })
 </script>
@@ -33,7 +43,7 @@ watchEffect(() => {
       <Tile v-if="isModded()" title="Mods" :subtitle="`You have ${mods ? Object.keys(mods).length : 0} mods installed`"
             button-title="Manage mods"
             @action="$router.push({path: `/instance/${instance.id}/mods`})"></Tile>
-      <Tile v-if="isModded()" title="Shaders" subtitle="You have ?? shaders installed"
+      <Tile v-if="isModded()" title="Shaders" :subtitle="`You have ${shaders ? Object.keys(shaders).length : 0} shaders installed`"
             :disabled="true"
             button-title="Manage shaders"
             @action="$router.push({path: `/instance/${instance.id}/shaders`})"></Tile>
