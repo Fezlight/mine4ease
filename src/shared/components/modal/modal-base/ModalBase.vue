@@ -25,7 +25,7 @@ function openCloseModal() {
 function closeModal() {
   hidden.value = false;
   if (props.cancelCallback) {
-    props.cancelCallback();
+    props?.cancelCallback();
   }
 }
 </script>

@@ -4,15 +4,9 @@
   "description": "",
   "main": "index.ts",
   "type": "module",
-  "directories": {
-    "test": "tests"
-  },
   "files": [
     "./dist"
   ],
-  "scripts": {
-    "test": "jest"
-  },
   "keywords": [],
   "author": "FezLight",
   "license": "ISC",

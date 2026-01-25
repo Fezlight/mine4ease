@@ -1,6 +1,6 @@
-import {Account, IAuthService} from "mine4ease-ipc-api";
+import {Account, Services} from "mine4ease-ipc-api";
 
-export class AuthService implements IAuthService {
+export class AuthService implements Services.IAuthService {
   async authenticate(): Promise<any> {
     return window.ipcRenderer.invoke('authService.authenticate');
   }

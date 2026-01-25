@@ -143,7 +143,7 @@ const listener = new TaskListeners();
                         :id="'modal-1'"
                         :promise="() => s.createEvent(() => update(), () => isUpdateNeeded = false)"
                         :cancel-callback="() => isUpdateNeeded = false"
-                        cancel-message="No, just launch"
+                        cancel-message="No, just ignore"
                         alert-message="An update is available, would you like to download it ?">
             </modal-base>
             <button type="button" class="secondary px-5 py-2.5 space-x-2"
