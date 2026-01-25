@@ -45,6 +45,7 @@
     "@eslint/object-schema": "^3.0.0",
     "@types/child-process-promise": "^2.2.6",
     "@types/decompress": "^4.2.7",
+    "@types/node": "24.10.3",
     "@types/semver": "~7.7.0",
     "@vitejs/plugin-vue": "^6.0.3",
     "autoprefixer": "^10.4.23",

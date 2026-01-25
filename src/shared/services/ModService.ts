@@ -1,6 +1,6 @@
-import {ApiType, getByType, InstanceSettings, Mod, Services} from "mine4ease-ipc-api";
+import {ApiType, getByType, IModService, InstanceSettings, Mod} from "mine4ease-ipc-api";
 
-export class ModService implements Services.IModService {
+export class ModService implements IModService {
   addMod(mod: Mod, instance: InstanceSettings): Promise<string> {
     return window.ipcRenderer.invoke('modService.addMod', JSON.stringify(mod), JSON.stringify(instance));
   }

@@ -1,7 +1,7 @@
-import {ApiType, CurseModPack, getByType, InstanceSettings, ModPack, Services} from "mine4ease-ipc-api";
+import {ApiType, CurseModPack, getByType, IInstanceService, InstanceSettings, ModPack} from "mine4ease-ipc-api";
 import {v4 as uuidv4} from "uuid";
 
-export class InstanceService implements Services.IInstanceService {
+export class InstanceService implements IInstanceService {
   async createInstance(instance: InstanceSettings): Promise<InstanceSettings> {
     instance.id = uuidv4();
 

@@ -1,6 +1,6 @@
-import {Services, Settings} from "mine4ease-ipc-api";
+import {IGlobalSettingService, Settings} from "mine4ease-ipc-api";
 
-export class GlobalSettingsService implements Services.IGlobalSettingService {
+export class GlobalSettingsService implements IGlobalSettingService {
   async retrieveSettings(): Promise<Settings> {
     return window.ipcRenderer.invoke('globalSettingsService.retrieveSettings');
   }
