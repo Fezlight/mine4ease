@@ -233,7 +233,7 @@ export class Utils implements IUtils {
     }
 
     this.logger.debug(`Checking if file exist : ${filePath} ...`);
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       nodeFs.access(fullPath, nodeFs.constants.F_OK, (err: any) => {
         if (err) {
           resolve(false);

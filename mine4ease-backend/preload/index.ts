@@ -2,8 +2,8 @@ import {contextBridge, ipcRenderer} from 'electron'
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
-  'invoke': ipcRenderer.invoke,
-  'on': ipcRenderer.on
+  'invoke': (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args),
+  'on': (channel: string, listener: (event: any, ...args: any[]) => void) => ipcRenderer.on(channel, listener)
 })
 
 // --------- Preload scripts loading ---------

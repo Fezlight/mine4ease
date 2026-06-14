@@ -81,18 +81,14 @@ export function getAutoUpdater(): AppUpdater {
 }
 
 function createWindow() {
-  const isWindows = process.platform === 'win32';
-
   win = new BrowserWindow({
     icon: join(process.env.VITE_PUBLIC, 'icon.png'),
-    titleBarStyle: isWindows ? 'hidden' : 'default',
-    ...(isWindows ? {
-      titleBarOverlay: {
-        color: '#00000000',
-        symbolColor: '#ffffff',
-        height: 30
-      }
-    } : {}),
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: '#00000000',
+      symbolColor: '#fff',
+      height: 30
+    },
     width: 1200,
     height: 700,
     minWidth: 1200,
@@ -144,7 +140,7 @@ function createWindow() {
     win.webContents.openDevTools();
   }
 
-  getAutoUpdater().on('update-downloaded', info => {
+  getAutoUpdater().on('update-downloaded', () => {
     dialog.showMessageBox({
       type: 'info',
       message: "An update is available, would you like to restart now ?",
@@ -201,7 +197,9 @@ protocol.registerSchemesAsPrivileged([
     privileges: {
       standard: true,
       secure: true,
-      supportFetchAPI: true
+      supportFetchAPI: true,
+      corsEnabled: true,
+      bypassCSP: true
     }
   },
   {
@@ -209,7 +207,9 @@ protocol.registerSchemesAsPrivileged([
     privileges: {
       standard: true,
       secure: true,
-      supportFetchAPI: true
+      supportFetchAPI: true,
+      corsEnabled: true,
+      bypassCSP: true
     }
   }
 ]);
@@ -259,7 +259,9 @@ app.whenReady().then(() => {
     const [instanceId, assetsName] = instanceAsset.split('/');
 
     const url = join(appDirectory, INSTANCE_PATH, instanceId, ASSETS_PATH, assetsName);
-    return net.fetch('file://' + url);
+    return net.fetch('file://' + url, {
+      bypassCustomProtocolHandlers: true
+    });
   });
 
   protocol.handle('mine4ease-instance', async (request) => {
@@ -269,7 +271,9 @@ app.whenReady().then(() => {
 
     if (type === 'mods') {
       const url = join(appDirectory, INSTANCE_PATH, instanceId, "mods.json");
-      return net.fetch('file://' + url);
+      return net.fetch('file://' + url, {
+        bypassCustomProtocolHandlers: true
+      });
     }
     return Promise.resolve(new Response());
   })

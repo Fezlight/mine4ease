@@ -214,7 +214,7 @@ export async function getVersion(promise: Promise<Version[]>, versionName: strin
 
     let result: Version | undefined;
     for (let version of versionList) {
-        if (version.name.includes(versionName)) {
+        if (version.name === versionName) {
             result = version;
             break;
         }
