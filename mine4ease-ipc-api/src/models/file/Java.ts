@@ -6,12 +6,12 @@ export class Java extends File {
   type?: string;
 
   mainPath(): string {
-    const path = require("node:path");
-    return path.join(JAVA_PATH, this.type ?? "");
+    return JAVA_PATH + "/" + (this.type ?? "");
   }
 
   set path(javaPath: string) {
-    const path = require("node:path");
-    this.subPath = path.parse(javaPath).dir;
+    let parts = javaPath.split(/[/\\]/);
+    parts.pop();
+    this.subPath = parts.join("/");
   }
 }

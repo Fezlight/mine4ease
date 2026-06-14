@@ -198,6 +198,12 @@ export class InstallNeoForgeProcessorTask extends Task {
             case 'SIDE':
               newValue = this._installSide;
               break;
+            case 'ROOT':
+              newValue = join(process.env.APP_DIRECTORY);
+              break;
+            case 'PATCHED':
+              newValue = this._mappings.get(argIdentifier[1]) || "";
+              break;
             case 'BINPATCH':
               let c = new CachedFile();
               c.url = this._mappings.get(argIdentifier[1]) || "";

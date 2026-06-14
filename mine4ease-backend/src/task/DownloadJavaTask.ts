@@ -54,6 +54,12 @@ export class DownloadJavaTask extends Task {
         java.type = this.javaType;
         downloadReq.file = java;
 
+        if (this.osSpecs.OS !== 'windows') {
+          if (filePath.includes('bin/')) {
+            downloadReq.mode = 0o755;
+          }
+        }
+
         this.taskRunner.addTask(new DownloadFileTask(downloadReq, true));
       }
     } else {

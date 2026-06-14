@@ -22,8 +22,7 @@ export abstract class File implements FileControl {
 
   filePath(): string {
     if(this.subPath) {
-      const path = require('node:path');
-      return path.join(this.mainPath(), this.subPath);
+      return this.mainPath() + "/" + this.subPath;
     }
     return this.mainPath();
   }
@@ -32,10 +31,15 @@ export abstract class File implements FileControl {
 
   set url(url: string) {
     if(url) {
-      const path = require("node:path");
-      let parsedPath = path.parse(url);
-      this.name = parsedPath.name;
-      this.extension = parsedPath.ext;
+      let fileName = url.split('/').pop() || "";
+      let dotIndex = fileName.lastIndexOf('.');
+      if (dotIndex !== -1) {
+        this.name = fileName.substring(0, dotIndex);
+        this.extension = fileName.substring(dotIndex);
+      } else {
+        this.name = fileName;
+        this.extension = "";
+      }
     }
     this._url = url;
   }
@@ -65,8 +69,7 @@ export abstract class File implements FileControl {
 
   fullPath(): string {
     if(this.relativePath) {
-      const path = require('node:path');
-      return path.join(this.relativePath, this.filePath());
+      return this.relativePath + "/" + this.filePath();
     }
     return this.filePath();
   }

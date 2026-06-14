@@ -65,7 +65,7 @@ export class InstanceService implements IInstanceService {
 
   async selectInstance(id: string): Promise<void> {
     if (this.cacheProvider.has(SETTINGS_KEY)) {
-      let settings: Settings = await this.cacheProvider.load(SETTINGS_KEY).then(cache => cache?.object);
+      let settings: Settings = await this.cacheProvider.loadObject(SETTINGS_KEY);
       settings.selectedInstance = id;
       await this.cacheProvider.update(SETTINGS_KEY, settings);
     }

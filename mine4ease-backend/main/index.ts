@@ -1,7 +1,7 @@
 import {app, BrowserWindow, dialog, ipcMain, net, protocol, shell} from 'electron'
 import {dirname, join} from 'node:path'
 import {fileURLToPath} from 'node:url'
-import {existsSync, mkdirSync} from "fs";
+import {existsSync, mkdirSync} from "node:fs";
 import {
   ASSETS_PATH,
   GAME_EXITED_EVENT_NAME,
@@ -13,8 +13,33 @@ import {
 } from "mine4ease-ipc-api";
 import {handlerMap} from "../src/config/HandlerConfig";
 import {$cacheProvider, $eventEmitter, logger} from "../src/config/ObjectFactoryConfig";
-import electronUpdater, {type AppUpdater} from 'electron-updater';
+import {autoUpdater, type AppUpdater} from 'electron-updater';
 import 'v8-compile-cache';
+import * as fs from "node:fs";
+import * as crypto from "node:crypto";
+import * as os from "node:os";
+import decompress from "decompress";
+
+// @ts-ignore
+global.nodeFs = fs;
+// @ts-ignore
+global.nodePath = {join, parse: (p: string) => {
+    const parts = p.split(/[/\\]/);
+    const fileName = parts.pop() || "";
+    const dotIndex = fileName.lastIndexOf('.');
+    return {
+      dir: parts.join("/"),
+      name: dotIndex !== -1 ? fileName.substring(0, dotIndex) : fileName,
+      ext: dotIndex !== -1 ? fileName.substring(dotIndex) : ""
+    };
+  }, sep: "/"
+};
+// @ts-ignore
+global.nodeCrypto = crypto;
+// @ts-ignore
+global.nodeOs = os;
+// @ts-ignore
+global.nodeDecompress = decompress;
 
 globalThis.__filename = fileURLToPath(import.meta.url)
 globalThis.__dirname = dirname(__filename)
@@ -35,6 +60,11 @@ process.env.VITE_PUBLIC = process.env.VITE_DEV_SERVER_URL
   ? join(process.env.DIST_ELECTRON, '../public')
   : process.env.DIST
 
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('no-zygote');
+  app.commandLine.appendSwitch('enable-features', 'WaylandLinuxDrmSyncobj');
+}
+
 export let win: BrowserWindow | null
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
@@ -45,29 +75,34 @@ const indexHtml = join(process.env.DIST, 'index.html')
 app.setAppLogsPath(process.env.LOG_DIRECTORY);
 
 export function getAutoUpdater(): AppUpdater {
-  const { autoUpdater } = electronUpdater;
   autoUpdater.logger = logger;
   autoUpdater.autoDownload = true;
   return autoUpdater;
 }
 
 function createWindow() {
+  const isWindows = process.platform === 'win32';
+
   win = new BrowserWindow({
     icon: join(process.env.VITE_PUBLIC, 'icon.png'),
-    titleBarStyle: 'hidden',
-    titleBarOverlay: {
-      color: '#00000000',
-      symbolColor: '#ffffff',
-      height: 30
-    },
+    titleBarStyle: isWindows ? 'hidden' : 'default',
+    ...(isWindows ? {
+      titleBarOverlay: {
+        color: '#00000000',
+        symbolColor: '#ffffff',
+        height: 30
+      }
+    } : {}),
     width: 1200,
     height: 700,
+    minWidth: 1200,
+    minHeight: 700,
     webPreferences: {
       contextIsolation: true,
       nodeIntegrationInWorker: true,
       preload
     },
-  })
+  });
 
   win.on('close', (event) => {
     event.preventDefault();
@@ -78,16 +113,35 @@ function createWindow() {
   });
 
   let directory = process.env.APP_DIRECTORY;
-  if (directory && !existsSync(join(directory))) {
-    mkdirSync(join(directory));
+  if (directory && !existsSync(directory)) {
+    mkdirSync(directory);
   }
 
   if (VITE_DEV_SERVER_URL) {
+    logger.info(`Loading URL: ${VITE_DEV_SERVER_URL}`);
     win.loadURL(VITE_DEV_SERVER_URL);
+    win.webContents.openDevTools();
   } else {
+    logger.info(`Loading File: ${indexHtml}`);
     win.loadFile(indexHtml)
       .then(() => getAutoUpdater())
       .then(autoUpdater => autoUpdater.checkForUpdatesAndNotify());
+  }
+
+  win.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+    logger.error(`Failed to load URL: ${validatedURL} with error: ${errorDescription} (${errorCode})`);
+  });
+
+  win.webContents.on('render-process-gone', (event, details) => {
+    logger.error(`Renderer process gone: ${JSON.stringify(details)}`);
+  });
+
+  win.webContents.on('unresponsive', () => {
+    logger.warn('Renderer process unresponsive');
+  });
+
+  if (process.env.VSCODE_DEBUG) {
+    win.webContents.openDevTools();
   }
 
   getAutoUpdater().on('update-downloaded', info => {
@@ -166,21 +220,37 @@ app.whenReady().then(() => {
   })
 
   $eventEmitter.on(TASK_EVENT_NAME, (taskEvent: TaskEvent) => {
-    win?.webContents.send(TASK_EVENT_NAME, taskEvent);
+    logger.debug(`Sending TASK_EVENT_NAME to renderer: ${JSON.stringify(taskEvent)}`);
+    if (win && !win.isDestroyed()) {
+      win.webContents.send(TASK_EVENT_NAME, taskEvent);
+    } else {
+      logger.warn('Cannot send TASK_EVENT_NAME: window is not available or destroyed');
+    }
   });
 
   $eventEmitter.on(TASK_PROCESSING_EVENT_NAME, (taskEvent: TaskEvent) => {
-    win?.webContents.send(TASK_PROCESSING_EVENT_NAME, taskEvent);
+    logger.debug(`Sending TASK_PROCESSING_EVENT_NAME to renderer: ${JSON.stringify(taskEvent)}`);
+    if (win && !win.isDestroyed()) {
+      win.webContents.send(TASK_PROCESSING_EVENT_NAME, taskEvent);
+    } else {
+      logger.warn('Cannot send TASK_PROCESSING_EVENT_NAME: window is not available or destroyed');
+    }
   });
 
   $eventEmitter.on(GAME_LAUNCHED_EVENT_NAME, () => {
-    win?.minimize();
-    win?.webContents.send(GAME_LAUNCHED_EVENT_NAME);
+    logger.debug(`Sending GAME_LAUNCHED_EVENT_NAME to renderer`);
+    if (win && !win.isDestroyed()) {
+      win.minimize();
+      win.webContents.send(GAME_LAUNCHED_EVENT_NAME);
+    }
   });
 
   $eventEmitter.on(GAME_EXITED_EVENT_NAME, () => {
-    win?.show();
-    win?.webContents.send(GAME_EXITED_EVENT_NAME);
+    logger.debug(`Sending GAME_EXITED_EVENT_NAME to renderer`);
+    if (win && !win.isDestroyed()) {
+      win.show();
+      win.webContents.send(GAME_EXITED_EVENT_NAME);
+    }
   });
 
   protocol.handle('mine4ease-icon', (request) => {

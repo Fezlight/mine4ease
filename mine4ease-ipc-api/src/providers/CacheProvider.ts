@@ -12,10 +12,10 @@ export interface ICacheProvider {
   load(key: string): Promise<Cache | undefined>;
 
   /**
-   * Alias method for load(key: string) but extract object from cache and return it
+   * Alias method for loadObject(key: string) but extract an object from cache and return it
    *
    * @param key key related to object used to retrieve it
-   * @return promise of object or undefined if not found or empty
+   * @return promise of an object or undefined if not found or empty
    */
   loadObject(key: string): Promise<any>
 
@@ -70,8 +70,7 @@ export class CacheProvider implements ICacheProvider {
 
   async load(key: string): Promise<Cache | undefined> {
     return Promise.resolve(this.caches.get(key))
-    .then(cache => cache?.load((f: any) => this.utils.readFile(f)))
-    .catch(() => undefined);
+    .then(cache => cache?.load((f: any) => this.utils.readFile(f)));
   }
 
   async loadObject(key: string): Promise<any> {
