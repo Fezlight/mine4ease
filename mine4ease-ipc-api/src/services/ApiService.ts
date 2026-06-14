@@ -4,6 +4,7 @@ import {Shader} from "../models/file/Shader";
 import {ResourcePack} from "../models/file/ResourcePack";
 import {ModPack} from "../models/file/ModPack";
 import {BasicFile} from "../models/file/BasicFile";
+import path from "node:path";
 
 export enum ApiType {
   CURSE = "CURSE", MODRINTH = "MODRINTH", MINE4EASE = "MINE4EASE", FEEDTHEBEAST = "FEEDTHEBEAST"

@@ -1,9 +1,10 @@
 {
   "name": "mine4ease",
   "private": true,
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "A multi-instance minecraft launcher with an easy way to manage assets for your game",
   "author": "FezLight",
+  "desktopName": "fr.fezlight.mine4ease.desktop",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
@@ -54,7 +55,7 @@
     "electron-builder": "^26.15.3",
     "electron-builder-squirrel-windows": "^26.15.3",
     "eslint": "^9.39.2",
-    "postcss": "^8.5.6",
+    "postcss": "^8.5.15",
     "postcss-import": "^16.1.1",
     "tailwindcss": "^3.4.14",
     "tree-kill": "^1.2.2",

@@ -40,7 +40,26 @@
     "target": [
       "AppImage"
     ],
-    "artifactName": "${productName}-Linux-${version}.${ext}"
+    "artifactName": "${productName}-Linux-${version}.${ext}",
+    "category": "Game"
+  },
+  "flatpak": {
+    "runtime": "org.freedesktop.Platform",
+    "sdk": "org.freedesktop.Sdk",
+    "runtimeVersion": "24.08",
+    "finishArgs": [
+      "--socket=x11",
+      "--socket=wayland",
+      "--share=ipc",
+      "--share=network",
+      "--filesystem=home",
+      "--talk-name=org.freedesktop.Notifications",
+      "--talk-name=org.kde.StatusNotifierWatcher",
+      "--talk-name=com.canonical.AppMenu.Registrar",
+      "--device=dri",
+      "--socket=pulseaudio"
+    ],
+    "useWaylandFlags": true
   },
   "publish": [
     {

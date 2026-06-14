@@ -2,6 +2,7 @@ import {DownloadRequest} from "../models/DownloadRequest";
 import {Utils} from "../utils/Utils";
 import {File} from "../models/file/File";
 import {Logger} from "winston";
+import * as fs from "node:fs";
 
 export const fetchWithRetry = async (url: string, logger: Logger, options = {}, mirrors: string[] = [], retry = 3) => {
   return fetch(url, options)
