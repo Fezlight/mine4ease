@@ -96,34 +96,35 @@ export class InstallNeoForgeTask extends Task {
     this._taskRunner.addTask(new DownloadLibrariesTask(installProfile.libraries, this._minecraftVersion,
       this._installSide, false, this._subEventEmitter));
 
-    const map = new Map<string, string>;
-    const data: Map<string, string> = Object.assign(new Map<string, string>, installProfile.data);
-    Object.entries(data).forEach(([key, value]) => {
-      map.set(key, value[this._installSide]);
-    });
+    const map = new Map<string, string>();
+    for (const [key, value] of Object.entries(installProfile.data)) {
+      map.set(key, (value as any)[this._installSide]);
+    }
 
-    const processors: [] = installProfile.processors;
+    const processors = installProfile.processors as any[];
 
     let needDeleteLZMA = false;
-    processors.forEach((processor: any) => {
+    for (const processor of processors) {
       if (processor.sides && !processor.sides.includes(this._installSide)) {
-        return;
+        continue;
       }
 
       if (processor.args.includes('{BINPATCH}')) {
-        extractRequest.destName = `${this._installSide}.lzma`;
-        extractRequest.destPath = CACHE_PATH;
-        extractRequest.includes = [
+        const extractLZMARequest = new ExtractRequest();
+        extractLZMARequest.file = installerFile;
+        extractLZMARequest.destName = `${this._installSide}.lzma`;
+        extractLZMARequest.destPath = CACHE_PATH;
+        extractLZMARequest.includes = [
           `data/${this._installSide}.lzma`
         ];
 
-        this._taskRunner.addTask(new ExtractFileTask(extractRequest, false));
+        this._taskRunner.addTask(new ExtractFileTask(extractLZMARequest, false));
         needDeleteLZMA = true;
       }
 
       this._taskRunner.addTask(new InstallNeoForgeProcessorTask(processor.jar, processor.classpath, processor.args,
         this._installSide, this._minecraftVersion, map, this._subEventEmitter));
-    });
+    }
 
     if (needDeleteLZMA) {
       this._taskRunner.addTask(new DeleteFileTask(join(CACHE_PATH, `${this._installSide}.lzma`)));
@@ -197,6 +198,9 @@ export class InstallNeoForgeProcessorTask extends Task {
               break;
             case 'SIDE':
               newValue = this._installSide;
+              break;
+            case 'ROOT':
+              newValue = join(process.env.APP_DIRECTORY);
               break;
             case 'BINPATCH':
               let c = new CachedFile();

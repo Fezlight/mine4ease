@@ -18,15 +18,16 @@ export class GlobalSettingsService implements IGlobalSettingService {
     this.logger.info("Retrieving launcher settings ...");
 
     let settings;
-    if (this.cacheProvider.has(SETTINGS_KEY)) {
-      settings = this.cacheProvider.loadObject(SETTINGS_KEY);
-    } else {
-      settings = await this.utils.readFile(SETTINGS_FILE)
-        .catch(() => "{}")
-        .then(JSON.parse);
-    }
-
-    if(!settings) {
+    try {
+      if (this.cacheProvider.has(SETTINGS_KEY)) {
+        settings = await this.cacheProvider.loadObject(SETTINGS_KEY);
+      } else {
+        settings = await this.utils.readFile(SETTINGS_FILE)
+          .catch(() => "{}")
+          .then(JSON.parse);
+      }
+    } catch (e) {
+      this.logger.error("Error while retrieving launcher settings", e);
       settings = {};
     }
 

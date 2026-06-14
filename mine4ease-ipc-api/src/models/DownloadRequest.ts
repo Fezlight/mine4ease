@@ -3,6 +3,7 @@ import {RuleControl} from "./Rule";
 
 export class DownloadRequest extends RuleControl{
   file: File;
+  mode?: number;
   _mirrors?: string[];
 
   needDownload(): boolean {

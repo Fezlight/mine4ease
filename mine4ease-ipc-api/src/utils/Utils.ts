@@ -2,6 +2,15 @@ import {Logger} from "winston";
 import {ExtractRequest} from "../models/ExtractRequest";
 import JSZip from "jszip";
 
+// Global Node.js modules will be set by the environment (backend)
+declare global {
+  var nodeFs: any;
+  var nodePath: any;
+  var nodeCrypto: any;
+  var nodeOs: any;
+  var nodeDecompress: any;
+}
+
 export interface IUtils {
   readFile(filePath: string, relative?: boolean, binary?: boolean): Promise<any>;
 
@@ -23,27 +32,50 @@ export class Utils implements IUtils {
     this.logger = logger;
   }
 
-  saveFile(file: { data: any, path?: string, filename: string, binary?: boolean }): Promise<string> {
-    const path = require("node:path");
-    const fs = require("node:fs");
+  static getBrowserPlatform(): { OS: string; platform: string } {
+    const userAgent = navigator.userAgent.toLowerCase();
+    let OS = "linux";
+    let platform = "x64";
 
+    if (userAgent.indexOf("win") !== -1) OS = "windows";
+    else if (userAgent.indexOf("mac") !== -1) OS = "mac-os";
+
+    if (userAgent.indexOf("arm") !== -1 || userAgent.indexOf("aarch64") !== -1) platform = "arm64";
+
+    return { OS, platform };
+  }
+
+  saveFile(file: { data: any, path?: string, filename: string, binary?: boolean, mode?: number }): Promise<string> {
     let directory = process.env.APP_DIRECTORY;
     if (!directory) {
       throw new Error("Unable to retrieve main directory");
     }
-    directory = path.join(directory, file.path ?? "");
-
-    if (!fs.existsSync(directory)) {
-      fs.mkdirSync(directory, {recursive: true});
+    if (typeof nodePath !== 'undefined') {
+      directory = nodePath.join(directory, file.path ?? "");
+    } else {
+      directory = directory + "/" + (file.path ?? "");
     }
-    let fullPath = path.join(directory, file.filename);
+
+    if (typeof nodeFs !== 'undefined' && !nodeFs.existsSync(directory)) {
+      nodeFs.mkdirSync(directory, {recursive: true});
+    }
+    
+    let fullPath = directory + "/" + file.filename;
+    if (typeof nodePath !== 'undefined') {
+       fullPath = nodePath.join(directory, file.filename);
+    }
+
+    if (typeof nodeFs === 'undefined') {
+      return Promise.reject(new Error("Node.js fs module not available"));
+    }
 
     this.logger?.debug(`Saving file ${file.filename} into ${fullPath} ...`);
     return new Promise((resolve, reject) => {
       const buffer = Buffer.from(file.data);
 
-      const stream = fs.createWriteStream(fullPath, {
+      const stream = nodeFs.createWriteStream(fullPath, {
         encoding: file.binary ? 'binary' : 'utf-8',
+        mode: file.mode
       });
 
       stream.write(buffer, (err) => {
@@ -62,9 +94,6 @@ export class Utils implements IUtils {
   }
 
   readFile(filePath: string, relative: boolean = true, binary: boolean = false): Promise<any> {
-    const path = require("node:path");
-    const fs = require("node:fs");
-
     let fullPath = filePath;
     if (relative) {
       let directory = process.env.APP_DIRECTORY;
@@ -72,19 +101,27 @@ export class Utils implements IUtils {
         throw new Error("Unable to retrieve main directory");
       }
 
-      fullPath = path.join(directory, filePath);
+      if (typeof nodePath !== 'undefined') {
+        fullPath = nodePath.join(directory, filePath);
+      } else {
+        fullPath = directory + "/" + filePath;
+      }
+    }
+
+    if (typeof nodeFs === 'undefined') {
+      return Promise.reject(new Error("Node.js fs module not available"));
     }
 
     this.logger?.debug(`Reading file from ${fullPath} ...`);
     return new Promise((resolve, reject) => {
-      fs.access(fullPath, fs.constants.F_OK, (err) => {
+      nodeFs.access(fullPath, nodeFs.constants.F_OK, (err: any) => {
         if (err) {
           let error = new Error("File does not exist : " + fullPath);
           error.name = "FILE_NOT_FOUND";
           return reject(error);
         }
 
-        const stream = fs.createReadStream(fullPath, {
+        const stream = nodeFs.createReadStream(fullPath, {
           highWaterMark: binary ? 64 * 1024 : undefined,
           encoding: binary ? 'binary' : 'utf-8',
         });
@@ -117,26 +154,30 @@ export class Utils implements IUtils {
   }
 
   deleteFile(filePath: string): Promise<string> {
-    const path = require("node:path");
-    const fs = require("node:fs");
-
     let directory = process.env.APP_DIRECTORY;
     if (!directory) {
       throw new Error("Unable to retrieve main directory");
     }
 
-    let fullPath = path.join(directory, filePath);
+    let fullPath = directory + "/" + filePath;
+    if (typeof nodePath !== 'undefined') {
+      fullPath = nodePath.join(directory, filePath);
+    }
+
+    if (typeof nodeFs === 'undefined') {
+      return Promise.reject(new Error("Node.js fs module not available"));
+    }
 
     this.logger.info(`Deleting file from ${fullPath} ...`);
     return new Promise((resolve, reject) => {
-      fs.access(fullPath, fs.constants.F_OK, (err: NodeJS.ErrnoException | null) => {
+      nodeFs.access(fullPath, nodeFs.constants.F_OK, (err: any) => {
         if (err) {
           let error = new Error("File does not exist : " + fullPath);
           error.name = "FILE_NOT_FOUND";
           return reject(error);
         }
 
-        fs.rmSync(fullPath, {recursive: true, force: true});
+        nodeFs.rmSync(fullPath, {recursive: true, force: true});
 
         return resolve("");
       })
@@ -144,12 +185,13 @@ export class Utils implements IUtils {
   }
 
   async readFileHash(filePath: string): Promise<string> {
-    const crypto = require("node:crypto");
-
     this.logger.debug(`Reading file hash : ${filePath} ...`);
     return this.readFile(filePath, true, true)
     .then((data: ArrayBuffer) => {
-      return crypto.createHash('sha1')
+      if (typeof nodeCrypto === 'undefined') {
+        throw new Error("Node.js crypto module not available");
+      }
+      return nodeCrypto.createHash('sha1')
       .update(Buffer.from(data))
       .digest('hex');
     })
@@ -176,19 +218,23 @@ export class Utils implements IUtils {
   }
 
   async isFileExist(filePath: string): Promise<boolean> {
-    const path = require("node:path");
-    const fs = require("node:fs");
-
     let directory = process.env.APP_DIRECTORY;
     if (!directory) {
       throw new Error("Unable to retrieve main directory");
     }
 
-    let fullPath = path.join(directory, filePath);
+    let fullPath = directory + "/" + filePath;
+    if (typeof nodePath !== 'undefined') {
+      fullPath = nodePath.join(directory, filePath);
+    }
+
+    if (typeof nodeFs === 'undefined') {
+      return Promise.resolve(false);
+    }
 
     this.logger.debug(`Checking if file exist : ${filePath} ...`);
-    return new Promise((resolve, reject) => {
-      fs.access(fullPath, fs.constants.F_OK, (err: NodeJS.ErrnoException | null) => {
+    return new Promise((resolve) => {
+      nodeFs.access(fullPath, nodeFs.constants.F_OK, (err: any) => {
         if (err) {
           resolve(false);
         }
@@ -199,9 +245,6 @@ export class Utils implements IUtils {
   }
 
   async extractFile(extractRequest: ExtractRequest): Promise<void> {
-    const path = require("node:path");
-    const decompress = require("decompress");
-
     let directory = process.env.APP_DIRECTORY;
     if (!directory) {
       throw new Error("Unable to retrieve main directory");
@@ -211,12 +254,20 @@ export class Utils implements IUtils {
       throw new Error("Unable to retrieve file to extract");
     }
 
-    let fullPath = path.join(directory, extractRequest.file.filePath(), extractRequest.file.fileName());
-    let destFullPath = path.join(directory, extractRequest.destPath);
+    let fullPath = directory + "/" + extractRequest.file.filePath() + "/" + extractRequest.file.fileName();
+    let destFullPath = directory + "/" + extractRequest.destPath;
+    if (typeof nodePath !== 'undefined') {
+      fullPath = nodePath.join(directory, extractRequest.file.filePath(), extractRequest.file.fileName());
+      destFullPath = nodePath.join(directory, extractRequest.destPath);
+    }
     let excludes = extractRequest.excludes;
     let includes = extractRequest.includes;
 
-    return decompress(fullPath, destFullPath, {
+    if (typeof nodeDecompress === 'undefined') {
+      return Promise.reject(new Error("Node.js decompress module not available"));
+    }
+
+    return nodeDecompress(fullPath, destFullPath, {
       filter: file => {
         let valid = true;
         if (includes) {
@@ -255,14 +306,15 @@ export class Utils implements IUtils {
   }
 
   getPlatform(): { OS: string; platform: string } {
-    const os = require("node:os");
-
-    let platform = os.machine();
+    if (typeof nodeOs === 'undefined') {
+      return Utils.getBrowserPlatform();
+    }
+    let platform = nodeOs.machine();
     if (platform === 'x86_64') {
-      platform = os.arch() !== 'x64' ? 'x86' : 'x64';
+      platform = nodeOs.arch() !== 'x64' ? 'x86' : 'x64';
     }
 
-    let OS = os.type()
+    let OS = nodeOs.type()
     if (OS === 'Linux') {
       OS = "linux";
     } else if (OS === 'Darwin') {
@@ -280,8 +332,8 @@ export class Utils implements IUtils {
     let os = this.getPlatform().OS;
 
     if(os === 'windows') {
-      return '/bin/javaw.exe';
+      return '/bin/java.exe';
     }
-    return '/bin/javaw'
+    return '/bin/java'
   }
 }

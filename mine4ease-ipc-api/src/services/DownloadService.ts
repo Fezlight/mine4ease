@@ -62,7 +62,8 @@ export class DownloadService implements IDownloadService {
         data: r,
         filename: request.file.fileName(),
         path: request.file.fullPath(),
-        binary: true
+        binary: true,
+        mode: request.mode
       })
     })
     .catch((err: Error) => {
@@ -86,6 +87,20 @@ export class DownloadService implements IDownloadService {
       await this.initFileHash(request.file);
 
       if (!request.needDownload()) {
+        if (request.mode) {
+          let destFile = request.file.fullPath() + "/" + request.file.fileName();
+          let directory = process.env.APP_DIRECTORY;
+          if (directory) {
+            let fullPath = directory + "/" + destFile;
+            try {
+              if (typeof fs !== 'undefined') {
+                fs.chmodSync(fullPath, request.mode);
+              }
+            } catch (e) {
+              this.logger.error(`Error when chmod file ${fullPath}`, e);
+            }
+          }
+        }
         let error = new Error(`No need to download file, use already downloaded file : ${request.file.fileName()}`);
         error.name = "FILE_ALREADY_DOWNLOADED";
         return reject(error);
@@ -99,8 +114,7 @@ export class DownloadService implements IDownloadService {
   }
 
   async initFileHash(file: File): Promise<string> {
-    const path = require("node:path");
-    let destFile = path.join(file.fullPath(), file.fileName());
+    let destFile = file.fullPath() + "/" + file.fileName();
     return this.utils.readFileHash(destFile)
     .then(hash => file.currentHash = hash);
   }

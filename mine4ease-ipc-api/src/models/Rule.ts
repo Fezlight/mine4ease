@@ -1,9 +1,14 @@
+import { Utils } from '../utils/Utils';
+
 export class RuleControl {
   rules?: Rule[];
   installSide?: InstallSide;
 
   isRuleValid(): boolean {
-    return this.rules?.map(r => r.isRuleValid(this.installSide)).reduce((p, c) => p && c) ?? true;
+    const platform = typeof process !== 'undefined' && process.platform ? process.platform : Utils.getBrowserPlatform().platform;
+    const version = ""; // Default version if not in Node
+    const arch = typeof process !== 'undefined' && process.arch ? process.arch : Utils.getBrowserPlatform().OS;
+    return this.rules?.map(r => r.isRuleValid(platform, version, arch, this.installSide)).reduce((p, c) => p && c) ?? true;
   }
 }
 
@@ -17,8 +22,7 @@ export class Rule {
   features: Map<string, string>;
   side?: InstallSide;
 
-  isRuleValid(installSide?: InstallSide) {
-    const os = require('os');
+  isRuleValid(platform: string, osVersion: string, arch: string, installSide?: InstallSide) {
     let cond = true;
 
     if(this.features) {
@@ -26,13 +30,13 @@ export class Rule {
     }
 
     if(this.os) {
-      cond &&= OS[this.os.name as keyof OS] === os.platform();
+      cond &&= OS[this.os.name as keyof OS] === platform;
       if(this.os.version) {
-        cond &&= new RegExp(this.os.version).test(os.version());
+        cond &&= new RegExp(this.os.version).test(osVersion);
       }
 
       if(this.os.arch) {
-        cond &&= os.arch() === this.os.arch;
+        cond &&= arch === this.os.arch;
       }
     }
 

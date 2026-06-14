@@ -6,7 +6,6 @@ export class Instance {
   iconName: string;
 
   fullPath() {
-    const path = require('node:path');
-    return path.join(INSTANCE_PATH, this.id);
+    return INSTANCE_PATH + "/" + this.id;
   }
 }

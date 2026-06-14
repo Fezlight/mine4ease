@@ -37,10 +37,11 @@ export class AuthProvider {
     this.clientApplication = new PublicClientApplication(msalConfig);
 
     cacheProvider.loadObject(CURRENT_ACCOUNT_STORAGE_KEY)
-      .then(object => this.accessToken = object?.accessToken)
-      .catch(e => logger.error("Error when retrieving account profile settings", e))
-    ;
-    cacheProvider.delete(CURRENT_ACCOUNT_STORAGE_KEY);
+      .then(object => {
+        this.accessToken = object?.accessToken;
+        this.refreshToken = object?.refreshToken;
+      })
+      .catch(e => logger.error("Error when retrieving account profile settings", e));
 
     this.cryptoProvider = new CryptoProvider();
     this.customFileProtocolName = REDIRECT_URI.split(":")[0];

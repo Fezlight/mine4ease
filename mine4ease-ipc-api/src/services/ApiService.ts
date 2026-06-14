@@ -66,6 +66,13 @@ export interface ApiService {
   getItemById<T extends Mod | ModPack>(id: number, type: T, gameVersion: string | undefined, modLoader: ModLoader | undefined): Promise<T>;
 
   /**
+   * Search a modloader by its uniquer identifier.
+   *
+   * @param id mod loader id (e.g., neoforge-21.1.233)
+   */
+  getModLoaderById(id: string): Promise<Version>;
+
+  /**
    * Get a file by its identifier with filter by gameVersion, modLoader.
    *
    * @param id file id
@@ -204,6 +211,21 @@ export class CurseApiService implements ApiService {
     }).then((response: any) => {
       return func(response.data, gameVersion, modLoader!);
     });
+  }
+
+  async getModLoaderById(id: string): Promise<Version> {
+    const response = await fetch(CURSE_FORGE_API_URL + `/v1/minecraft/modloader/${id}`, {
+      method: 'GET',
+      headers: {
+        'x-api-key': CURSE_FORGE_API_KEY
+      }
+    });
+    const responseJson: any = await response.json();
+    let responseData = responseJson.data;
+    return {
+      name: responseData.name,
+      url: responseData.url
+    } as Version;
   }
 
   async getModDescription(id: number): Promise<string> {
@@ -427,7 +449,6 @@ export class FeedTheBeastApiService implements ApiService {
           };
           response.id = response.parent;
           response.files = response.files.map(file => {
-            const path = require("node:path");
             let filename = path.parse(file.name);
 
             let f: any;
@@ -541,6 +562,10 @@ export class FeedTheBeastApiService implements ApiService {
   }
 
   searchVersions(gameVersion?: string, modLoader?: ModLoader): Promise<Version[]> {
+    throw new Error("Not yet implemented");
+  }
+
+  getModLoaderById(id: string): Promise<Version> {
     throw new Error("Not yet implemented");
   }
 

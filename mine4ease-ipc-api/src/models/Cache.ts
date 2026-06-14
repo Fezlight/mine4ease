@@ -18,8 +18,11 @@ export class Cache {
     if(!this.path) return this;
     if(this.object) return this;
 
-    const path = require("node:path")
-    await callback(path.join(this.path, this.filename)).then((response: string) => {
+    let fullPath = (this.path ?? "") + "/" + (this.filename ?? "");
+    if (typeof nodePath !== 'undefined') {
+      fullPath = nodePath.join(this.path ?? "", this.filename ?? "");
+    }
+    await callback(fullPath).then((response: string) => {
       this.object = JSON.parse(response);
     }).catch(() => this.object = {});
 
