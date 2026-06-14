@@ -1,2 +1,48 @@
-# Mine4ease
-A multi-instance minecraft launcher with an easy way to manage assets for your game
+# Mine4Ease
+
+Mine4Ease is a multi-instance Minecraft launcher designed to provide an easy way to manage assets and instances for your game. Built with Vue, Vite, and Electron, it offers a modern and user-friendly interface for Minecraft players.
+<br>
+
+| **Create Instance** | **Instance View** |
+| :---: | :---: |
+| ![Create Instance](assets/screenshots/create_instance.png) | ![Instance View](assets/screenshots/instance.png) |
+
+### Features
+
+- 📂 **Multi-Instance Management**: Create and manage multiple Minecraft instances independently.
+- ⚙️ **Mod Loader Support**: Support for popular mod loaders including Fabric, Forge, NeoForge, and Quilt.
+- 📦 **Modpack Integration**: Browse and install modpacks from CurseForge and Feed The Beast (FTB).
+- 🛠️ **Mod Management**: Easily search for and manage mods for your instances.
+- 🔐 **Easy Authentication**: Simple login process to get you into the game quickly.
+- 🗃️ **Asset Management**: Streamlined way to manage your game assets.
+- 📝 **Markdown Support**: Integrated markdown renderer for mod and modpack descriptions.
+
+### Installation
+
+🚀 You can download the latest version of Mine4Ease from the [Releases](https://github.com/FezLight/mine4ease/releases) page.
+
+#### 🪟 Windows
+1. ⏬ Download the `Mine4Ease-Windows-X.X.X-Setup.exe` file.
+2. 🛠️ Run the installer and follow the on-screen instructions.
+3. 🎉 Once installed, you can launch Mine4Ease from your desktop or start menu.
+
+#### 🍎 macOS
+1. ⏬ Download the `Mine4Ease-Mac-X.X.X-Installer.dmg` file.
+2. 📂 Open the `.dmg` file and drag Mine4Ease to your `Applications` folder.
+3. 🚀 Launch Mine4Ease from your `Applications` folder.
+
+#### 🐧 Linux
+1. ⏬ Download the `Mine4Ease-Linux-X.X.X.AppImage` file.
+2. 🔑 Make the file executable:
+   ```bash
+   chmod +x Mine4Ease-Linux-X.X.X.AppImage
+   ```
+3. 🚀 Run the AppImage to launch the application.
+
+### Maintainers
+
+- **FezLight** - *Lead Developer* - [GitHub](https://github.com/FezLight)
+
+### License
+
+This project is licensed under the Apache-2.0 License - see the [LICENSE](LICENSE) file for details.
