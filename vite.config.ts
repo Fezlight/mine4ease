@@ -57,9 +57,6 @@ export default defineConfig(({ command }) => {
             },
           },
         }
-      }),
-      renderer({
-        nodeIntegration: false,
       })
     ],
     optimizeDeps: {
