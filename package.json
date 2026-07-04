@@ -33,7 +33,6 @@
     "markdown-it-sub": "^2.0.0",
     "markdown-it-sup": "^2.0.0",
     "markdown-it-task-lists": "^2.1.1",
-    "mine4ease-ipc-api": "file:./mine4ease-ipc-api",
     "semver": "^7.8.4",
     "uuid": "^14.0.0",
     "v8-compile-cache": "^2.4.0",

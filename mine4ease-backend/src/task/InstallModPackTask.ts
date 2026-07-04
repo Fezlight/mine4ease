@@ -1,9 +1,11 @@
 import {
     ApiType,
     CACHE_PATH,
+    CURSE_FORGE_MIRRORS_URL,
     CurseModPack,
     DownloadRequest,
     ExtractRequest,
+    FeedTheBeastModPack,
     getByType,
     getCurseForgeFileUrl,
     INSTANCE_PATH,
@@ -26,8 +28,6 @@ import {$instanceService} from "../services/InstanceService";
 import {InstallModTask} from "./InstallModTask";
 import {DeleteFileTask, DownloadFileTask, ExtractFileTask} from "./FileTask";
 import {$modService} from "../services/ModService";
-import {CURSE_FORGE_MIRRORS_URL} from "../../../mine4ease-ipc-api";
-import {FeedTheBeastModPack} from "../../../mine4ease-ipc-api/src/models/modpack/FeedTheBeastModPack.ts";
 import path from "node:path";
 
 export function installModPack(modpackId: number, apiType: ApiType, gameVersion?: string, versionId?: number) {
@@ -112,7 +112,7 @@ export class InstallModPackCurseTask extends Task {
 
         if (!minecraftVersion) throw new Error("Unable to find minecraft version from manifest");
 
-        let modLoaderVersion = await getModLoaderVersion(modLoader, modloaderId);
+        let modLoaderVersion = await getModLoaderVersion(modLoader, modloaderId, minecraftVersion.name);
 
         let curseModPack = new CurseModPack();
         curseModPack.id = modpack.id;
@@ -179,11 +179,17 @@ export function findModloaderByString(modloaderId: string): ModLoader | undefine
         modloader = ModLoader.NEOFORGE;
     } else if (modloaderId.startsWith('forge-')) {
         modloader = ModLoader.FORGE;
+    } else if (modloaderId.startsWith('fabric-')) {
+        modloader = ModLoader.FABRIC;
     }
     return modloader;
 }
 
-export async function getModLoaderVersion(modloader: ModLoader, modloaderId: string): Promise<any> {
+export async function getModLoaderVersion(modloader: ModLoader, modloaderId: string, minecraftVersion: string): Promise<any> {
+    if (modloader === ModLoader.FABRIC) {
+        modloaderId += `-${minecraftVersion}`;
+    }
+
     let version = await getByType(ApiType.CURSE).getModLoaderById(modloaderId);
 
     if (!version) throw new Error("Unable to find version from manifest");
@@ -262,7 +268,7 @@ export class InstallModPackFeedTheBeastTask extends Task {
 
         if (!minecraftVersion) throw new Error("Unable to find minecraft version from modpack");
 
-        let modLoaderVersion = await getModLoaderVersion(modLoader, modloaderId);
+        let modLoaderVersion = await getModLoaderVersion(modLoader, modloaderId, minecraftVersion.name);
 
         let feedTheBeastModPack = new FeedTheBeastModPack();
         feedTheBeastModPack.title = selectedModPack.displayName;

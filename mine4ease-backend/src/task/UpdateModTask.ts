@@ -4,7 +4,7 @@ import {EventEmitter} from "events";
 import {InstallModTask} from "./InstallModTask.ts";
 import {getCurrentMod, isModHaveDependency, UninstallModTask} from "./UninstallModTask";
 import {$modService} from "../services/ModService.ts";
-import {UPDATE_MOD_EVENT_NAME} from "../../../mine4ease-ipc-api";
+import {UPDATE_MOD_EVENT_NAME} from "mine4ease-ipc-api";
 import {AddModListeners} from "../listeners/AddModListeners.ts";
 import {DeleteModListeners} from "../listeners/DeleteModListeners.ts";
 

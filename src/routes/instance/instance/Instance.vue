@@ -113,12 +113,12 @@ const listener = new TaskListeners();
           <span class="text-sm font-medium mr-2 p-3 rounded bg-orange-900 text-orange-300 inline-flex items-center h-full"
                 v-if="instance?.versions?.fabric">
             <img src="../../../assets/fabric_logo.png" class="w-4 h-4 mr-1.5" alt="Fabric logo" />
-            <span class="text-white font-medium text-xs">Fabric version {{ instance.versions.fabric.name }}</span>
+            <span class="text-white font-medium text-xs">Fabric version {{ instance.versions.fabric.name.replace('fabric-', '') }}</span>
           </span>
           <span class="text-sm font-medium mr-2 p-3 rounded bg-purple-600 text-gray-300 inline-flex items-center h-full"
                 v-if="instance?.versions?.quilt">
             <img src="../../../assets/quilt_logo.svg" class="w-4 h-4 mr-1.5" alt="Quilt logo" />
-            <span class="text-white font-medium text-xs">Quilt version {{ instance.versions.quilt.name }}</span>
+            <span class="text-white font-medium text-xs">Quilt version {{ instance.versions.quilt.name.replace('quilt-', '') }}</span>
           </span>
           <span class="text-sm font-medium mr-2 p-3 rounded bg-gray-600 text-gray-300 inline-flex items-center h-full"
                 v-if="instance?.versions?.neoForge">

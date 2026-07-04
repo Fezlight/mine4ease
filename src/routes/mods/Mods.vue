@@ -11,7 +11,7 @@ import EventWrapper from "../../shared/components/events/EventWrapper.vue";
 import BackToLastPage from "../../shared/components/buttons/BackToLastPage.vue";
 import LoadingComponent from "../../shared/components/LoadingComponent.vue";
 import InstanceContent from "../../shared/components/instance/InstanceContent.vue";
-import {CURSE_FORGE_MINECRAFT_MOD_CLASS_ID} from "../../../mine4ease-ipc-api";
+import {CURSE_FORGE_MINECRAFT_MOD_CLASS_ID} from "mine4ease-ipc-api";
 import {SearchQuery} from "../../shared/models/SearchQuery.ts";
 
 const instance: Ref<InstanceSettings | undefined> | undefined = inject('currentInstance');

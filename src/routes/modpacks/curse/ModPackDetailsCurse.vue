@@ -6,7 +6,7 @@ import LoadingComponent from "../../../shared/components/LoadingComponent.vue";
 import InstanceContent from "../../../shared/components/instance/InstanceContent.vue";
 import {transformDownloadCount} from "../../../shared/utils/Utils";
 import BottomNavBar from "../../../shared/components/bottom-nav-bar/BottomNavBar.vue";
-import {Links} from "../../../../mine4ease-ipc-api";
+import {Links} from "mine4ease-ipc-api";
 
 const route = useRoute();
 const instance: Ref<InstanceSettings | undefined> | undefined = inject('currentInstance');

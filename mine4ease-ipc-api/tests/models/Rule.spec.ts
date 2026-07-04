@@ -1,6 +1,5 @@
-import {Rule} from "../../index";
-import * as os from "os";
-import {beforeEach, describe, expect, jest, test} from "@jest/globals";
+import {Rule} from "../../src/models/Rule";
+import {beforeEach, describe, expect, test} from "@jest/globals";
 
 describe('Testing basic rules', () => {
   test('Given disallow rule with os windows when rule isRuleValid() then return false', () => {
@@ -10,11 +9,7 @@ describe('Testing basic rules', () => {
       name: "windows"
     };
 
-    jest.spyOn(os, 'platform').mockReturnValue("win32");
-
-    expect(rule.isRuleValid()).toBe(false);
-
-    jest.resetAllMocks();
+    expect(rule.isRuleValid("win32", "", "x64")).toBe(false);
   });
 
   test('Given allow rule with os osx when rule isRuleValid() then return true', () => {
@@ -24,30 +19,26 @@ describe('Testing basic rules', () => {
       name: "osx"
     };
 
-    jest.spyOn(os, 'platform').mockReturnValue("darwin");
-
-    expect(rule.isRuleValid()).toBe(true);
-
-    jest.resetAllMocks();
+    expect(rule.isRuleValid("darwin", "", "x64")).toBe(true);
   });
 
   test('Given allow rule without any rule when rule isRuleValid() then return true', () => {
     let rule = new Rule();
     rule.action = "allow";
 
-    expect(rule.isRuleValid()).toBe(true);
+    expect(rule.isRuleValid("linux", "", "x64")).toBe(true);
   });
 
   test('Given disallow rule without any rule when rule isRuleValid() then return false', () => {
     let rule = new Rule();
     rule.action = "disallow";
 
-    expect(rule.isRuleValid()).toBe(false);
+    expect(rule.isRuleValid("linux", "", "x64")).toBe(false);
   });
 });
 
 describe('Testing advanced rules', () => {
-  let rules = [];
+  let rules: Rule[] = [];
   beforeEach(() => {
     let rule = new Rule();
     rule.action = "allow";
@@ -66,44 +57,27 @@ describe('Testing advanced rules', () => {
   })
 
   test('Given list of rules with os macosx and disallow windows v10.0.0 on linux when rule isRuleValid() then return false', () => {
-    jest.spyOn(os, 'platform').mockReturnValue("linux");
-
     expect(rules
-    .map(value => value.isRuleValid())
+    .map(value => value.isRuleValid("linux", "", "x64"))
     .reduce((previousValue, currentValue) => previousValue && currentValue))
     .toBe(false);
-
-    jest.resetAllMocks();
   });
 
   test('Given list of rules with os macosx and disallow windows v10.0.0 on windows 11.0.0 when rule isRuleValid() then return false', () => {
-    jest.spyOn(os, 'platform').mockReturnValue("win32");
-    jest.spyOn(os, 'version').mockReturnValue("11.0.0");
-
     expect(rules
-    .map(value => value.isRuleValid())
+    .map(value => value.isRuleValid("win32", "11.0.0", "x64"))
     .reduce((previousValue, currentValue) => previousValue && currentValue))
     .toBe(false);
-
-    jest.resetAllMocks();
   });
 
   test('Given list of rules with os macosx and disallow windows v10.0.0 on osx when rule isRuleValid() then return true', () => {
-    jest.spyOn(os, 'platform').mockReturnValue("darwin");
-
     expect(rules
-    .map(value => value.isRuleValid())
+    .map(value => value.isRuleValid("darwin", "", "x64"))
     .reduce((previousValue, currentValue) => previousValue && currentValue))
     .toBe(true);
-
-    jest.resetAllMocks();
   });
 
   test('Given list of rules with os windows v10.X and x64 on windows v10.5.3 and x64 when rule isRuleValid() then return true', () => {
-    jest.spyOn(os, 'platform').mockReturnValue("win32");
-    jest.spyOn(os, 'version').mockReturnValue("10.5.3");
-    jest.spyOn(os, 'arch').mockReturnValue("x64");
-
     let rule = new Rule();
     rule.action = "allow";
     rule.os = {
@@ -112,8 +86,6 @@ describe('Testing advanced rules', () => {
       arch: "x64"
     };
 
-    expect(rule.isRuleValid()).toBe(true);
-
-    jest.resetAllMocks();
+    expect(rule.isRuleValid("win32", "10.5.3", "x64")).toBe(true);
   });
 });

@@ -10,8 +10,15 @@
   "keywords": [],
   "author": "FezLight",
   "license": "ISC",
+  "scripts": {
+    "test": "jest"
+  },
   "devDependencies": {
-    "@types/node": "24.10.3"
+    "@jest/globals": "^30.4.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "24.10.3",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.11"
   },
   "dependencies": {
     "decompress": "^4.2.1",

@@ -1,9 +1,14 @@
 import fs from 'node:fs'
+import {fileURLToPath} from 'node:url'
 import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import electron from 'vite-plugin-electron/simple'
 import pkg from './package.json'
-import renderer from "vite-plugin-electron-renderer";
+
+// Resolve the local `mine4ease-ipc-api` lib straight from its TypeScript sources.
+// This way it is compiled together with the app and does not need to be
+// (re)installed into node_modules after every change.
+const ipcApiEntry = fileURLToPath(new URL('./mine4ease-ipc-api/index.ts', import.meta.url))
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
@@ -37,7 +42,9 @@ export default defineConfig(({ command }) => {
                 // we can use `external` to exclude them to ensure they work correctly.
                 // Others need to put them in `dependencies` to ensure they are collected into `app.asar` after the app is built.
                 // Of course, this is not absolute, just this way is relatively simple. :)
-                external: Object.keys('dependencies' in pkg ? pkg.dependencies : {}).filter(dep => dep !== 'mine4ease-ipc-api'),
+                // `mine4ease-ipc-api` is intentionally NOT external: it is aliased to its
+                // TypeScript sources (see `resolve.alias`) and bundled directly into the app.
+                external: Object.keys('dependencies' in pkg ? pkg.dependencies : {}),
               },
             },
           },
@@ -59,6 +66,11 @@ export default defineConfig(({ command }) => {
         }
       })
     ],
+    resolve: {
+      alias: {
+        'mine4ease-ipc-api': ipcApiEntry,
+      },
+    },
     optimizeDeps: {
       exclude: [
         'mine4ease-ipc-api',

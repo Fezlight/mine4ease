@@ -32,6 +32,7 @@ export * from './src/models/Rule'
 export * from './src/models/modpack/ModPackInfo'
 export * from './src/models/modpack/CurseModPack'
 export * from './src/models/modpack/ModrinthModPack'
+export * from './src/models/modpack/FeedTheBeastModPack'
 export * from './src/utils/Utils'
 export * from './src/task/Task'
 

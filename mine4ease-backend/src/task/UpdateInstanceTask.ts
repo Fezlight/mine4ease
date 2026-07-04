@@ -90,7 +90,7 @@ export class UpdateModPackCurseTask extends Task {
 
     let mods = await $modService.getInstanceMods(this._instance.id);
 
-    let modLoaderVersion = await getModLoaderVersion(modLoader, modloaderId);
+    let modLoaderVersion = await getModLoaderVersion(modLoader, modloaderId, this._instance.versions.minecraft.name);
 
     let modToInstall: any[] = [];
     let allMods: any[] = [];

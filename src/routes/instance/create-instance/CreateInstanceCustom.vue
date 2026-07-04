@@ -140,7 +140,7 @@ async function loadImage(e: any) {
               </li>
               <li>
                 <input type="radio" id="fabric" name="modloaders" value="Fabric"
-                       class="hidden peer" v-model="selectedModLoader" disabled
+                       class="hidden peer" v-model="selectedModLoader"
                        v-on:change="($refs.modLoaderVersionList as unknown as typeof ModLoaderVersionsList).retrieveVersions(ModLoader.FABRIC)">
                 <label for="fabric" class="flex items-center w-full p-3 gap-2 border rounded-lg cursor-pointer hover:text-gray-300 border-gray-700 peer-checked:bg-gray-700 text-white bg-gray-800 hover:bg-gray-700 peer-disabled:bg-gray-700/30 peer-disabled:text-gray-600">
                   <span class="w-5">

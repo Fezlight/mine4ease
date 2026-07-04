@@ -92,7 +92,7 @@ async function searchModPack() {
 
   modpacks.value = [];
 
-  return getByType(apiType).searchModPacks(filter.value, [ModLoader.FORGE, ModLoader.NEOFORGE], selectedVersion.value, selectedCategories.value)
+  return getByType(apiType).searchModPacks(filter.value, [ModLoader.FORGE, ModLoader.NEOFORGE, ModLoader.FABRIC], selectedVersion.value, selectedCategories.value)
   .then(packs => modpacks.value = <ModPack[]>packs);
 }
 
