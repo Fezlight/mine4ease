@@ -45,8 +45,8 @@ Mine4Ease is a multi-instance Minecraft launcher designed to provide an easy way
 
 Once published, Mine4Ease will be installable directly from [Flathub](https://flathub.org/) — no manual download, with automatic updates:
 ```bash
-flatpak install flathub fr.fezlight.mine4ease
-flatpak run fr.fezlight.mine4ease
+flatpak install flathub io.github.mine4ease
+flatpak run io.github.mine4ease
 ```
 
 **Flatpak (manual bundle)** — _available now_
@@ -59,7 +59,7 @@ In the meantime, you can install the bundle from the release page:
    ```
 3. 🚀 Launch it:
    ```bash
-   flatpak run fr.fezlight.mine4ease
+   flatpak run io.github.mine4ease
    ```
 
 ### Building from source

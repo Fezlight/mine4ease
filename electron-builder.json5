@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "fr.fezlight.mine4ease",
+  "appId": "io.github.mine4ease",
   "asar": true,
   "productName": "Mine4Ease",
   "files": [

@@ -24,6 +24,7 @@ jobs:
           flatpak install --user -y flathub \
             org.freedesktop.Platform//25.08 \
             org.freedesktop.Sdk//25.08 \
+            org.freedesktop.Sdk.Extension.node22//25.08 \
             org.electronjs.Electron2.BaseApp//25.08
       - name: install dependencies
         run: yarn install --immutable --immutable-cache --check-cache

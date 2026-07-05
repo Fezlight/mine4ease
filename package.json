@@ -4,7 +4,6 @@
   "version": "0.8.0",
   "description": "A multi-instance minecraft launcher with an easy way to manage assets for your game",
   "author": "FezLight",
-  "desktopName": "fr.fezlight.mine4ease.desktop",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build && DEBUG=electron-builder electron-builder --publish never",
