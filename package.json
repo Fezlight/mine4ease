@@ -6,7 +6,7 @@
   "author": "FezLight",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc && vite build && DEBUG=electron-builder electron-builder --publish never",
+    "build": "vue-tsc && vite build && electron-builder --publish never",
     "preview": "vite preview",
     "publish:prod": "yarn build --publish always"
   },
