@@ -26,12 +26,6 @@ modules:
     build-options:
       append-path: /usr/lib/sdk/node22/bin
       env:
-        # Force fully-offline installs against the mirror populated by
-        # generated-sources.json.
-        npm_config_offline: 'true'
-        # Electron's binary is supplied by the base app / offline sources,
-        # never downloaded during build.
-        ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
         XDG_CACHE_HOME: /run/build/mine4ease/flatpak-node/cache
     build-commands:
       # 1. Offline dependency install (mirror comes from generated-sources.json).
@@ -39,7 +33,8 @@ modules:
         export YARN_OFFLINE_MIRROR="$PWD/flatpak-node/yarn-mirror"
         yarn config --offline set yarn-offline-mirror "$YARN_OFFLINE_MIRROR"
         yarn install --offline --frozen-lockfile --ignore-scripts
-      # 2. Build the renderer + main + preload bundles.
+      - jq '.linux.target="dir"' <<<$(<electron-builder.json5) > electron-builder.json5
+      # 2. Build the renderer + main + preload bundles (stops before electron-builder).
       - yarn run build
       # 3. Lay the app out under /app/main.
       - mkdir -p /app/main

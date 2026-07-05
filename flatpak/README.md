@@ -31,7 +31,7 @@ pip install "git+https://github.com/flatpak/flatpak-builder-tools.git#subdirecto
 Then, from the repo root (our lockfile is yarn **classic**, v1):
 
 ```bash
-flatpak-node-generator yarn yarn.lock -o flatpak/generated-sources.json
+flatpak-node-generator yarn yarn.lock -o flatpak/generated-sources.json --xdg-layout
 ```
 
 Regenerate this file whenever `yarn.lock` changes.
