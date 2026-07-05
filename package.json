@@ -7,7 +7,7 @@
   "desktopName": "fr.fezlight.mine4ease.desktop",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc && vite build && electron-builder",
+    "build": "vue-tsc && vite build && electron-builder --publish never",
     "preview": "vite preview",
     "publish:prod": "yarn build --publish always"
   },
