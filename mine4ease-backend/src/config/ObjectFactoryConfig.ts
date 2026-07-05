@@ -12,7 +12,9 @@ import fs from "node:fs";
 const {combine, timestamp} = format;
 
 const oldPath = path.join(app.getPath('appData'), '.mine4ease');
-const newPath = path.join(app.getPath('userData'), 'mine4ease');
+
+const basePath = process.env.XDG_DATA_HOME ?? app.getPath('userData');
+const newPath = path.join(basePath, 'mine4ease');
 process.env.APP_DIRECTORY = path.join(newPath);
 process.env.LOG_DIRECTORY = app.getPath('logs');
 
@@ -41,7 +43,7 @@ export const logger = createLogger({
   handleRejections: true
 });
 
-logger.info( "AppPath: " + app.getAppPath());
+logger.info( "basepath: " + basePath);
 logger.info( "UserData: " + app.getPath('userData'));
 logger.info( "AppData: " + app.getPath('appData'));
 
