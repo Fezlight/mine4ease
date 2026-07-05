@@ -39,33 +39,33 @@ modules:
       # have here; isVerifyChecksum=false skips that so the pre-cached electron
       # zip (from generated-sources.json) is used as-is.
       - jq '.linux.target="dir" | .electronDownload.isVerifyChecksum=false' <<<$(<electron-builder.json5) > electron-builder.json5
-      # 2. Build the renderer + main + preload bundles (stops before electron-builder).
+      # 2. Build the renderer + main + preload bundles.
       - ". flatpak-node/electron-builder-arch-args.sh; yarn run build -- $ELECTRON_BUILDER_ARCH_ARGS"
       # 3. Lay the app out under /app/main.
       - mkdir -p /app/main
       - cp -a dist/linux*unpacked/** /app/main
       # 4. Launcher: run the app's electron through zypak so the sandbox works.
       - mkdir -p /app/bin
-      - |
-        cat > /app/bin/mine4ease <<'EOF'
-        #!/bin/sh
-        exec zypak-wrapper /app/main/mine4ease "$@"
-        EOF
-        chmod +x /app/bin/mine4ease
+      # Install app wrapper
+      - install -Dm755 -t /app/bin/ run.sh
       # 5. Desktop entry, icon, and AppStream metadata.
       #    The .desktop and .metainfo.xml are supplied as `file` sources below
       #    (they live next to this manifest), so they land at the build root
       #    regardless of what the app's source tag contains.
       - install -Dm644 flatpak/io.github.fezlight.mine4ease.desktop
-          /app/share/applications/io.github.fezlight.mine4ease.desktop
+        /app/share/applications/io.github.fezlight.mine4ease.desktop
       - install -Dm644 build/icon.png
-          /app/share/icons/hicolor/512x512/apps/io.github.fezlight.mine4ease.png
+        /app/share/icons/hicolor/512x512/apps/io.github.fezlight.mine4ease.png
       - install -Dm644 flatpak/io.github.fezlight.mine4ease.metainfo.xml
-          /app/share/metainfo/io.github.fezlight.mine4ease.metainfo.xml
+        /app/share/metainfo/io.github.fezlight.mine4ease.metainfo.xml
     sources:
       # Pin to the released tag when submitting; use a branch/commit while testing.
       - type: git
         url: https://github.com/FezLight/mine4ease.git
         tag: v0.9.0
+      - type: script
+        dest-filename: run.sh
+        commands:
+          - zypak-wrapper /app/main/mine4ease "$@"
       # Generated offline dependency sources — see flatpak/README.md to (re)create.
       - generated-sources.json
