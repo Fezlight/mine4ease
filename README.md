@@ -76,11 +76,11 @@ Build output is written to `dist/`.
 > 🐧 **Building the Linux Flatpak** additionally requires `flatpak` and `flatpak-builder`, plus the following Flatpak runtimes from [Flathub](https://flathub.org/):
 >
 > ```bash
-> flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
-> flatpak install --user flathub \
->   org.freedesktop.Platform//24.08 \
->   org.freedesktop.Sdk//24.08 \
->   org.electronjs.Electron2.BaseApp//24.08
+> flatpak install --user -y flathub \
+> org.freedesktop.Platform//25.08 \
+> org.freedesktop.Sdk//25.08 \
+> org.freedesktop.Sdk.Extension.node22//25.08 \
+> org.electronjs.Electron2.BaseApp//25.08
 > ```
 >
 > These are only needed for the `flatpak` target. The `AppImage` target builds without them.
