@@ -2,7 +2,7 @@
 Type=Application
 Name=Mine4Ease
 Comment=A multi-instance Minecraft launcher with an easy way to manage assets for your game
-Exec=mine4ease %U
+Exec=run.sh %U
 Icon=io.github.fezlight.mine4ease
 Terminal=false
 Categories=Game;
