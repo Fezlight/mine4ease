@@ -14,7 +14,7 @@ const {combine, timestamp} = format;
 const oldPath = path.join(app.getPath('appData'), '.mine4ease');
 const newPath = path.join(app.getPath('userData'), 'mine4ease');
 process.env.APP_DIRECTORY = path.join(newPath);
-process.env.LOG_DIRECTORY = process.env.APP_DIRECTORY + '/logs'
+process.env.LOG_DIRECTORY = app.getPath('logs');
 
 if (fs.existsSync(path.join(oldPath))){
   fs.cpSync(path.join(oldPath), path.join(newPath), { recursive: true });
@@ -28,18 +28,22 @@ export const logger = createLogger({
     format.json()
   ),
   transports: [
-    new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + 'error.%DATE%.log', level: 'error'}),
+    new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + '%DATE%.error.log', level: 'error'}),
     new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + 'mine4ease.%DATE%.log'})
   ],
   exceptionHandlers: [
-    new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + 'error.%DATE%.log', level: 'error'})
+    new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + '%DATE%.error.log', level: 'error'})
   ],
   rejectionHandlers: [
-    new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + 'error.%DATE%.log', level: 'error'})
+    new DailyRotateFile({filename: process.env.LOG_DIRECTORY + '/' + '%DATE%.error.log', level: 'error'})
   ],
   handleExceptions: true,
   handleRejections: true
 });
+
+logger.debug( "AppPath: " + app.getAppPath());
+logger.debug( "UserData: " + app.getPath('userData'));
+logger.debug( "AppData: " + app.getPath('appData'));
 
 if (!app.isPackaged) {
   logger.add(new winston.transports.Console());
