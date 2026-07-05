@@ -41,9 +41,9 @@ export const logger = createLogger({
   handleRejections: true
 });
 
-logger.debug( "AppPath: " + app.getAppPath());
-logger.debug( "UserData: " + app.getPath('userData'));
-logger.debug( "AppData: " + app.getPath('appData'));
+logger.info( "AppPath: " + app.getAppPath());
+logger.info( "UserData: " + app.getPath('userData'));
+logger.info( "AppData: " + app.getPath('appData'));
 
 if (!app.isPackaged) {
   logger.add(new winston.transports.Console());
