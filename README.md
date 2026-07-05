@@ -32,6 +32,8 @@ Mine4Ease is a multi-instance Minecraft launcher designed to provide an easy way
 3. 🚀 Launch Mine4Ease from your `Applications` folder.
 
 #### 🐧 Linux
+
+**AppImage**
 1. ⏬ Download the `Mine4Ease-Linux-X.X.X.AppImage` file.
 2. 🔑 Make the file executable:
    ```bash
@@ -39,9 +41,53 @@ Mine4Ease is a multi-instance Minecraft launcher designed to provide an easy way
    ```
 3. 🚀 Run the AppImage to launch the application.
 
+**Flatpak (via Flathub)** — _recommended, coming soon_ 🚧
+
+Once published, Mine4Ease will be installable directly from [Flathub](https://flathub.org/) — no manual download, with automatic updates:
+```bash
+flatpak install flathub io.github.mine4ease
+flatpak run io.github.mine4ease
+```
+
+**Flatpak (manual bundle)** — _available now_
+
+In the meantime, you can install the bundle from the release page:
+1. ⏬ Download the `Mine4Ease-Linux-X.X.X.flatpak` file.
+2. 📦 Install it (the required `org.freedesktop.Platform` runtime is pulled from Flathub automatically):
+   ```bash
+   flatpak install --user Mine4Ease-Linux-X.X.X.flatpak
+   ```
+3. 🚀 Launch it:
+   ```bash
+   flatpak run io.github.mine4ease
+   ```
+
+### Building from source
+
+Requirements: [Node.js](https://nodejs.org/) 22+ and [Yarn](https://yarnpkg.com/).
+
+```bash
+yarn install
+yarn build
+```
+
+Build output is written to `dist/`.
+
+> 🐧 **Building the Linux Flatpak** additionally requires `flatpak` and `flatpak-builder`, plus the following Flatpak runtimes from [Flathub](https://flathub.org/):
+>
+> ```bash
+> flatpak install --user -y flathub \
+> org.freedesktop.Platform//25.08 \
+> org.freedesktop.Sdk//25.08 \
+> org.freedesktop.Sdk.Extension.node22//25.08 \
+> org.electronjs.Electron2.BaseApp//25.08
+> ```
+>
+> These are only needed for the `flatpak` target. The `AppImage` target builds without them.
+
 ### Maintainers
 
-- **FezLight** - *Lead Developer* - [GitHub](https://github.com/FezLight)
+- **FezLight** - *Maintener* - [GitHub](https://github.com/FezLight)
 
 ### License
 

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.mine4ease</id>
+
+  <name>Mine4Ease</name>
+  <summary>Multi-instance Minecraft launcher</summary>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Apache-2.0</project_license>
+
+  <developer_name>FezLight</developer_name>
+
+  <description>
+    <p>
+      Mine4Ease is a multi-instance Minecraft launcher designed to provide an
+      easy way to manage assets and instances for your game.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Create and manage multiple Minecraft instances independently</li>
+      <li>Support for Fabric, Forge, NeoForge, and Quilt mod loaders</li>
+      <li>Browse and install modpacks from CurseForge and Feed The Beast (FTB)</li>
+      <li>Search for and manage mods for your instances</li>
+      <li>Simple login process and streamlined asset management</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">io.github.mine4ease.desktop</launchable>
+
+  <url type="homepage">https://github.com/FezLight/mine4ease</url>
+  <url type="bugtracker">https://github.com/FezLight/mine4ease/issues</url>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Instance view</caption>
+      <image>https://raw.githubusercontent.com/FezLight/mine4ease/main/assets/screenshots/instance.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Creating a new instance</caption>
+      <image>https://raw.githubusercontent.com/FezLight/mine4ease/main/assets/screenshots/create_instance.png</image>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="0.8.0" date="2025-06-14"/>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>

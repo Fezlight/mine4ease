@@ -13,6 +13,8 @@ dist-ssr
 dist-electron
 release
 *.local
+flatpak/.flatpak-builder
+flatpak/build-dir
 
 # Editor directories and files
 .vscode/*

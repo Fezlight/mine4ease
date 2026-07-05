@@ -1,14 +1,8 @@
-/**
- * @see https://www.electron.build/configuration/configuration
- */
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "fr.fezlight.mine4ease",
+  "appId": "io.github.mine4ease",
   "asar": true,
   "productName": "Mine4Ease",
-  "directories": {
-    "output": "release/${version}"
-  },
   "files": [
     "dist",
     "dist-electron"
@@ -43,30 +37,12 @@
     "artifactName": "${productName}-Linux-${version}.${ext}",
     "category": "Game"
   },
-  "flatpak": {
-    "runtime": "org.freedesktop.Platform",
-    "sdk": "org.freedesktop.Sdk",
-    "runtimeVersion": "24.08",
-    "finishArgs": [
-      "--socket=x11",
-      "--socket=wayland",
-      "--share=ipc",
-      "--share=network",
-      "--filesystem=home",
-      "--talk-name=org.freedesktop.Notifications",
-      "--talk-name=org.kde.StatusNotifierWatcher",
-      "--talk-name=com.canonical.AppMenu.Registrar",
-      "--device=dri",
-      "--socket=pulseaudio"
-    ],
-    "useWaylandFlags": true
-  },
   "publish": [
     {
-      repo: "mine4ease",
-      owner: "FezLight",
-      provider: "github",
-      releaseType: "release"
+      "repo": "mine4ease",
+      "owner": "FezLight",
+      "provider": "github",
+      "releaseType": "release"
     }
   ]
 }

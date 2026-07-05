@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Mine4Ease
+Comment=A multi-instance Minecraft launcher with an easy way to manage assets for your game
+Exec=mine4ease %U
+Icon=io.github.mine4ease
+Terminal=false
+Categories=Game;
