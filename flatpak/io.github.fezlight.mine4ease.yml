@@ -61,7 +61,7 @@ modules:
       # Pin to the released tag when submitting; use a branch/commit while testing.
       - type: git
         url: https://github.com/FezLight/mine4ease.git
-        tag: v0.9.0
+        tag: v0.9.1
       - type: script
         dest-filename: run.sh
         commands:
