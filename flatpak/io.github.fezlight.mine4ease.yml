@@ -6,7 +6,7 @@ base: org.electronjs.Electron2.BaseApp
 base-version: '25.08'
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.node22
-command: mine4ease
+command: run.sh
 finish-args:
   - --socket=fallback-x11
   - --socket=wayland
@@ -62,6 +62,7 @@ modules:
       - type: git
         url: https://github.com/FezLight/mine4ease.git
         tag: v0.9.1
+        commit: 8ad89b8ad73b70ebf61eedddb3ceb76973a510cb
       - type: script
         dest-filename: run.sh
         commands:
