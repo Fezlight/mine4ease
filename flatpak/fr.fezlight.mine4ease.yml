@@ -35,7 +35,7 @@ modules:
         yarn install --offline --frozen-lockfile --ignore-scripts
       - jq '.linux.target="dir"' <<<$(<electron-builder.json5) > electron-builder.json5
       # 2. Build the renderer + main + preload bundles (stops before electron-builder).
-      - yarn run build
+      - ". flatpak-node/electron-builder-arch-args.sh; yarn run build -- $ELECTRON_BUILDER_ARCH_ARGS"
       # 3. Lay the app out under /app/main.
       - mkdir -p /app/main
       - cp -a dist/linux*unpacked /app/main
