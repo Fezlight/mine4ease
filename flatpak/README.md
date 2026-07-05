@@ -28,10 +28,13 @@ Install the Node generator from
 pip install "git+https://github.com/flatpak/flatpak-builder-tools.git#subdirectory=node"
 ```
 
+Install the App Stream CLI from
+[AppStream CLI](https://flathub.org/en/apps/org.freedesktop.appstream.cli)
+
 Then, from the repo root (our lockfile is yarn **classic**, v1):
 
 ```bash
-flatpak-node-generator yarn yarn.lock -o flatpak/generated-sources.json --xdg-layout
+flatpak-node-generator yarn yarn.lock -o flatpak/generated-sources.json -r --electron-node-headers
 ```
 
 Regenerate this file whenever `yarn.lock` changes.
@@ -57,7 +60,7 @@ flatpak run fr.fezlight.mine4ease
 Validate the metadata before submitting:
 
 ```bash
-flatpak run org.freedesktop.appstream-cli validate flatpak/fr.fezlight.mine4ease.metainfo.xml
+appstreamcli validate flatpak/fr.fezlight.mine4ease.metainfo.xml
 desktop-file-validate flatpak/fr.fezlight.mine4ease.desktop
 ```
 
