@@ -14,7 +14,6 @@ finish-args:
   - --share=network
   - --device=dri
   - --socket=pulseaudio
-  - --filesystem=home
   - --talk-name=org.freedesktop.Notifications
   - --talk-name=org.kde.StatusNotifierWatcher
   - --talk-name=com.canonical.AppMenu.Registrar

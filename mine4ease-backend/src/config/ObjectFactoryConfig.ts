@@ -7,11 +7,19 @@ import path from "node:path";
 import {app} from "electron";
 import {defaultCaches} from "./CacheConfig";
 import {EventEmitter} from 'events';
+import fs from "node:fs";
 
 const {combine, timestamp} = format;
 
-process.env.APP_DIRECTORY = path.join(app.getPath('appData'), '.mine4ease');
+const oldPath = path.join(app.getPath('appData'), '.mine4ease');
+const newPath = path.join(app.getPath('userData'), 'mine4ease');
+process.env.APP_DIRECTORY = path.join(newPath);
 process.env.LOG_DIRECTORY = process.env.APP_DIRECTORY + '/logs'
+
+if (fs.existsSync(path.join(oldPath))){
+  fs.cpSync(path.join(oldPath), path.join(newPath), { recursive: true });
+  fs.rmSync(path.join(oldPath), { recursive: true, force: true });
+}
 
 export const logger = createLogger({
   level: app.isPackaged ? 'info' : 'debug',
