@@ -8,7 +8,9 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>Apache-2.0</project_license>
 
-  <developer_name>FezLight</developer_name>
+  <developer id="io.github.fezlight.mine4ease">
+    <name>FezLight</name>
+  </developer>
 
   <description>
     <p>
@@ -27,6 +29,7 @@
 
   <launchable type="desktop-id">io.github.fezlight.mine4ease.desktop</launchable>
 
+  <url type="vcs-browser">https://github.com/FezLight/mine4ease</url>
   <url type="homepage">https://github.com/FezLight/mine4ease</url>
   <url type="bugtracker">https://github.com/FezLight/mine4ease/issues</url>
 
@@ -42,7 +45,7 @@
   </screenshots>
 
   <releases>
-    <release version="0.9.2" date="2025-07-06"/>
+    <release version="0.9.3" date="2026-07-06"/>
   </releases>
   <content_rating type="oars-1.1"/>
 </component>
