@@ -100,7 +100,7 @@ async function loadImage(e: any) {
               <input id="instanceIcon" name="instanceIcon" type="file" accept="image/*" @change="loadImage($event)"
                      class="w-full hidden">
             </div>
-            <div class="space-y-2 required flex-grow">
+            <div class="space-y-2 required grow">
               <label for="instanceName">Name</label>
               <input id="instanceName" name="instanceName" type="text" maxlength="30" v-model="instance.title"
                      class="w-full" required>

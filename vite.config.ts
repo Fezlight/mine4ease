@@ -4,6 +4,7 @@ import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import electron from 'vite-plugin-electron/simple'
 import pkg from './package.json'
+import tailwindcss from "@tailwindcss/vite";
 
 // Resolve the local `mine4ease-ipc-api` lib straight from its TypeScript sources.
 // This way it is compiled together with the app and does not need to be
@@ -20,10 +21,14 @@ export default defineConfig(({ command }) => {
 
   return {
     plugins: [
+      tailwindcss({
+        optimize: {
+          minify: isBuild,
+        },
+      }),
       vue(),
       electron({
         main: {
-          // Shortcut of `build.lib.entry`
           entry: 'mine4ease-backend/main/index.ts',
           onstart({ startup }) {
             if (process.env.VSCODE_DEBUG) {
@@ -50,8 +55,6 @@ export default defineConfig(({ command }) => {
           },
         },
         preload: {
-          // Shortcut of `build.rolldownOptions.input`.
-          // Preload scripts may contain Web assets, so use the `build.rolldownOptions.input` instead `build.lib.entry`.
           input: 'mine4ease-backend/preload/index.ts',
           vite: {
             build: {

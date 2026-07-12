@@ -91,7 +91,7 @@ const listener = new TaskListeners();
 </script>
 <template>
   <InstanceContent v-if="instance" class="relative" :fluid="true">
-    <section class="border-b-2 border-gray-700/30 flex flex-col justify-between sticky top-0 bg-gray-800 p-6 h-[130px]">
+    <section class="border-b-2 border-gray-700/30 flex flex-col justify-between sticky top-0 bg-gray-800 p-6 h-32.5">
       <h2 class="inline-block space-x-1">
         <span>{{ instance.title }}</span>
         <span class="text-xs text-yellow-600" v-if="instance?.versions?.self">
@@ -99,28 +99,28 @@ const listener = new TaskListeners();
         </span>
       </h2>
       <div class="flex flex-row items-end">
-        <span class="inline-flex items-center gap-2 flex-grow h-[20px]">
-          <span class="text-sm font-medium mr-2 p-3 rounded bg-green-900 text-green-300 inline-flex items-center h-full"
+        <span class="inline-flex items-center gap-2 grow h-5">
+          <span class="text-sm font-medium mr-2 p-3 rounded-sm bg-green-900 text-green-300 inline-flex items-center h-full"
                 v-if="instance?.versions?.minecraft">
             <img src="../../../assets/minecraft_logo.ico" class="w-4 h-4 mr-1.5" alt="Minecraft logo" />
             <span class="text-white font-medium text-xs">Minecraft version {{ instance.versions.minecraft.name }}</span>
           </span>
-          <span class="text-sm font-medium mr-2 p-3 rounded bg-gray-900 text-gray-300 inline-flex items-center h-full"
+          <span class="text-sm font-medium mr-2 p-3 rounded-sm bg-gray-900 text-gray-300 inline-flex items-center h-full"
                 v-if="instance?.versions?.forge">
             <img src="../../../assets/forge_logo.ico" class="w-4 h-4 mr-1.5" alt="Forge logo" />
             <span class="text-white font-medium text-xs">Forge version {{ instance.versions.forge.name.replace('forge-', '') }}</span>
           </span>
-          <span class="text-sm font-medium mr-2 p-3 rounded bg-orange-900 text-orange-300 inline-flex items-center h-full"
+          <span class="text-sm font-medium mr-2 p-3 rounded-sm bg-orange-900 text-orange-300 inline-flex items-center h-full"
                 v-if="instance?.versions?.fabric">
             <img src="../../../assets/fabric_logo.png" class="w-4 h-4 mr-1.5" alt="Fabric logo" />
             <span class="text-white font-medium text-xs">Fabric version {{ instance.versions.fabric.name.replace('fabric-', '') }}</span>
           </span>
-          <span class="text-sm font-medium mr-2 p-3 rounded bg-purple-600 text-gray-300 inline-flex items-center h-full"
+          <span class="text-sm font-medium mr-2 p-3 rounded-sm bg-purple-600 text-gray-300 inline-flex items-center h-full"
                 v-if="instance?.versions?.quilt">
             <img src="../../../assets/quilt_logo.svg" class="w-4 h-4 mr-1.5" alt="Quilt logo" />
             <span class="text-white font-medium text-xs">Quilt version {{ instance.versions.quilt.name.replace('quilt-', '') }}</span>
           </span>
-          <span class="text-sm font-medium mr-2 p-3 rounded bg-gray-600 text-gray-300 inline-flex items-center h-full"
+          <span class="text-sm font-medium mr-2 p-3 rounded-sm bg-gray-600 text-gray-300 inline-flex items-center h-full"
                 v-if="instance?.versions?.neoForge">
             <img src="../../../assets/neoforge_logo.png" class="w-4 h-4 mr-1.5" alt="NeoForge logo" />
             <span class="text-white font-medium text-xs">NeoForge version {{ instance.versions.neoForge.name.replace('neoforge-', '') }}</span>
@@ -165,7 +165,7 @@ const listener = new TaskListeners();
         </span>
       </div>
     </section>
-    <section class="flex-grow">
+    <section class="grow">
       <router-view />
     </section>
     <ProgressBar></ProgressBar>

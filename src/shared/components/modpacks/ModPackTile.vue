@@ -30,7 +30,7 @@ function uniqueCat(): IterableIterator<Category> {
       <button @click="redirect({path: `/modpacks/${$apiType?.toLowerCase()}/${modpack.id}`}, emit)" class="w-[96px] h-[96px]">
         <img :src="modpack.iconUrl" :alt="modpack.displayName + ' icon'" class="object-cover">
       </button>
-      <div class="flex flex-col space-y-2 max-w-lg xl:max-w-screen-2xl">
+      <div class="flex flex-col space-y-2 max-w-lg xl:max-w-(--breakpoint-2xl)">
         <h3 class="truncate">{{ modpack.displayName }} <span class="text-gray-400 text-sm">by {{modpack.authors?.map(a => a.name).join(', ')}}</span></h3>
         <p class="text-sm">{{ modpack.summary }}</p>
         <span class="inline-block space-x-2" v-if="modpack?.downloadCount">
@@ -38,7 +38,7 @@ function uniqueCat(): IterableIterator<Category> {
           <span>{{ transformDownloadCount(modpack?.downloadCount) }}</span>
         </span>
       </div>
-      <div class="flex items-center justify-end flex-grow gap-2">
+      <div class="flex items-center justify-end grow gap-2">
         <slot></slot>
       </div>
     </div>

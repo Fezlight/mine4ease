@@ -94,8 +94,8 @@ $globalSettingsService?.retrieveSettings().then(data => {
 </script>
 <template>
   <div class="grid grid-cols-[80px_1fr]">
-    <section class="flex flex-col menu-left max-window-height bg-gray-800">
-      <div class="flex flex-col flex-grow gap-4 overflow-y-auto py-2">
+    <section class="flex flex-col max-window-height bg-gray-800 menu-left">
+      <div class="flex flex-col grow gap-4 overflow-y-auto py-2">
         <InstanceIcon :id="instance.id"
                       :class="{ 'active': selectedInstance === instance }"
                       v-for="instance in settings?.instances"
@@ -121,15 +121,15 @@ $globalSettingsService?.retrieveSettings().then(data => {
           </template>
         </InstanceIcon>
       </div>
-      <div class=" z-10 shadow-black/50 p-2 rounded-t-md border-t-[1px] border-gray-500/60 flex flex-col justify-center gap-2">
+      <div class="z-10 shadow-black/50 p-2 rounded-t-md border-t border-gray-500/60 flex flex-col justify-center gap-2">
         <button type="button" class="group rounded-lg hover:bg-gray-700/60 flex justify-center">
-          <font-awesome-icon class="p-2 text-2xl text-white/80 h-[34px]"
+          <font-awesome-icon class="p-2 text-2xl text-white/80 h-8.5"
                              :icon="['fas', 'gear']" />
         </button>
         <button type="button"
                 class="group rounded-lg hover:bg-gray-700/60 flex justify-center"
                 @click="router.push('/login')">
-          <font-awesome-icon class="p-2 text-2xl text-white/80 h-[34px] group-hover:text-red-700/80"
+          <font-awesome-icon class="p-2 text-2xl text-white/80 h-8.5 group-hover:text-red-700/80"
                              :icon="['fas', 'right-from-bracket']" />
         </button>
       </div>
@@ -138,7 +138,10 @@ $globalSettingsService?.retrieveSettings().then(data => {
   </div>
 </template>
 <style scoped>
+@reference "../../style.css";
+
 .menu-left {
-  @apply max-h-screen shadow-xl shadow-black/80 border-r-[1px] border-gray-500/60;
+  @apply max-h-screen shadow-xl shadow-black/80 border-r border-gray-500/60;
 }
+
 </style>

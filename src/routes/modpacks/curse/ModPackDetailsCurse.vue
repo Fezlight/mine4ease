@@ -103,7 +103,7 @@ async function getModDescription(id: string): Promise<string | undefined> {
           </ol>
         </div>
       </LoadingComponent>
-      <LoadingComponent class="flex-grow rounded-lg bg-black/30 shadow-md shadow-black/40 p-4" :promise="() => getModDescription(<string>route.params.id)" :execute-automation="true">
+      <LoadingComponent class="grow rounded-lg bg-black/30 shadow-md shadow-black/40 p-4" :promise="() => getModDescription(<string>route.params.id)" :execute-automation="true">
         <template v-slot:loading>
           <div role="status" class="animate-pulse">
             <div class="h-8 rounded-full bg-gray-600 mb-4"></div>
@@ -130,6 +130,8 @@ async function getModDescription(id: string): Promise<string | undefined> {
   </InstanceContent>
 </template>
 <style>
+@reference "../../../style.css";
+
 #mod-description {
   position: relative;
   overflow-wrap: break-word;

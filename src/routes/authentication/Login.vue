@@ -18,7 +18,7 @@ async function login() {
 
 <template>
   <div class="px-10 p-6 bg-gray-800 h-screen">
-    <div class="flex flex-grow flex-col space-y-6 h-full">
+    <div class="flex grow flex-col space-y-6 h-full">
       <h1>Login to Mine4Ease</h1>
 
       <div class="flex flex-col h-full">

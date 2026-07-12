@@ -1,11 +1,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import 'tailwindcss';
 
-/* You can add global styles to this file, and also import other style files */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme {
+  --font-*: initial;
+  --font-sans:
+    Lato, Raleway, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
 
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
 @layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
   .max-window-height {
     height: calc(100vh - 30px);
   }
@@ -18,63 +37,66 @@
   *::-webkit-scrollbar {
     display: none;
   }
+
+  body {
+    font-size: 16px;
+    letter-spacing: normal;
+    color: white;
+  }
+
+  .draggable {
+    -webkit-app-region: drag;
+  }
+
+  h1 {
+    @apply text-6xl font-semibold text-white;
+  }
+
+  h2 {
+    @apply text-4xl font-semibold text-white;
+  }
+
+  h3, label {
+    @apply block text-xl font-semibold text-white;
+  }
+
+  input, select {
+    @apply border text-sm rounded-lg block p-2.5 bg-gray-700 focus:ring-4 focus:outline-hidden border-gray-600 placeholder-gray-400/60 text-white focus:ring-sky-600/20;
+  }
+
+  .required label::after {
+    content: ' *';
+    @apply text-red-400;
+  }
+
+  button[type=submit] {
+    @apply px-5 py-2.5 inline-flex;
+  }
+
+  .danger {
+    @apply bg-red-600/60 hover:bg-red-600/50 focus:ring-red-600/20;
+  }
+
+  .primary {
+    @apply bg-sky-600/60 hover:bg-sky-600/50 focus:ring-sky-600/20;
+  }
+
+  .secondary {
+    @apply bg-amber-600/60 hover:bg-amber-600/50 focus:ring-amber-600/20;
+  }
+
+  .normal {
+    @apply bg-gray-600/60 hover:bg-gray-600/50 focus:ring-gray-600/20;
+  }
+
+  button {
+    @apply bg-gray-800 focus:ring-4 focus:outline-hidden cursor-pointer font-medium rounded-lg text-sm text-center text-white items-center focus:ring-sky-600/20;
+  }
+
+  a {
+    @apply text-center text-white items-center focus:ring-sky-600/20;
+  }
 }
 
-body {
-  font-size: 16px;
-  letter-spacing: normal;
-  color: white;
-}
 
-.draggable {
-  -webkit-app-region: drag;
-}
 
-h1 {
-  @apply text-6xl font-semibold text-white;
-}
-
-h2 {
-  @apply text-4xl font-semibold text-white;
-}
-
-h3, label {
-  @apply block text-xl font-semibold text-white;
-}
-
-input, select {
-  @apply border text-sm rounded-lg block p-2.5 bg-gray-700 focus:ring-4 focus:outline-none border-gray-600 placeholder-gray-400/60 text-white focus:ring-sky-600/20;
-}
-
-.required label::after {
-  content: ' *';
-  @apply text-red-400;
-}
-
-button[type=submit] {
-  @apply px-5 py-2.5 inline-flex;
-}
-
-.danger {
-  @apply bg-red-600/60 hover:bg-red-600/50 focus:ring-red-600/20;
-}
-
-.primary {
-  @apply bg-sky-600/60 hover:bg-sky-600/50 focus:ring-sky-600/20;
-}
-
-.secondary {
-  @apply bg-amber-600/60 hover:bg-amber-600/50 focus:ring-amber-600/20;
-}
-
-.normal {
-  @apply bg-gray-600/60 hover:bg-gray-600/50 focus:ring-gray-600/20;
-}
-
-button {
-  @apply bg-gray-800 focus:ring-4 focus:outline-none font-medium rounded-lg text-sm text-center text-white items-center focus:ring-sky-600/20;
-}
-
-a {
-  @apply text-center text-white items-center focus:ring-sky-600/20;
-}

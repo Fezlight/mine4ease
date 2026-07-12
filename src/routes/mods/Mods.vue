@@ -125,12 +125,12 @@ const listener = new TaskListeners();
 <template>
   <InstanceContent>
     <section class="flex flex-row overflow-y-auto gap-4 h-full">
-      <section class="flex flex-col flex-grow">
-        <section class="flex flex-row items-center gap-4 rounded-lg bg-black/30 px-4 py-3 shadow-md shadow-black/40 flex-grow-0 mb-4">
+      <section class="flex flex-col grow">
+        <section class="flex flex-row items-center gap-4 rounded-lg bg-black/30 px-4 py-3 shadow-md shadow-black/40 grow-0 mb-4">
           <BackToLastPage @back-to-last-page="() => backToLastPage()"></BackToLastPage>
           <label for="default-search" class="mb-2 text-sm font-medium text-gray-900 sr-only">Search</label>
           <div class="relative">
-            <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+            <div class="absolute inset-y-0 inset-s-0 flex items-center ps-3 pointer-events-none">
               <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
               </svg>
@@ -138,12 +138,12 @@ const listener = new TaskListeners();
             <input type="search" id="default-search" v-model="filter"
                    v-on:keyup.enter="($refs.modList as unknown as typeof LoadingComponent).executePromise()"
                    class="block w-full p-2 ps-10 pe-16 text-sm text-white border border-gray-500 rounded-lg bg-gray-800 focus:ring-2 focus:ring-gray-500 focus:border-gray-500" placeholder="Search ..." required>
-            <button class="text-white absolute inset-y-1 end-1 bg-gray-700 hover:bg-gray-600 focus:ring-1 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm p-1"
+            <button class="text-white absolute inset-y-1 inset-e-1 bg-gray-700 hover:bg-gray-600 focus:ring-1 focus:outline-hidden focus:ring-gray-300 font-medium rounded-lg text-sm p-1"
                     v-on:click="($refs.modList as unknown as typeof LoadingComponent).executePromise()">Search
             </button>
           </div>
         </section>
-        <LoadingComponent class="flex flex-col overflow-y-auto flex-grow" :promise="() => searchMod()" ref="modList">
+        <LoadingComponent class="flex flex-col overflow-y-auto grow" :promise="() => searchMod()" ref="modList">
           <ModTile v-for="mod in mods" :mod="mod" @redirect="(t: Transitions) => redirect(t.route, emit)" class="mb-4" :key="mod.id">
             <EventWrapper :listener="listener" v-slot:default="s">
               <button type="button" class="px-5 py-2.5 primary inline-block space-x-2" v-on:click="s.createEvent(() => addMod(mod))">
@@ -155,9 +155,9 @@ const listener = new TaskListeners();
           <span v-if="mods.length === 0" class="flex max-window-height items-center justify-center text-2xl">No result found</span>
         </LoadingComponent>
       </section>
-      <section class="flex flex-col flex-grow rounded-lg bg-black/30 shadow-md shadow-black/40 overflow-y-auto min-w-[200px] max-w-[200px] mb-1">
+      <section class="flex flex-col grow rounded-lg bg-black/30 shadow-md shadow-black/40 overflow-y-auto min-w-[200px] max-w-[200px] mb-1">
         <LoadingComponent class="flex flex-col gap-3 p-4 h-full" :promise="() => getAllCategories().then(() => initFilter())" :execute-automation="true">
-          <button type="button" v-for="category in selectedCategories" :key="category.id" @click="searchWithCategories(category)" class="flex flex-row text-left gap-2 rounded border-2 border-gray-800 px-2 py-1 bg-gray-800">
+          <button type="button" v-for="category in selectedCategories" :key="category.id" @click="searchWithCategories(category)" class="flex flex-row text-left gap-2 rounded-sm border-2 border-gray-800 px-2 py-1 bg-gray-800">
             <img :src="category.iconUrl" :alt="category.name + ' icon'" class="w-7 h-7">
             <span class="text-sm">{{ category.name }}</span>
           </button>

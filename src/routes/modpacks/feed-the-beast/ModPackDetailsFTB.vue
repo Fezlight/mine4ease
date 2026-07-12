@@ -92,7 +92,7 @@ async function getModDetails(id: string): Promise<ModPack> {
           </ol>
         </div>
       </LoadingComponent>
-      <LoadingComponent class="flex-grow rounded-lg bg-black/30 shadow-md shadow-black/40 p-4" :promise="() => modpack?.description" ref="modpackDescription">
+      <LoadingComponent class="grow rounded-lg bg-black/30 shadow-md shadow-black/40 p-4" :promise="() => modpack?.description" ref="modpackDescription">
         <template v-slot:loading>
           <div role="status" class="animate-pulse">
             <div class="h-8 rounded-full bg-gray-600 mb-4"></div>

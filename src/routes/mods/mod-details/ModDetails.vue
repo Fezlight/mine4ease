@@ -132,6 +132,8 @@ function eventListeners() {
   </InstanceContent>
 </template>
 <style>
+@reference "../../../style.css";
+
 #mod-description {
   position: relative;
   overflow-wrap: break-word;
