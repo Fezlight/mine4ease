@@ -4,11 +4,11 @@ import JSZip from "jszip";
 
 // Global Node.js modules will be set by the environment (backend)
 declare global {
-  var nodeFs: any;
-  var nodePath: any;
-  var nodeCrypto: any;
-  var nodeOs: any;
-  var nodeDecompress: any;
+  let nodeFs: any;
+  let nodePath: any;
+  let nodeCrypto: any;
+  let nodeOs: any;
+  let nodeDecompress: any;
 }
 
 export interface IUtils {

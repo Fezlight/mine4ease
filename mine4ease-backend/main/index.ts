@@ -18,7 +18,6 @@ import 'v8-compile-cache';
 import * as fs from "node:fs";
 import * as crypto from "node:crypto";
 import * as os from "node:os";
-import decompress from "decompress";
 
 // @ts-ignore
 global.nodeFs = fs;
@@ -38,8 +37,18 @@ global.nodePath = {join, parse: (p: string) => {
 global.nodeCrypto = crypto;
 // @ts-ignore
 global.nodeOs = os;
-// @ts-ignore
-global.nodeDecompress = decompress;
+// Load decompress dynamically and expose it as `global.nodeDecompress`.
+(async () => {
+  try {
+    const decompress = await import('@xhmikosr/decompress');
+    // @ts-ignore
+    global.nodeDecompress = decompress?.default ?? decompress;
+  } catch (e) {
+    logger.error('Failed to dynamically import @xhmikosr/decompress:', e);
+    // @ts-ignore
+    global.nodeDecompress = undefined;
+  }
+})();
 
 globalThis.__filename = fileURLToPath(import.meta.url)
 globalThis.__dirname = dirname(__filename)
